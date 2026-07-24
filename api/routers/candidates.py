@@ -4,7 +4,7 @@ import json
 import uuid
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import ValidationError
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -21,6 +21,7 @@ from api.models_api import (
     CandidateAuthResponse, CandidateLoginRequest, CandidateSurveySubmission, CVExtractionRequest,
     SubscriptionUpdateRequest, TalentCreate, TalentOut,
 )
+from api.rate_limit import limiter
 from candidate_extraction import CandidateExtractionResult
 from schemas import Talent, TalentElementValue
 
@@ -28,7 +29,10 @@ router = APIRouter(prefix="/candidates", tags=["candidates"])
 
 
 @router.post("", response_model=CandidateAuthResponse, status_code=201)
-def create_candidate(payload: TalentCreate, conn: Connection = Depends(get_connection)) -> CandidateAuthResponse:
+@limiter.limit("5/hour")
+def create_candidate(
+    request: Request, payload: TalentCreate, conn: Connection = Depends(get_connection),
+) -> CandidateAuthResponse:
     existing = conn.execute(
         text("select talent_id from talent where email = :email"), {"email": payload.email}
     ).first()
@@ -87,7 +91,10 @@ def create_candidate(payload: TalentCreate, conn: Connection = Depends(get_conne
 
 
 @router.post("/login", response_model=CandidateAuthResponse)
-def login_candidate(payload: CandidateLoginRequest, conn: Connection = Depends(get_connection)) -> CandidateAuthResponse:
+@limiter.limit("10/minute")
+def login_candidate(
+    request: Request, payload: CandidateLoginRequest, conn: Connection = Depends(get_connection),
+) -> CandidateAuthResponse:
     row = conn.execute(
         text("select * from talent where email = :email"), {"email": payload.email}
     ).mappings().first()
@@ -232,8 +239,9 @@ def submit_candidate_survey(
 
 
 @router.post("/{talent_id}/extract-cv", response_model=CandidateExtractionResult)
+@limiter.limit("20/hour")
 def extract_cv(
-    talent_id: UUID, payload: CVExtractionRequest, conn: Connection = Depends(get_connection),
+    request: Request, talent_id: UUID, payload: CVExtractionRequest, conn: Connection = Depends(get_connection),
     claims: dict = Depends(require_candidate_self_or_admin),
 ) -> CandidateExtractionResult:
     """Extract CAP/TASK elements from raw CV text via Claude; never persists.

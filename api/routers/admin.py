@@ -7,17 +7,19 @@ is fixed at deploy/config time.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from api.auth import ADMIN_TOKEN_EXPIRY, create_access_token, verify_password
 from api.config import ADMIN_EMAIL, ADMIN_PASSWORD_HASH
 from api.models_api import AdminAuthResponse, AdminLoginRequest
+from api.rate_limit import limiter
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
 
 @router.post("/login", response_model=AdminAuthResponse)
-def login_admin(payload: AdminLoginRequest) -> AdminAuthResponse:
+@limiter.limit("5/minute")
+def login_admin(request: Request, payload: AdminLoginRequest) -> AdminAuthResponse:
     if (
         not ADMIN_EMAIL or not ADMIN_PASSWORD_HASH
         or payload.email.lower() != ADMIN_EMAIL.lower()

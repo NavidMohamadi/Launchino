@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import ValidationError
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
@@ -14,6 +14,7 @@ from api.database import get_connection
 from api.extraction_service import run_vacancy_extraction
 from api.matching_service import load_dictionary
 from api.models_api import VacancyCreate, VacancyDescriptionExtractionRequest, VacancyWorkshopSubmission
+from api.rate_limit import limiter
 from api.vacancy_store import fetch_vacancy, insert_vacancy
 from company_intake import canonicalise_company_submission
 from schemas import VacancyElementValue
@@ -158,9 +159,10 @@ def submit_vacancy_workshop(
 
 
 @router.post("/{vacancy_id}/extract-description", response_model=VacancyExtractionResult)
+@limiter.limit("20/hour")
 def extract_vacancy_description(
-    vacancy_id: UUID, payload: VacancyDescriptionExtractionRequest, conn: Connection = Depends(get_connection),
-    claims: dict = Depends(require_role("company", "admin")),
+    request: Request, vacancy_id: UUID, payload: VacancyDescriptionExtractionRequest,
+    conn: Connection = Depends(get_connection), claims: dict = Depends(require_role("company", "admin")),
 ) -> VacancyExtractionResult:
     """Extract Fit Dictionary items from raw vacancy description text via Claude; never persists.
 

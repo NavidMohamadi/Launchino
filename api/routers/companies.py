@@ -2,19 +2,23 @@ from __future__ import annotations
 
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from api.auth import COMPANY_TOKEN_EXPIRY, create_access_token, hash_password, verify_password
 from api.database import get_connection
 from api.models_api import CompanyAuthResponse, CompanyCreate, CompanyLoginRequest, CompanyOut
+from api.rate_limit import limiter
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
 
 @router.post("", response_model=CompanyAuthResponse, status_code=201)
-def create_company(payload: CompanyCreate, conn: Connection = Depends(get_connection)) -> CompanyAuthResponse:
+@limiter.limit("5/hour")
+def create_company(
+    request: Request, payload: CompanyCreate, conn: Connection = Depends(get_connection),
+) -> CompanyAuthResponse:
     existing = conn.execute(
         text(
             "select 1 from company where lower(website_domain) = lower(:domain) "
@@ -59,7 +63,10 @@ def create_company(payload: CompanyCreate, conn: Connection = Depends(get_connec
 
 
 @router.post("/login", response_model=CompanyAuthResponse)
-def login_company(payload: CompanyLoginRequest, conn: Connection = Depends(get_connection)) -> CompanyAuthResponse:
+@limiter.limit("10/minute")
+def login_company(
+    request: Request, payload: CompanyLoginRequest, conn: Connection = Depends(get_connection),
+) -> CompanyAuthResponse:
     row = conn.execute(
         text("select * from company where lower(contact_email) = lower(:email)"), {"email": payload.email}
     ).mappings().first()

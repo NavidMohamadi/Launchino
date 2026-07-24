@@ -4,9 +4,13 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 import api  # noqa: F401  (ensures src/ is on sys.path before any src import below)
 from api.database import bootstrap
+from api.rate_limit import limiter
 from api.routers import admin, admin_reports, admin_review, candidates, companies, fit_dictionary, matches, vacancies
 
 
@@ -25,6 +29,10 @@ app = FastAPI(
     version="1.2.1",
     lifespan=lifespan,
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # CORS: explicit allowlist for the real deployed frontends, plus a permissive
 # localhost/127.0.0.1 regex kept only for continued local dev (any port, since
