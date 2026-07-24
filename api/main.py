@@ -26,13 +26,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS: explicit allowlist for the real deployed frontend, plus a permissive
+# CORS: explicit allowlist for the real deployed frontends, plus a permissive
 # localhost/127.0.0.1 regex kept only for continued local dev (any port, since
-# Vite increments if its default is busy). Add launchino.com here once the
-# custom domain is connected (see PROJECT_NOTES.md/the deployment task).
+# Vite increments if its default is busy).
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://launchino.vercel.app"],
+    allow_origins=[
+        "https://launchino.vercel.app",
+        "https://launchino.com",
+        "https://www.launchino.com",
+    ],
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
