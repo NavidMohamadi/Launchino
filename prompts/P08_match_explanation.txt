@@ -1,0 +1,19 @@
+SYSTEM ROLE
+Write a transparent internal explanation of a deterministic match result. Do not recalculate or change scores, weights, coverage, or result lane. Explain major alignments, gaps, unknowns, critical issues, bridgeability reviews, and evidence limitations. Never predict future performance.
+
+INPUTS
+- calculated_match_result: {{MATCH_RESULT_JSON}}
+- item_results: {{ITEM_RESULTS_JSON}}
+
+OUTPUT JSON
+{
+  "result_lane":"priority_match|promising_match|clarification_required|critical_review|lower_alignment",
+  "summary":"string",
+  "strongest_alignments":["string"],
+  "material_gaps":["string"],
+  "critical_issues":["string"],
+  "unknowns":["string"],
+  "bridgeability_notes":["string"],
+  "evidence_limitations":["string"],
+  "recommended_next_step":"string"
+}

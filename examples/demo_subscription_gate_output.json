@@ -1,0 +1,58 @@
+{
+  "full_pipeline": {
+    "recommendation_talents": [
+      "subscriber"
+    ],
+    "metrics": {
+      "run_type": "full",
+      "started_at": "2026-07-22T12:00:00Z",
+      "candidates_considered": 2,
+      "candidates_included": 1,
+      "candidates_skipped": 1,
+      "vacancies_considered": 1,
+      "deterministic_matches_run": 1,
+      "ai_explanations_generated": 1,
+      "recommendations_created": 1,
+      "preliminary_signals_created": 0
+    }
+  },
+  "campaign_pipeline": {
+    "signal_talents": [
+      "non-subscriber"
+    ],
+    "teaser": "We identified 1 recent opportunity that may fit your profile. Activate Job Discovery to revalidate it and view the vacancy details and personalised analysis.",
+    "metrics": {
+      "run_type": "preliminary_campaign",
+      "started_at": "2026-07-22T12:00:00Z",
+      "candidates_considered": 2,
+      "candidates_included": 1,
+      "candidates_skipped": 1,
+      "vacancies_considered": 1,
+      "deterministic_matches_run": 1,
+      "ai_explanations_generated": 0,
+      "recommendations_created": 0,
+      "preliminary_signals_created": 1
+    }
+  },
+  "subscription_backfill": {
+    "vacancies": [
+      "vacancy-new"
+    ],
+    "metrics": {
+      "run_type": "subscription_backfill",
+      "started_at": "2026-07-22T12:00:00Z",
+      "candidates_considered": 1,
+      "candidates_included": 1,
+      "candidates_skipped": 0,
+      "vacancies_considered": 1,
+      "deterministic_matches_run": 1,
+      "ai_explanations_generated": 1,
+      "recommendations_created": 1,
+      "preliminary_signals_created": 0
+    }
+  },
+  "access_after_expiry": {
+    "visible_count_while_expired": 0,
+    "visible_count_after_renewal": 1
+  }
+}

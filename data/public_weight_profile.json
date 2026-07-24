@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "name": "SHEXON public-vacancy discovery ordering",
+  "purpose": "A transparent provisional profile used only when the employer has not validated vacancy-specific category weights.",
+  "category_weights": {
+    "PRACT": 15,
+    "CAP": 30,
+    "TASK": 25,
+    "TEAM": 10,
+    "CAREER": 5,
+    "MOT": 5,
+    "ENV": 10
+  },
+  "rules": [
+    "The result must be labelled preliminary and provisional.",
+    "Explicit requirement wording may adjust item importance, but AI may not invent company priorities.",
+    "A company-validated profile replaces this profile without creating a second vacancy record.",
+    "Unknown fields reduce coverage and generate clarification; they never score as zero."
+  ]
+}

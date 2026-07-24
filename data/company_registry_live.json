@@ -1,0 +1,10 @@
+{
+  "_format": "One entry per board. ats must be greenhouse, lever, ashby, or avular (the only adapters src/job_sources/ has -- avular is a one-off single-site parser, see PROJECT_NOTES.md). domain is optional -- used for company-identity matching in dedup; omit it if you don't have one handy. Add or remove a company by adding or removing one object below -- no code change needed. For avular, board_token is the site's base URL, not a per-tenant token (see api/job_discovery_scheduler.py's ATS_LISTING_URL comment).",
+  "boards": [
+    {"name": "Sendcloud", "ats": "greenhouse", "board_token": "sendcloudnew", "domain": "sendcloud.com"},
+    {"name": "Axelera AI", "ats": "ashby", "board_token": "axelera", "domain": "axelera.ai"},
+    {"name": "Beyond Sports", "ats": "ashby", "board_token": "beyondsports", "domain": "beyondsports.ai"},
+    {"name": "Monumental", "ats": "ashby", "board_token": "monumental", "domain": "monumental.co"},
+    {"name": "Avular", "ats": "avular", "board_token": "https://www.avular.com", "domain": "avular.com"}
+  ]
+}

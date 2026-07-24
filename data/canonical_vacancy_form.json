@@ -1,0 +1,76 @@
+{
+  "version": "2.0.0",
+  "principle": "Company-submitted and public-web vacancies populate the same CanonicalVacancyProfile and Role Fit Profile. Source metadata and verification status differ; the matching fields do not.",
+  "sections": [
+    {
+      "section_id": "source_metadata",
+      "title": "Source and provenance",
+      "fields": [
+        "vacancy_id",
+        "intake_source",
+        "acquisition_method",
+        "primary_source_url",
+        "external_job_id",
+        "retrieved_at",
+        "verification_status",
+        "source_snapshot_ids"
+      ]
+    },
+    {
+      "section_id": "basic_job_data",
+      "title": "Job identity and lifecycle",
+      "fields": [
+        "company_id",
+        "company_name",
+        "company_domain",
+        "title",
+        "description_text",
+        "apply_url",
+        "location_text",
+        "department",
+        "employment_types",
+        "work_mode",
+        "date_posted",
+        "valid_through",
+        "salary",
+        "lifecycle_status"
+      ]
+    },
+    {
+      "section_id": "role_fit_profile",
+      "title": "Mirrored Role Fit Profile",
+      "fields": [
+        "PRACT elements",
+        "CAP elements",
+        "TASK elements",
+        "TEAM elements",
+        "CAREER elements",
+        "MOT elements",
+        "ENV elements"
+      ]
+    },
+    {
+      "section_id": "weights",
+      "title": "Vacancy-specific or provisional weighting",
+      "fields": [
+        "weighting_mode",
+        "weights_confirmed_by_company",
+        "category_weights",
+        "item_importance",
+        "requirement_type",
+        "trainability_window"
+      ]
+    },
+    {
+      "section_id": "quality",
+      "title": "Quality, conflict and review",
+      "fields": [
+        "provenance",
+        "source_conflicts",
+        "extraction_confidence",
+        "coverage",
+        "review_flags"
+      ]
+    }
+  ]
+}

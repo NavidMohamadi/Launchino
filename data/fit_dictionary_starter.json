@@ -1,0 +1,1137 @@
+[
+  {
+    "element_id": "PRACT-COUNTRY",
+    "category": "PRACT",
+    "label": "Country presence",
+    "definition": "Whether the candidate is already in the employment country, compared only when the vacancy states a condition.",
+    "candidate_question": "What is your current country of residence?",
+    "vacancy_question": "Must or should the candidate already be in the employment country?",
+    "candidate_value_schema": {
+      "current_country": "ISO country",
+      "presence_relative_to_vacancy": "in_country|outside_country|unknown"
+    },
+    "vacancy_value_schema": {
+      "employment_country": "ISO country",
+      "condition": "required|preferred|open|not_specified"
+    },
+    "evidence_rule": "Candidate confirmation; refresh before introduction.",
+    "comparator_key": "country_presence",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-SPONSOR",
+    "category": "PRACT",
+    "label": "Visa sponsorship",
+    "definition": "Whether employer sponsorship is expected and what the employer states it can provide.",
+    "candidate_question": "For your next role, do you expect employer visa sponsorship?",
+    "vacancy_question": "Can the employer provide sponsorship for this vacancy?",
+    "candidate_value_schema": {
+      "requirement": "required|not_required|not_sure"
+    },
+    "vacancy_value_schema": {
+      "policy": "available|conditional|unavailable|not_specified",
+      "conditions": "string|null"
+    },
+    "evidence_rule": "Candidate self-report plus clarification when needed; do not request unnecessary immigration documents.",
+    "comparator_key": "visa_sponsorship",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-START",
+    "category": "PRACT",
+    "label": "Availability",
+    "definition": "Candidate earliest start compared with the vacancy preferred/latest acceptable dates.",
+    "candidate_question": "What is the earliest date you could start?",
+    "vacancy_question": "What is the preferred and latest acceptable start date?",
+    "candidate_value_schema": {
+      "earliest_start": "YYYY-MM-DD|null"
+    },
+    "vacancy_value_schema": {
+      "preferred_start": "YYYY-MM-DD|null",
+      "latest_acceptable_start": "YYYY-MM-DD|null"
+    },
+    "evidence_rule": "Candidate confirmation within 30 days of introduction.",
+    "comparator_key": "availability",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-LANG",
+    "category": "PRACT",
+    "label": "Working language",
+    "definition": "Job-relevant language and usable level; never infer from nationality or name.",
+    "candidate_question": "Which languages can you use professionally, and at what level?",
+    "vacancy_question": "Which languages are genuinely required or preferred, at what level, and why?",
+    "candidate_value_schema": {
+      "languages": {
+        "language": "basic|working|professional|fluent|native_or_equivalent"
+      }
+    },
+    "vacancy_value_schema": {
+      "language": "string",
+      "minimum_level": "basic|working|professional|fluent|native_or_equivalent",
+      "status": "required|preferred|not_specified",
+      "reason": "string"
+    },
+    "evidence_rule": "Candidate report; employer must explain job relevance.",
+    "comparator_key": "language_level",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-CONTRACT",
+    "category": "PRACT",
+    "label": "Contract type",
+    "definition": "Overlap between candidate-acceptable and vacancy-offered contract types.",
+    "candidate_question": "Which opportunity types are you considering?",
+    "vacancy_question": "What contract type is offered?",
+    "candidate_value_schema": {
+      "acceptable": [
+        "internship|full_time|traineeship|project|other"
+      ]
+    },
+    "vacancy_value_schema": {
+      "description": "{\"offered\":[\"internship|full_time|traineeship|project|other\"]|\"not_specified\"}"
+    },
+    "evidence_rule": "Candidate and company confirmation.",
+    "comparator_key": "contract_set",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-WORKMODE",
+    "category": "PRACT",
+    "label": "Work arrangement",
+    "definition": "Overlap between acceptable and actual on-site, hybrid, or remote arrangements.",
+    "candidate_question": "Which work arrangements are acceptable to you?",
+    "vacancy_question": "What is the actual work arrangement?",
+    "candidate_value_schema": {
+      "acceptable": [
+        "on_site|hybrid|remote"
+      ]
+    },
+    "vacancy_value_schema": {
+      "description": "{\"offered\":[\"on_site|hybrid|remote|flexible\"]|\"not_specified\"}"
+    },
+    "evidence_rule": "Candidate and company confirmation.",
+    "comparator_key": "work_mode_set",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "TEAM-COMM",
+    "category": "TEAM",
+    "label": "Timely team communication",
+    "definition": "Shares job-relevant information clearly and at the right time.",
+    "candidate_question": "Describe a concrete situation that shows how you handle timely team communication in a group.",
+    "vacancy_question": "How important is timely team communication in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-COORD",
+    "category": "TEAM",
+    "label": "Coordination",
+    "definition": "Coordinates responsibilities, dependencies, timing, and handoffs.",
+    "candidate_question": "Describe a concrete situation that shows how you handle coordination in a group.",
+    "vacancy_question": "How important is coordination in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-CONFLICT",
+    "category": "TEAM",
+    "label": "Constructive disagreement",
+    "definition": "Addresses disagreement directly and constructively.",
+    "candidate_question": "Describe a concrete situation that shows how you handle constructive disagreement in a group.",
+    "vacancy_question": "How important is constructive disagreement in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-HELP",
+    "category": "TEAM",
+    "label": "Help seeking and support",
+    "definition": "Asks for and offers help appropriately.",
+    "candidate_question": "Describe a concrete situation that shows how you handle help seeking and support in a group.",
+    "vacancy_question": "How important is help seeking and support in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-FEEDBACK",
+    "category": "TEAM",
+    "label": "Feedback use",
+    "definition": "Gives, receives, and acts on feedback.",
+    "candidate_question": "Describe a concrete situation that shows how you handle feedback use in a group.",
+    "vacancy_question": "How important is feedback use in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-SHARED-OWNERSHIP",
+    "category": "TEAM",
+    "label": "Shared ownership",
+    "definition": "Takes responsibility for the collective result, not only individual tasks.",
+    "candidate_question": "Describe a concrete situation that shows how you handle shared ownership in a group.",
+    "vacancy_question": "How important is shared ownership in this role, and what behaviour would demonstrate success?",
+    "candidate_value_schema": {
+      "level": 0,
+      "example": "string",
+      "context": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "example": "string",
+      "selected_priority_rank": "integer 1..4|null",
+      "activated": "boolean"
+    },
+    "evidence_rule": "Behavioural example; observation or documented evidence where available.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TEAM-COLLAB-INTENSITY",
+    "category": "TEAM",
+    "label": "Collaboration intensity",
+    "definition": "The proportion and interdependence of collaborative work, separated from teamwork capability.",
+    "candidate_question": "What balance of independent and collaborative work do you prefer and tolerate?",
+    "vacancy_question": "What proportion of the role is collaborative and how interdependent is the work?",
+    "candidate_value_schema": {
+      "scale_id": "team_collaboration_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "team_collaboration_1_5",
+      "actual": "integer 1..5|not_specified",
+      "estimated_percent": "integer 0..100|null"
+    },
+    "evidence_rule": "Candidate preference and hiring-manager/team-member validation.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-PRIMARY-ROLE",
+    "category": "CAREER",
+    "label": "Primary role direction",
+    "definition": "The role direction the candidate most wants to pursue.",
+    "candidate_question": "What is your primary role direction for the next 12\u201324 months?",
+    "vacancy_question": "What is the clearest role family or occupational direction represented by this vacancy?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-SECONDARY-ROLE",
+    "category": "CAREER",
+    "label": "Secondary role direction",
+    "definition": "A second acceptable direction.",
+    "candidate_question": "What is your second acceptable role direction?",
+    "vacancy_question": "Which adjacent role directions could reasonably describe this opportunity?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-PROBLEM-TYPES",
+    "category": "CAREER",
+    "label": "Preferred problem types",
+    "definition": "Kinds of problems the candidate wants to solve.",
+    "candidate_question": "Which kinds of problems do you most enjoy solving?",
+    "vacancy_question": "Which problem types dominate the role?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-DESIRED-ACTIVITIES",
+    "category": "CAREER",
+    "label": "Desired activities",
+    "definition": "Activities the candidate wants more of.",
+    "candidate_question": "Which work activities do you want to do more often?",
+    "vacancy_question": "Which activities occupy the largest share of the role?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-AVOIDED-ACTIVITIES",
+    "category": "CAREER",
+    "label": "Avoided activities",
+    "definition": "Activities the candidate does not want to dominate.",
+    "candidate_question": "Which activities should not become the majority of your role?",
+    "vacancy_question": "Which less attractive but unavoidable activities are substantial?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INDUSTRIES",
+    "category": "CAREER",
+    "label": "Industry interest",
+    "definition": "Industries actively preferred; normally low weight.",
+    "candidate_question": "Which industries interest you?",
+    "vacancy_question": "Which industry and product context does the role operate in?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-DEVELOPMENT",
+    "category": "CAREER",
+    "label": "Development direction",
+    "definition": "Skills or experiences the candidate wants to develop.",
+    "candidate_question": "Which skills or experiences do you most want to develop next?",
+    "vacancy_question": "What will the person realistically learn in the first year?",
+    "candidate_value_schema": {
+      "values": [
+        "string"
+      ],
+      "ranked": true
+    },
+    "vacancy_value_schema": {
+      "values": [
+        "string"
+      ],
+      "source": "job_description|hiring_manager|team_member"
+    },
+    "evidence_rule": "Candidate self-report and vacancy validation.",
+    "comparator_key": "semantic_overlap",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "MOT-LEARN",
+    "category": "MOT",
+    "label": "Learning",
+    "definition": "Opportunity to gain meaningful knowledge or capability.",
+    "candidate_question": "If learning is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much learning does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-OWNERSHIP",
+    "category": "MOT",
+    "label": "Ownership",
+    "definition": "Responsibility for decisions, outputs, or outcomes.",
+    "candidate_question": "If ownership is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much ownership does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-STABILITY",
+    "category": "MOT",
+    "label": "Stability",
+    "definition": "Predictability and continuity in work and employment.",
+    "candidate_question": "If stability is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much stability does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-PROGRESSION",
+    "category": "MOT",
+    "label": "Progression",
+    "definition": "Realistic development or advancement opportunities.",
+    "candidate_question": "If progression is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much progression does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-IMPACT",
+    "category": "MOT",
+    "label": "Visible impact",
+    "definition": "Ability to see how work affects customers, operations, society, or business outcomes.",
+    "candidate_question": "If visible impact is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much visible impact does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-TECH-DEPTH",
+    "category": "MOT",
+    "label": "Technical depth",
+    "definition": "Opportunity to deepen specialist expertise.",
+    "candidate_question": "If technical depth is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much technical depth does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-VARIETY",
+    "category": "MOT",
+    "label": "Variety",
+    "definition": "Range of tasks, problems, or stakeholders.",
+    "candidate_question": "If variety is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much variety does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-AUTONOMY",
+    "category": "MOT",
+    "label": "Autonomy",
+    "definition": "Freedom to make decisions or choose methods.",
+    "candidate_question": "If autonomy is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much autonomy does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-RECOGNITION",
+    "category": "MOT",
+    "label": "Recognition",
+    "definition": "Visibility and acknowledgement of contribution.",
+    "candidate_question": "If recognition is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much recognition does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-FINANCIAL",
+    "category": "MOT",
+    "label": "Financial reward",
+    "definition": "Importance of compensation and financial development.",
+    "candidate_question": "If financial reward is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much financial reward does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-LEADERSHIP",
+    "category": "MOT",
+    "label": "Leadership opportunity",
+    "definition": "Opportunity to lead work, people, or initiatives.",
+    "candidate_question": "If leadership opportunity is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much leadership opportunity does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "MOT-COLLABORATION",
+    "category": "MOT",
+    "label": "Collaboration value",
+    "definition": "Importance of working closely with other people.",
+    "candidate_question": "If collaboration value is in your top five priorities, state your preferred and tolerable supply range on the 1\u20135 motivation scale and explain what it means to you.",
+    "vacancy_question": "How much collaboration value does this role realistically provide on the 1\u20135 motivation-supply scale?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "scale_id": "motivation_supply_1_5",
+      "preferred_min": "integer 1..5|null",
+      "preferred_max": "integer 1..5|null",
+      "tolerable_min": "integer 1..5|null",
+      "tolerable_max": "integer 1..5|null",
+      "meaning": "string|null",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "motivation_supply_1_5",
+      "actual": "integer 1..5|not_specified",
+      "evidence": "string|null"
+    },
+    "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "ENV-STRUCTURE",
+    "category": "ENV",
+    "label": "Goal and role structure",
+    "definition": "How clearly goals and responsibilities are defined.",
+    "candidate_question": "What is your preferred and tolerable range for goal and role structure? Give an example.",
+    "vacancy_question": "What is the actual level of goal and role structure in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_structure_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_structure_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-PRIORITY-CHANGE",
+    "category": "ENV",
+    "label": "Priority change",
+    "definition": "How often priorities materially change.",
+    "candidate_question": "What is your preferred and tolerable range for priority change? Give an example.",
+    "vacancy_question": "What is the actual level of priority change in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_priority_change_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_priority_change_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-METHOD-AUTONOMY",
+    "category": "ENV",
+    "label": "Method autonomy",
+    "definition": "Freedom to choose how work is performed.",
+    "candidate_question": "What is your preferred and tolerable range for method autonomy? Give an example.",
+    "vacancy_question": "What is the actual level of method autonomy in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_method_autonomy_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_method_autonomy_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-MANAGER-INVOLVEMENT",
+    "category": "ENV",
+    "label": "Manager involvement",
+    "definition": "Frequency and intensity of manager check-ins.",
+    "candidate_question": "What is your preferred and tolerable range for manager involvement? Give an example.",
+    "vacancy_question": "What is the actual level of manager involvement in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_manager_involvement_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_manager_involvement_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-FEEDBACK",
+    "category": "ENV",
+    "label": "Feedback frequency",
+    "definition": "How often useful performance feedback is expected/provided.",
+    "candidate_question": "What is your preferred and tolerable range for feedback frequency? Give an example.",
+    "vacancy_question": "What is the actual level of feedback frequency in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_feedback_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_feedback_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-PROCESS-MATURITY",
+    "category": "ENV",
+    "label": "Process maturity",
+    "definition": "Extent to which processes are established versus being built.",
+    "candidate_question": "What is your preferred and tolerable range for process maturity? Give an example.",
+    "vacancy_question": "What is the actual level of process maturity in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_process_maturity_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_process_maturity_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-REACTIVITY",
+    "category": "ENV",
+    "label": "Role reactivity",
+    "definition": "Degree to which work is planned versus urgent/reactive.",
+    "candidate_question": "What is your preferred and tolerable range for role reactivity? Give an example.",
+    "vacancy_question": "What is the actual level of role reactivity in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_reactivity_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_reactivity_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-ROLE-BREADTH",
+    "category": "ENV",
+    "label": "Role breadth",
+    "definition": "Specialist depth versus broad generalist responsibility.",
+    "candidate_question": "What is your preferred and tolerable range for role breadth? Give an example.",
+    "vacancy_question": "What is the actual level of role breadth in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_role_breadth_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_role_breadth_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-STAKEHOLDER",
+    "category": "ENV",
+    "label": "Stakeholder exposure",
+    "definition": "Amount and complexity of direct stakeholder interaction.",
+    "candidate_question": "What is your preferred and tolerable range for stakeholder exposure? Give an example.",
+    "vacancy_question": "What is the actual level of stakeholder exposure in this role? Give an example.",
+    "candidate_value_schema": {
+      "scale_id": "env_stakeholder_1_5",
+      "preferred_min": "integer 1..5",
+      "preferred_max": "integer 1..5",
+      "tolerable_min": "integer 1..5",
+      "tolerable_max": "integer 1..5",
+      "example": "string|null"
+    },
+    "vacancy_value_schema": {
+      "scale_id": "env_stakeholder_1_5",
+      "actual": "integer 1..5|not_specified",
+      "example": "string|null"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
+    "comparator_key": "ordinal_range",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  }
+]

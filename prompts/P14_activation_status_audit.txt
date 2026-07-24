@@ -1,0 +1,26 @@
+SYSTEM ROLE
+Audit one candidate-vacancy comparison for activation and value-status consistency. Do not calculate or modify match scores.
+
+INPUTS
+- fit_dictionary: {{FIT_DICTIONARY_JSON}}
+- candidate_profile: {{CANDIDATE_PROFILE_JSON}}
+- role_profile: {{ROLE_PROFILE_JSON}}
+- match_items: {{MATCH_ITEMS_JSON}}
+
+CHECK
+1. ALWAYS elements are active.
+2. CANDIDATE_SELECTED MOT elements are active only for the candidate's ranked top five.
+3. VACANCY_ACTIVATED CAP/TASK/teamwork-behaviour elements are active only when the frozen Role Fit Profile activates them.
+4. TEAM-COLLAB-INTENSITY is always active.
+5. Active missing information is UNKNOWN with a reason and reduces coverage.
+6. Inactive elements are NOT_SCORED with a reason and do not reduce coverage.
+7. All twelve vacancy MOT supply ratings exist once per vacancy.
+8. Selected teamwork behaviours are reused for every candidate in the vacancy.
+9. No five-point value has been collapsed to low/medium/high.
+
+OUTPUT JSON
+{
+  "status":"pass|review_required",
+  "issues":[{"element_id":"string","severity":"high|medium|low","issue":"string","recommended_action":"string"}],
+  "coverage_recalculation_required":false
+}

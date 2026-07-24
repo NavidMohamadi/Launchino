@@ -1,0 +1,638 @@
+{
+  "version": "2.0.0",
+  "principle": "Candidate-facing options, stored schemas, vacancy options and comparators must use the same canonical scale.",
+  "motivation_factors": [
+    "MOT-LEARN",
+    "MOT-OWNERSHIP",
+    "MOT-STABILITY",
+    "MOT-PROGRESSION",
+    "MOT-IMPACT",
+    "MOT-TECH-DEPTH",
+    "MOT-VARIETY",
+    "MOT-AUTONOMY",
+    "MOT-RECOGNITION",
+    "MOT-FINANCIAL",
+    "MOT-LEADERSHIP",
+    "MOT-COLLABORATION"
+  ],
+  "sections": [
+    {
+      "section_id": "acceptance",
+      "title": "Stage 0: transparency and acceptance",
+      "questions": [
+        {
+          "ID": "TQ-ACC-01",
+          "Question": "I understand that SHEXON will create a Talent Fit Profile from information I provide, my CV and structured conversations.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "Participation record"
+        },
+        {
+          "ID": "TQ-ACC-02",
+          "Question": "I understand that SHEXON may compare my profile with vacancy requirements and use vacancy-specific company weights to produce an internal ranking.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "Matching transparency"
+        },
+        {
+          "ID": "TQ-ACC-03",
+          "Question": "I understand that AI may assist with extraction, organisation and draft summaries, while SHEXON staff review the result before any introduction.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "AI transparency"
+        },
+        {
+          "ID": "TQ-ACC-04",
+          "Question": "I understand that vacancy information that is not specified will be treated as unknown, not assumed.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "Process transparency"
+        },
+        {
+          "ID": "TQ-ACC-05",
+          "Question": "I understand that SHEXON will ask me before sharing my Candidate Fit Brief with a named employer.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "Sharing control"
+        },
+        {
+          "ID": "TQ-ACC-06",
+          "Question": "I confirm that I can review and correct my profile and request information about how a match was generated.",
+          "Response": "Required acknowledgement",
+          "Options / scale": "Agree",
+          "How used": "Candidate rights/process"
+        }
+      ]
+    },
+    {
+      "section_id": "registration",
+      "title": "Stage 1: registration",
+      "questions": [
+        {
+          "ID": "TQ-REG-01",
+          "Question": "What is your current country of residence?",
+          "Response": "Country",
+          "Options / scale": "Country list",
+          "How used": "Practical comparison"
+        },
+        {
+          "ID": "TQ-REG-02",
+          "Question": "For your next role, do you expect to need employer visa sponsorship?",
+          "Response": "Single choice",
+          "Options / scale": "Yes / No / I am not sure",
+          "How used": "Practical comparison"
+        },
+        {
+          "ID": "TQ-REG-03",
+          "Question": "What is the earliest date you could start?",
+          "Response": "Date",
+          "Options / scale": "Date / Not sure",
+          "How used": "Availability"
+        },
+        {
+          "ID": "TQ-REG-04",
+          "Question": "Which opportunity types are you considering?",
+          "Response": "Multiple choice",
+          "Options / scale": "Internship / Full-time / Traineeship / Project / Other",
+          "How used": "Contract compatibility"
+        },
+        {
+          "ID": "TQ-REG-05",
+          "Question": "Which working languages can you use professionally?",
+          "Response": "Repeatable field",
+          "Options / scale": "Language + basic / working / professional / fluent",
+          "How used": "Job-relevant language comparison"
+        },
+        {
+          "ID": "TQ-REG-06",
+          "Question": "Which work arrangements are acceptable to you?",
+          "Response": "Multiple choice",
+          "Options / scale": "On-site / Hybrid / Remote",
+          "How used": "Practical/environment comparison"
+        },
+        {
+          "ID": "TQ-REG-07",
+          "Question": "Which three job titles or role families are closest to what you want next?",
+          "Response": "Three text fields",
+          "Options / scale": "Free text with suggestions",
+          "How used": "Career direction"
+        },
+        {
+          "ID": "TQ-REG-08",
+          "Question": "Are you actively looking, open to relevant opportunities, or exploring for later?",
+          "Response": "Single choice",
+          "Options / scale": "Active / Open / Exploring / Not currently available",
+          "How used": "Profile status"
+        },
+        {
+          "ID": "TQ-REG-09",
+          "Question": "Upload your current CV or experience profile.",
+          "Response": "File upload",
+          "Options / scale": "PDF/DOCX",
+          "How used": "Professional extraction"
+        },
+        {
+          "ID": "TQ-REG-10",
+          "Question": "Is there anything practical that should be checked before we contact you about a role?",
+          "Response": "Optional text",
+          "Options / scale": "Free text",
+          "How used": "Clarification only"
+        }
+      ]
+    },
+    {
+      "section_id": "career",
+      "title": "Stage 3A: career direction",
+      "questions": [
+        {
+          "ID": "TQ-CAR-01",
+          "Question": "What is the primary role direction you want to move toward in the next 12\u201324 months?",
+          "Response": "Text + suggestions",
+          "Options / scale": "One primary direction",
+          "How used": "Career match"
+        },
+        {
+          "ID": "TQ-CAR-02",
+          "Question": "What is your second acceptable role direction?",
+          "Response": "Text + suggestions",
+          "Options / scale": "Optional",
+          "How used": "Broader matching"
+        },
+        {
+          "ID": "TQ-CAR-03",
+          "Question": "Which kinds of problems do you most enjoy solving?",
+          "Response": "Select up to 5",
+          "Options / scale": "Analytical / technical / operational / customer / commercial / people / creative / process / research / other",
+          "How used": "Task/career direction"
+        },
+        {
+          "ID": "TQ-CAR-04",
+          "Question": "Which work activities would you like to do more often in your next role?",
+          "Response": "Select and rank 5",
+          "Options / scale": "Dynamic list + free text",
+          "How used": "Task and opportunity alignment"
+        },
+        {
+          "ID": "TQ-CAR-05",
+          "Question": "Which activities would you prefer not to become the majority of your role?",
+          "Response": "Select up to 5",
+          "Options / scale": "Dynamic list + free text",
+          "How used": "Opportunity alignment"
+        },
+        {
+          "ID": "TQ-CAR-06",
+          "Question": "Which industries are you actively interested in?",
+          "Response": "Multiple choice",
+          "Options / scale": "Industry list + open",
+          "How used": "Candidate preference; usually low weight"
+        },
+        {
+          "ID": "TQ-CAR-07",
+          "Question": "Which skills or experiences do you most want to develop next?",
+          "Response": "Rank up to 5",
+          "Options / scale": "Free text with suggestions",
+          "How used": "Development opportunity"
+        },
+        {
+          "ID": "TQ-CAR-08",
+          "Question": "What would make you consider a role that is outside your first-choice direction?",
+          "Response": "Open text",
+          "Options / scale": "Free text",
+          "How used": "Interpret flexibility"
+        },
+        {
+          "ID": "TQ-CAR-09",
+          "Question": "Describe one role you would not accept even if the title or salary looked attractive. Why?",
+          "Response": "Open text",
+          "Options / scale": "Free text",
+          "How used": "Boundaries and follow-up"
+        }
+      ]
+    },
+    {
+      "section_id": "motivation",
+      "title": "Stage 3B: motivation and work values",
+      "questions": [
+        {
+          "ID": "TQ-MOT-01",
+          "Question": "Rank the five factors that would most influence whether you stay engaged in a role.",
+          "Response": "Rank exactly 5",
+          "Options / scale": "Learning / ownership / stability / progression / impact / technical depth / variety / autonomy / recognition / financial reward / leadership / collaboration",
+          "How used": "Activates five candidate-selected motivation elements"
+        },
+        {
+          "ID": "TQ-MOT-02",
+          "Question": "For each selected factor, choose the range you would ideally like a role to provide.",
+          "Response": "Preferred minimum and maximum for each selected factor",
+          "Options / scale": "1 very limited \u2013 5 very strong",
+          "How used": "Preferred range for ordinal comparison"
+        },
+        {
+          "ID": "TQ-MOT-03",
+          "Question": "For each selected factor, choose the wider range you could still accept.",
+          "Response": "Tolerable minimum and maximum for each selected factor",
+          "Options / scale": "1 very limited \u2013 5 very strong; must contain the preferred range",
+          "How used": "Tolerable boundary and clarification"
+        },
+        {
+          "ID": "TQ-MOT-04",
+          "Question": "For each selected factor, what would a good level look like in practice?",
+          "Response": "Short open text repeated five times",
+          "Options / scale": "Concrete role example",
+          "How used": "Candidate meaning and later confirmation"
+        },
+        {
+          "ID": "TQ-MOT-05",
+          "Question": "For each selected factor, give one experience showing why it matters to you.",
+          "Response": "Behavioural example repeated five times",
+          "Options / scale": "Situation / what mattered / effect",
+          "How used": "Evidence supporting self-report"
+        },
+        {
+          "ID": "TQ-MOT-06",
+          "Question": "Which selected factor, if below your tolerable minimum, would most likely make you leave within a year?",
+          "Response": "Select one + explanation",
+          "Options / scale": "From the selected top five",
+          "How used": "Priority boundary; does not become an automatic gate"
+        },
+        {
+          "ID": "TQ-MOT-07",
+          "Question": "Tell us about a project or experience where you stayed highly engaged after the initial excitement passed. What sustained it?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Validate sustained motivation"
+        },
+        {
+          "ID": "TQ-MOT-08",
+          "Question": "Tell us about work or study that drained your energy. Which conditions mattered most?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Validate avoided conditions"
+        }
+      ]
+    },
+    {
+      "section_id": "environment",
+      "title": "Stage 3C: work environment",
+      "questions": [
+        {
+          "ID": "TQ-ENV-01",
+          "Question": "How clearly do you prefer goals and responsibilities to be defined when you start a task?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "1 very open \u2013 5 highly defined",
+          "How used": "Structure alignment",
+          "element_id": "ENV-STRUCTURE",
+          "scale_id": "env_structure_1_5"
+        },
+        {
+          "ID": "TQ-ENV-02",
+          "Question": "How often can priorities change before the work becomes frustrating rather than energising?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Rarely / monthly / weekly / several times weekly / daily",
+          "How used": "Priority-change alignment",
+          "element_id": "ENV-PRIORITY-CHANGE",
+          "scale_id": "env_priority_change_1_5"
+        },
+        {
+          "ID": "TQ-ENV-03",
+          "Question": "How much freedom do you prefer in deciding how to complete your work?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "1 method defined \u2013 5 full method autonomy",
+          "How used": "Autonomy alignment",
+          "element_id": "ENV-METHOD-AUTONOMY",
+          "scale_id": "env_method_autonomy_1_5"
+        },
+        {
+          "ID": "TQ-ENV-04",
+          "Question": "How frequently do you prefer your manager to check in while you are learning a new role?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Daily / several times weekly / weekly / every two weeks / monthly",
+          "How used": "Manager involvement",
+          "element_id": "ENV-MANAGER-INVOLVEMENT",
+          "scale_id": "env_manager_involvement_1_5"
+        },
+        {
+          "ID": "TQ-ENV-05",
+          "Question": "After you are established in a role, how frequently do you prefer feedback?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Weekly / every two weeks / monthly / quarterly / when needed",
+          "How used": "Feedback alignment",
+          "element_id": "ENV-FEEDBACK",
+          "scale_id": "env_feedback_1_5"
+        },
+        {
+          "ID": "TQ-ENV-06",
+          "Question": "Which process environment suits you best?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Established / mostly established / mixed / mostly being built / no established processes",
+          "How used": "Process maturity",
+          "element_id": "ENV-PROCESS-MATURITY",
+          "scale_id": "env_process_maturity_1_5"
+        },
+        {
+          "ID": "TQ-ENV-07",
+          "Question": "Which role breadth do you prefer?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Deep specialist / specialist with variety / balanced / broad generalist",
+          "How used": "Role breadth",
+          "element_id": "ENV-ROLE-BREADTH",
+          "scale_id": "env_role_breadth_1_5"
+        },
+        {
+          "ID": "TQ-ENV-08",
+          "Question": "How much direct stakeholder interaction do you prefer?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Limited / occasional / regular / substantial / most of the role",
+          "How used": "Stakeholder intensity",
+          "element_id": "ENV-STAKEHOLDER",
+          "scale_id": "env_stakeholder_1_5"
+        },
+        {
+          "ID": "TQ-ENV-09",
+          "Question": "Which working pace suits you best?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Predictable / mostly planned / mixed / fast-changing / highly reactive",
+          "How used": "Pace alignment",
+          "element_id": "ENV-REACTIVITY",
+          "scale_id": "env_reactivity_1_5"
+        },
+        {
+          "ID": "TQ-ENV-10",
+          "Question": "Which communication environment feels most natural?",
+          "Response": "Preferred + acceptable range",
+          "Options / scale": "Formal / moderately formal / balanced / informal / highly informal",
+          "How used": "Communication context"
+        },
+        {
+          "ID": "TQ-ENV-11",
+          "Question": "Describe a work or study environment in which you performed especially well. What conditions helped?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Validate preferences"
+        },
+        {
+          "ID": "TQ-ENV-12",
+          "Question": "Describe an environment that made it harder for you to perform. What specifically caused difficulty?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Validate tolerance"
+        }
+      ]
+    },
+    {
+      "section_id": "teamwork",
+      "title": "Stage 3D: teamwork and collaboration",
+      "questions": [
+        {
+          "ID": "TQ-TEAM-01",
+          "Question": "Which range best describes how much of your working time you would ideally and acceptably spend collaborating directly with others?",
+          "Response": "Preferred and tolerable ranges",
+          "Options / scale": "1=0\u201320%, 2=21\u201340%, 3=41\u201360%, 4=61\u201380%, 5=81\u2013100%",
+          "How used": "Collaboration preference",
+          "element_id": "TEAM-COLLAB-INTENSITY",
+          "scale_id": "team_collaboration_1_5"
+        },
+        {
+          "ID": "TQ-TEAM-02",
+          "Question": "Which group role do you most often take naturally?",
+          "Response": "Choose up to 2 + example",
+          "Options / scale": "Coordinator / idea generator / analyst / implementer / challenger / supporter / communicator / flexible",
+          "How used": "Conversation input, not scored alone"
+        },
+        {
+          "ID": "TQ-TEAM-03",
+          "Question": "Describe a time another person\u2019s delay or mistake affected your work. What did you do?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Coordination and ownership evidence"
+        },
+        {
+          "ID": "TQ-TEAM-04",
+          "Question": "Describe a disagreement with a peer or project partner. How did you handle it?",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Conflict handling evidence"
+        },
+        {
+          "ID": "TQ-TEAM-05",
+          "Question": "When do you normally ask for help?",
+          "Response": "Choice + example",
+          "Options / scale": "Very early / after trying briefly / after several attempts / only when blocked / varies",
+          "How used": "Help-seeking evidence"
+        },
+        {
+          "ID": "TQ-TEAM-06",
+          "Question": "Tell us about feedback that changed how you approached a task.",
+          "Response": "Behavioural example",
+          "Options / scale": "Free text",
+          "How used": "Feedback response"
+        },
+        {
+          "ID": "TQ-TEAM-07",
+          "Question": "How comfortable are you challenging a decision made by someone more senior?",
+          "Response": "Scale + explanation",
+          "Options / scale": "1 very uncomfortable \u2013 5 very comfortable",
+          "How used": "Follow-up, not direct score"
+        },
+        {
+          "ID": "TQ-TEAM-08",
+          "Question": "How do you prefer decisions to be made in a team?",
+          "Response": "Preferred + acceptable",
+          "Options / scale": "Leader decides / consult then decide / shared decision / varies by topic",
+          "How used": "Collaboration alignment"
+        }
+      ]
+    },
+    {
+      "section_id": "professional",
+      "title": "Stage 3E: dynamic professional profile",
+      "questions": [
+        {
+          "ID": "TQ-PRO-01",
+          "Question": "Review the skills and tools extracted from your CV. Which are correct, missing or no longer current?",
+          "Response": "Confirm/edit list",
+          "Options / scale": "Add / edit / remove",
+          "How used": "Candidate-confirmed inventory"
+        },
+        {
+          "ID": "TQ-PRO-02",
+          "Question": "For each selected skill, what is your current level?",
+          "Response": "Level per item",
+          "Options / scale": "0 no evidence \u2013 4 complex/guide others",
+          "How used": "Provisional capability level"
+        },
+        {
+          "ID": "TQ-PRO-03",
+          "Question": "For each selected skill, when did you last use it?",
+          "Response": "Date/year per item",
+          "Options / scale": "Year / current",
+          "How used": "Recency"
+        },
+        {
+          "ID": "TQ-PRO-04",
+          "Question": "What evidence best supports each important skill?",
+          "Response": "Evidence link/example",
+          "Options / scale": "Employment / project / course / portfolio / work sample / other",
+          "How used": "Evidence quality"
+        },
+        {
+          "ID": "TQ-PRO-05",
+          "Question": "Review the tasks extracted from your CV. Which tasks have you actually performed?",
+          "Response": "Confirm/edit list",
+          "Options / scale": "Add / edit / remove",
+          "How used": "Task inventory"
+        },
+        {
+          "ID": "TQ-PRO-06",
+          "Question": "For each task, how often and with how much independence did you perform it?",
+          "Response": "Two scales per item",
+          "Options / scale": "Exposure 0\u20133; autonomy 0\u20133",
+          "How used": "Task match"
+        },
+        {
+          "ID": "TQ-PRO-07",
+          "Question": "Choose up to three examples that best show what you can contribute to an employer.",
+          "Response": "Select + describe",
+          "Options / scale": "Project, work, thesis, volunteering",
+          "How used": "Evidence-backed assets"
+        },
+        {
+          "ID": "TQ-PRO-08",
+          "Question": "For each example, what was the situation, your personal contribution and the result?",
+          "Response": "Structured text",
+          "Options / scale": "Situation / action / result",
+          "How used": "Behavioural evidence"
+        },
+        {
+          "ID": "TQ-PRO-09",
+          "Question": "Which professional claims in your profile should not be shared with employers without asking you again?",
+          "Response": "Sharing controls",
+          "Options / scale": "Per item",
+          "How used": "Privacy/shareability"
+        }
+      ]
+    }
+  ],
+  "structured_interview": [
+    {
+      "ID": "INT-01",
+      "Area": "Career direction",
+      "Core question": "What would make your next role a meaningful step rather than simply a job?",
+      "Purpose": "Clarify direction and trade-offs"
+    },
+    {
+      "ID": "INT-02",
+      "Area": "Career direction",
+      "Core question": "Which part of your preferred role do you understand least today?",
+      "Purpose": "Test realism and development need"
+    },
+    {
+      "ID": "INT-03",
+      "Area": "Capability",
+      "Core question": "Choose one capability you rated highly. Walk me through the most difficult example where you used it.",
+      "Purpose": "Verify level and complexity"
+    },
+    {
+      "ID": "INT-04",
+      "Area": "Capability",
+      "Core question": "What part did you personally do, and what was done by others?",
+      "Purpose": "Separate individual contribution"
+    },
+    {
+      "ID": "INT-05",
+      "Area": "Capability",
+      "Core question": "What would someone need to know before trusting you to do this independently?",
+      "Purpose": "Self-awareness and limits"
+    },
+    {
+      "ID": "INT-06",
+      "Area": "Task",
+      "Core question": "Tell me about a task you initially did with support and later handled independently.",
+      "Purpose": "Learning and autonomy evidence"
+    },
+    {
+      "ID": "INT-07",
+      "Area": "Task",
+      "Core question": "Describe a time the available information was incomplete. What did you do first?",
+      "Purpose": "Problem structuring"
+    },
+    {
+      "ID": "INT-08",
+      "Area": "Task",
+      "Core question": "Tell me about a recommendation you communicated to someone without your technical background.",
+      "Purpose": "Communication evidence"
+    },
+    {
+      "ID": "INT-09",
+      "Area": "Teamwork",
+      "Core question": "Tell me about a team commitment that became at risk. How did you respond?",
+      "Purpose": "Coordination and ownership"
+    },
+    {
+      "ID": "INT-10",
+      "Area": "Teamwork",
+      "Core question": "Describe a disagreement where you changed your own position.",
+      "Purpose": "Listening and feedback"
+    },
+    {
+      "ID": "INT-11",
+      "Area": "Teamwork",
+      "Core question": "Describe a disagreement where you did not change your position. How did you communicate it?",
+      "Purpose": "Constructive challenge"
+    },
+    {
+      "ID": "INT-12",
+      "Area": "Teamwork",
+      "Core question": "When have you waited too long to ask for help?",
+      "Purpose": "Self-awareness and escalation"
+    },
+    {
+      "ID": "INT-13",
+      "Area": "Environment",
+      "Core question": "Tell me about an unclear assignment. What level of ambiguity was useful, and what became unproductive?",
+      "Purpose": "Validate ambiguity range"
+    },
+    {
+      "ID": "INT-14",
+      "Area": "Environment",
+      "Core question": "How do you react when priorities change after you have already invested significant effort?",
+      "Purpose": "Validate pace/change preference"
+    },
+    {
+      "ID": "INT-15",
+      "Area": "Manager",
+      "Core question": "Describe the best support you received from a manager, teacher or supervisor.",
+      "Purpose": "Manager involvement preference"
+    },
+    {
+      "ID": "INT-16",
+      "Area": "Motivation",
+      "Core question": "What made your most engaging project engaging after the initial excitement passed?",
+      "Purpose": "Sustained motivation"
+    },
+    {
+      "ID": "INT-17",
+      "Area": "Motivation",
+      "Core question": "What would you be willing to compromise on in your first role, and what would you not compromise on?",
+      "Purpose": "Priority boundaries"
+    },
+    {
+      "ID": "INT-18",
+      "Area": "Reflection",
+      "Core question": "Which part of your self-profile do you think might be wrong or incomplete?",
+      "Purpose": "Reduce overconfidence"
+    },
+    {
+      "ID": "INT-19",
+      "Area": "Evidence",
+      "Core question": "Which claim should we treat cautiously until we collect more evidence?",
+      "Purpose": "Evidence honesty"
+    },
+    {
+      "ID": "INT-20",
+      "Area": "Close",
+      "Core question": "What do you want SHEXON to explain to a company that your CV does not show well?",
+      "Purpose": "Candidate voice"
+    }
+  ]
+}

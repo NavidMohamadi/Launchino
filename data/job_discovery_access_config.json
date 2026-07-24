@@ -1,0 +1,30 @@
+{
+  "version": "2.1",
+  "entitlement": {
+    "active_null_expiry_allowed": true,
+    "past_expiry_overrides_active_status": true,
+    "retain_recommendations_on_expiry": true,
+    "hide_recommendations_while_inactive": true,
+    "restore_after_renewal": true,
+    "restored_recommendation_max_unseen_days": 7
+  },
+  "preliminary_campaign": {
+    "enabled": true,
+    "candidate_opt_in_required": true,
+    "eligible_profile_statuses": ["complete", "active", "ready"],
+    "lookback_days": 14,
+    "max_vacancies": 50,
+    "max_signals_per_talent": 3,
+    "minimum_score_percent": 70,
+    "minimum_coverage_percent": 70,
+    "ai_explanation_allowed": false,
+    "vacancy_details_visible": false
+  },
+  "subscription_backfill": {
+    "lookback_days": 14,
+    "max_vacancies": 50,
+    "max_recommendations": 10,
+    "max_immediate_ai_explanations": 5,
+    "default_order": ["result_lane", "match_score", "coverage", "freshness"]
+  }
+}

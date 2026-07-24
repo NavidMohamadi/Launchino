@@ -1,0 +1,411 @@
+{
+  "version": "2.0.0",
+  "principle": "The Role Fit Profile is completed once and reused across candidates. All twelve motivation supplies are collected once; candidate-specific activation happens later.",
+  "motivation_matrix": [
+    {
+      "element_id": "MOT-LEARN",
+      "label": "Learning",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-OWNERSHIP",
+      "label": "Ownership",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-STABILITY",
+      "label": "Stability",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-PROGRESSION",
+      "label": "Progression",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-IMPACT",
+      "label": "Visible impact",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-TECH-DEPTH",
+      "label": "Technical depth",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-VARIETY",
+      "label": "Variety",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-AUTONOMY",
+      "label": "Autonomy",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-RECOGNITION",
+      "label": "Recognition",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-FINANCIAL",
+      "label": "Financial reward",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-LEADERSHIP",
+      "label": "Leadership opportunity",
+      "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-COLLABORATION",
+      "label": "Collaboration value",
+      "scale_id": "motivation_supply_1_5"
+    }
+  ],
+  "sections": [
+    {
+      "section_id": "practical",
+      "title": "Vacancy basics and practical compatibility",
+      "questions": [
+        {
+          "ID": "VQ-PRACT-01",
+          "Question": "In which country will the employee be formally employed?",
+          "Response": "Country",
+          "Options / scale": "Country list",
+          "How used": "Role practical value"
+        },
+        {
+          "ID": "VQ-PRACT-02",
+          "Question": "Must the candidate already be located in that country?",
+          "Response": "Single choice",
+          "Options / scale": "Required / Preferred / Open / Not decided",
+          "How used": "Country comparison"
+        },
+        {
+          "ID": "VQ-PRACT-03",
+          "Question": "Can the company sponsor a candidate who requires sponsorship?",
+          "Response": "Single choice",
+          "Options / scale": "Available / Conditional / Unavailable / Not confirmed",
+          "How used": "Sponsorship comparison"
+        },
+        {
+          "ID": "VQ-PRACT-04",
+          "Question": "What is the preferred and latest acceptable start date?",
+          "Response": "Date range",
+          "Options / scale": "Dates / Flexible / Not decided",
+          "How used": "Availability comparison"
+        },
+        {
+          "ID": "VQ-PRACT-05",
+          "Question": "Which working languages are genuinely necessary to perform the role, and why?",
+          "Response": "Language + reason",
+          "Options / scale": "Required / Preferred",
+          "How used": "Job-relevant language only"
+        },
+        {
+          "ID": "VQ-PRACT-06",
+          "Question": "What is the actual work arrangement?",
+          "Response": "Single choice",
+          "Options / scale": "On-site / Hybrid / Remote / Flexible",
+          "How used": "Work-mode comparison"
+        },
+        {
+          "ID": "VQ-PRACT-07",
+          "Question": "What contract type and weekly hours apply?",
+          "Response": "Structured",
+          "Options / scale": "Internship / Full-time / Other + hours",
+          "How used": "Contract comparison"
+        }
+      ]
+    },
+    {
+      "section_id": "role",
+      "title": "Role outcomes, tasks and capabilities",
+      "questions": [
+        {
+          "ID": "VQ-ROLE-01",
+          "Question": "What must this person have achieved after six months for you to call the hire successful?",
+          "Response": "Open text",
+          "Options / scale": "Up to 3 outcomes",
+          "How used": "Role purpose"
+        },
+        {
+          "ID": "VQ-ROLE-02",
+          "Question": "What must they have achieved after twelve months?",
+          "Response": "Open text",
+          "Options / scale": "Up to 3 outcomes",
+          "How used": "Role purpose"
+        },
+        {
+          "ID": "VQ-TASK-01",
+          "Question": "List the eight most important recurring tasks.",
+          "Response": "Repeatable list",
+          "Options / scale": "Task + frequency + autonomy",
+          "How used": "Task profile"
+        },
+        {
+          "ID": "VQ-TASK-02",
+          "Question": "Which tasks occupy the largest share of a normal month?",
+          "Response": "Allocate 100%",
+          "Options / scale": "Task percentages",
+          "How used": "Actual frequency"
+        },
+        {
+          "ID": "VQ-TASK-03",
+          "Question": "Which tasks are less attractive but unavoidable?",
+          "Response": "Select + explain",
+          "Options / scale": "From task list",
+          "How used": "Candidate reality check"
+        },
+        {
+          "ID": "VQ-TASK-04",
+          "Question": "Which tasks require independent ownership from day one?",
+          "Response": "Select",
+          "Options / scale": "From task list",
+          "How used": "Autonomy requirement"
+        },
+        {
+          "ID": "VQ-CAP-01",
+          "Question": "For each capability, what level is needed at the start?",
+          "Response": "Level per item",
+          "Options / scale": "0\u20134 capability scale",
+          "How used": "Candidate comparison"
+        },
+        {
+          "ID": "VQ-CAP-02",
+          "Question": "Which capabilities can be learned after joining, and within what time?",
+          "Response": "Per-item choice",
+          "Options / scale": "Not trainable / 1 month / 3 months / 6 months / longer",
+          "How used": "Trainability"
+        },
+        {
+          "ID": "VQ-CAP-03",
+          "Question": "What evidence would convince you that a candidate has each important capability?",
+          "Response": "Open per item",
+          "Options / scale": "Project / work example / test / certification / interview",
+          "How used": "Evidence expectation"
+        },
+        {
+          "ID": "VQ-CAP-04",
+          "Question": "Which years-of-experience requirements are genuine proxies for capability, and which could be replaced by evidence?",
+          "Response": "Review",
+          "Options / scale": "Per requirement",
+          "How used": "Challenge inflated requirements"
+        }
+      ]
+    },
+    {
+      "section_id": "teamwork",
+      "title": "Teamwork and collaboration demands",
+      "questions": [
+        {
+          "ID": "VQ-TEAM-01",
+          "Question": "Approximately what proportion of the role involves direct collaboration?",
+          "Response": "Percentage band",
+          "Options / scale": "0\u201320 / 21\u201340 / 41\u201360 / 61\u201380 / 81\u2013100",
+          "How used": "Collaboration intensity"
+        },
+        {
+          "ID": "VQ-TEAM-02",
+          "Question": "How dependent is this person\u2019s output on work delivered by others?",
+          "Response": "Scale",
+          "Options / scale": "1 mostly independent \u2013 5 highly interdependent",
+          "How used": "Task interdependence"
+        },
+        {
+          "ID": "VQ-TEAM-03",
+          "Question": "Which people or functions must the person coordinate with regularly?",
+          "Response": "Multiple + frequency",
+          "Options / scale": "Team / manager / customers / suppliers / other departments",
+          "How used": "Coordination complexity"
+        },
+        {
+          "ID": "VQ-TEAM-04",
+          "Question": "How often do competing priorities or disagreements need to be resolved?",
+          "Response": "Frequency",
+          "Options / scale": "Rarely / monthly / weekly / several times weekly / daily",
+          "How used": "Conflict demand"
+        },
+        {
+          "ID": "VQ-TEAM-05",
+          "Question": "Does the role require influencing people without formal authority? Give an example.",
+          "Response": "Choice + example",
+          "Options / scale": "No / Sometimes / Frequently",
+          "How used": "Influence demand"
+        },
+        {
+          "ID": "VQ-TEAM-06",
+          "Question": "Select and rank up to three primary teamwork behaviours required for success; add a justified fourth only when genuinely critical.",
+          "Response": "Rank up to 3 + optional critical exception",
+          "Options / scale": "Communication / coordination / conflict / help / feedback / shared ownership",
+          "How used": "Activates vacancy-selected teamwork elements"
+        },
+        {
+          "ID": "VQ-TEAM-06B",
+          "Question": "For each selected teamwork behaviour, what level is required and what would good behaviour look like in this team?",
+          "Response": "Level + example per selected behaviour",
+          "Options / scale": "0 no requirement \u2013 4 complex/role-model level",
+          "How used": "Requirement comparison and evidence expectation"
+        },
+        {
+          "ID": "VQ-TEAM-07",
+          "Question": "Describe one teamwork pattern that caused someone to struggle in this role.",
+          "Response": "Open text",
+          "Options / scale": "Behavioural description",
+          "How used": "Reality check"
+        }
+      ]
+    },
+    {
+      "section_id": "environment",
+      "title": "Work environment, manager and opportunity",
+      "questions": [
+        {
+          "ID": "VQ-ENV-01",
+          "Question": "How clearly are goals and responsibilities defined in practice?",
+          "Response": "Scale + example",
+          "Options / scale": "1 very open \u2013 5 highly defined",
+          "How used": "Structure value",
+          "element_id": "ENV-STRUCTURE",
+          "scale_id": "env_structure_1_5"
+        },
+        {
+          "ID": "VQ-ENV-02",
+          "Question": "How often do priorities materially change?",
+          "Response": "Frequency",
+          "Options / scale": "Rarely / monthly / weekly / several times weekly / daily",
+          "How used": "Change value",
+          "element_id": "ENV-PRIORITY-CHANGE",
+          "scale_id": "env_priority_change_1_5"
+        },
+        {
+          "ID": "VQ-ENV-03",
+          "Question": "How much freedom does the employee have to choose the method?",
+          "Response": "Scale",
+          "Options / scale": "1 method defined \u2013 5 full method autonomy",
+          "How used": "Autonomy value",
+          "element_id": "ENV-METHOD-AUTONOMY",
+          "scale_id": "env_method_autonomy_1_5"
+        },
+        {
+          "ID": "VQ-ENV-04",
+          "Question": "How often will the manager check in during the first three months?",
+          "Response": "Frequency",
+          "Options / scale": "Daily / several times weekly / weekly / biweekly / monthly",
+          "How used": "Manager involvement",
+          "element_id": "ENV-MANAGER-INVOLVEMENT",
+          "scale_id": "env_manager_involvement_1_5"
+        },
+        {
+          "ID": "VQ-ENV-05",
+          "Question": "How often does the manager normally provide feedback after onboarding?",
+          "Response": "Frequency",
+          "Options / scale": "Weekly / biweekly / monthly / quarterly / when needed",
+          "How used": "Feedback value",
+          "element_id": "ENV-FEEDBACK",
+          "scale_id": "env_feedback_1_5"
+        },
+        {
+          "ID": "VQ-ENV-06",
+          "Question": "How mature are the team\u2019s processes?",
+          "Response": "Scale + example",
+          "Options / scale": "Established / mostly established / mixed / mostly being built / none established",
+          "How used": "Process maturity",
+          "element_id": "ENV-PROCESS-MATURITY",
+          "scale_id": "env_process_maturity_1_5"
+        },
+        {
+          "ID": "VQ-ENV-07",
+          "Question": "How reactive is the role?",
+          "Response": "Scale + example",
+          "Options / scale": "Predictable / mostly planned / mixed / fast-changing / highly reactive",
+          "How used": "Pace value",
+          "element_id": "ENV-REACTIVITY",
+          "scale_id": "env_reactivity_1_5"
+        },
+        {
+          "ID": "VQ-ENV-08",
+          "Question": "How broad is the responsibility?",
+          "Response": "Scale",
+          "Options / scale": "Deep specialist / specialist with variety / balanced / broad generalist",
+          "How used": "Role breadth",
+          "element_id": "ENV-ROLE-BREADTH",
+          "scale_id": "env_role_breadth_1_5"
+        },
+        {
+          "ID": "VQ-ENV-09",
+          "Question": "How much direct stakeholder exposure is typical?",
+          "Response": "Scale",
+          "Options / scale": "Limited / occasional / regular / substantial / most of role",
+          "How used": "Stakeholder intensity",
+          "element_id": "ENV-STAKEHOLDER",
+          "scale_id": "env_stakeholder_1_5"
+        },
+        {
+          "ID": "VQ-MOT-01",
+          "Question": "Rate how much this role realistically provides for each of the twelve motivation factors.",
+          "Response": "One 1\u20135 rating for every factor; not_specified only when genuinely unresolved",
+          "Options / scale": "1 very limited \u2013 5 very strong",
+          "How used": "Reusable vacancy motivation-supply profile for all candidates"
+        },
+        {
+          "ID": "VQ-MOT-02",
+          "Question": "For ratings of 1, 2, 4 or 5, add a short factual example or role reality.",
+          "Response": "Short explanation where material",
+          "Options / scale": "Concrete role evidence",
+          "How used": "Validation and candidate conversation"
+        },
+        {
+          "ID": "VQ-MOT-03",
+          "Question": "What does this role not provide, despite what a candidate might assume from the title or advertisement?",
+          "Response": "Open text",
+          "Options / scale": "Role reality",
+          "How used": "Prevent overpromising and support candidate confirmation"
+        }
+      ]
+    }
+  ],
+  "weighting_process": [
+    {
+      "Step": "1",
+      "Company action": "Activate only the categories and elements relevant to this vacancy.",
+      "Control": "Do not score irrelevant universal fields."
+    },
+    {
+      "Step": "2",
+      "Company action": "Allocate 100 points across the activated categories.",
+      "Control": "One Match Configuration is the single source of truth."
+    },
+    {
+      "Step": "3",
+      "Company action": "Rate each active element from 1 to 5 for importance.",
+      "Control": "SHEXON asks for job-relevant reasoning."
+    },
+    {
+      "Step": "4",
+      "Company action": "Classify each item as critical, important, trainable, preferred or information only.",
+      "Control": "Critical does not mean automatic deletion."
+    },
+    {
+      "Step": "5",
+      "Company action": "For trainable items, state the time window and support available.",
+      "Control": "Trainability never adds automatic score points."
+    },
+    {
+      "Step": "6",
+      "Company action": "Write a one-sentence rationale for any category above 30%.",
+      "Control": "Prevents unexplained dominance."
+    },
+    {
+      "Step": "7",
+      "Company action": "Run a sensitivity check.",
+      "Control": "Show whether small weight changes radically reorder candidates."
+    },
+    {
+      "Step": "8",
+      "Company action": "Approve and freeze the Match Configuration for the run.",
+      "Control": "Any later change creates a new version and audit record."
+    }
+  ]
+}

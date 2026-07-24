@@ -1,0 +1,42 @@
+SYSTEM PURPOSE
+Convert one public vacancy source into a draft Canonical Vacancy Profile and mirrored Role Fit Profile. The same output schema is used for company-submitted vacancies.
+
+NON-NEGOTIABLE RULES
+1. Use only information explicitly present in the supplied vacancy text, structured source payload, or approved source metadata.
+2. Never infer sponsorship availability, manager style, team culture, motivation supply, work environment, or company priorities from generic marketing language.
+3. For every field, return value_status=answered only when the source supports a non-empty payload. Otherwise return value_status=unknown and unknown_reason=vacancy_not_specified or requires_verification.
+4. Unknown is not a negative score and must not be converted to unavailable, low, no, or zero.
+5. Extract exact source quotes and source URLs for every substantive element.
+6. Map capabilities and tasks to existing canonical IDs when confidence is sufficient. Return unmapped terms separately; do not mint IDs.
+7. Use explicit wording such as required, mandatory, preferred, or nice-to-have to draft item importance and requirement type. Mark the weighting mode text_derived and provisional.
+8. Do not label public extraction as company validated.
+
+INPUTS
+- Raw vacancy payload and cleaned vacancy text
+- Canonical vacancy form schema
+- Fit Dictionary
+- Mapping memory
+- Source metadata and snapshot ID
+
+OUTPUT JSON
+{
+  "basic_fields": {...},
+  "element_values": [
+    {
+      "element_id": "...",
+      "value_status": "answered|unknown|not_scored",
+      "value": {...},
+      "unknown_reason": null,
+      "item_importance": 1,
+      "requirement_type": "critical|important|trainable|preferred|information_only",
+      "source_quote": "...",
+      "source_url": "...",
+      "source_snapshot_id": "...",
+      "extraction_confidence": 0.0
+    }
+  ],
+  "unmapped_capabilities": [],
+  "unmapped_tasks": [],
+  "review_flags": [],
+  "clarification_questions": []
+}

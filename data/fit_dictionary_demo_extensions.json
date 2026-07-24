@@ -1,0 +1,77 @@
+[
+  {
+    "element_id": "CAP-SQL",
+    "category": "CAP",
+    "label": "SQL",
+    "definition": "Ability to query and manipulate relational data using SQL.",
+    "candidate_question": "Describe how you have used SQL, your autonomy, and one concrete output.",
+    "vacancy_question": "What SQL level is required at the start, and what evidence would demonstrate it?",
+    "candidate_value_schema": {
+      "level": 0,
+      "autonomy": "string",
+      "evidence": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "evidence_expected": "string"
+    },
+    "evidence_rule": "CV/project evidence plus candidate confirmation or work sample where used for a decision.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "CAP-FORECASTING",
+    "category": "CAP",
+    "label": "Forecasting",
+    "definition": "Ability to select, apply, and interpret forecasting approaches.",
+    "candidate_question": "Describe a forecasting problem you worked on, your method, and your level of independence.",
+    "vacancy_question": "What forecasting capability is required and when must it be usable independently?",
+    "candidate_value_schema": {
+      "level": 0,
+      "methods": [
+        "string"
+      ],
+      "evidence": "string"
+    },
+    "vacancy_value_schema": {
+      "required_level": 0,
+      "time_to_need": "string"
+    },
+    "evidence_rule": "Project, work example, or structured exercise.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "TASK-ANALYSE-OPERATIONAL-DATA",
+    "category": "TASK",
+    "label": "Analyse operational data",
+    "definition": "Analyse operational data to identify patterns, issues, or recommendations.",
+    "candidate_question": "Describe when you analysed operational data, what you did, and what changed.",
+    "vacancy_question": "How frequently and independently must the employee analyse operational data?",
+    "candidate_value_schema": {
+      "exposure": 0,
+      "autonomy": 0,
+      "evidence": "string"
+    },
+    "vacancy_value_schema": {
+      "required_exposure": 0,
+      "required_autonomy": 0,
+      "frequency": "string"
+    },
+    "evidence_rule": "Concrete example, project output, or structured work sample.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  }
+]

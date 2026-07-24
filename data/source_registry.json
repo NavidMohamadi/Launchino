@@ -1,0 +1,123 @@
+[
+  {
+    "source_id": "company_direct_form",
+    "display_name": "SHEXON company vacancy intake",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["form", "webhook", "csv"],
+    "robots_policy": "manual_only",
+    "max_requests_per_minute": 60,
+    "partner_approval_required": false,
+    "notes": "Direct employer input. The same canonical vacancy profile is used as for public sources."
+  },
+  {
+    "source_id": "greenhouse_public_api",
+    "display_name": "Greenhouse Job Board API",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["api"],
+    "robots_policy": "not_applicable_api",
+    "max_requests_per_minute": 30,
+    "partner_approval_required": false,
+    "notes": "Use public board endpoints for published jobs only."
+  },
+  {
+    "source_id": "lever_public_api",
+    "display_name": "Lever Postings API",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["api"],
+    "robots_policy": "not_applicable_api",
+    "max_requests_per_minute": 30,
+    "partner_approval_required": false,
+    "notes": "Use the public Postings API and link candidates to the employer-hosted application page."
+  },
+  {
+    "source_id": "ashby_public_api",
+    "display_name": "Ashby public Job Postings API",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["api"],
+    "robots_policy": "not_applicable_api",
+    "max_requests_per_minute": 30,
+    "partner_approval_required": false,
+    "notes": "Use listed public job postings only."
+  },
+  {
+    "source_id": "company_page_jsonld",
+    "display_name": "Company career page JobPosting JSON-LD",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["json_ld", "manual_url"],
+    "robots_policy": "respect",
+    "max_requests_per_minute": 10,
+    "partner_approval_required": false,
+    "notes": "Fetch only company-owned career pages that have passed source review; prefer structured JobPosting data."
+  },
+  {
+    "source_id": "generic_company_html",
+    "display_name": "Generic company career-page HTML",
+    "enabled": false,
+    "terms_review_status": "needs_review",
+    "allowed_methods": ["html", "manual_url"],
+    "robots_policy": "respect",
+    "max_requests_per_minute": 5,
+    "partner_approval_required": false,
+    "notes": "Disabled by default. Enable per domain only after terms, robots, load, and privacy review."
+  },
+  {
+    "source_id": "avular_careers_html",
+    "display_name": "Avular careers page (avular.com/careers), narrow site-specific parser",
+    "enabled": true,
+    "terms_review_status": "approved",
+    "allowed_methods": ["html"],
+    "robots_policy": "respect",
+    "max_requests_per_minute": 5,
+    "partner_approval_required": false,
+    "notes": "robots.txt is fully permissive (Allow: /); no Terms and Conditions, Privacy Policy, or EULA found on avular.com addresses automated access to public career pages -- reviewed 2026-07-23. Parser is src/job_sources/avular.py, scoped only to avular.com's current page structure; see PROJECT_NOTES.md for its no-stable-contract caveat. Approved 2026-07-23 after human review of the above findings."
+  },
+  {
+    "source_id": "linkedin_direct",
+    "display_name": "LinkedIn direct page access",
+    "enabled": false,
+    "terms_review_status": "prohibited",
+    "allowed_methods": [],
+    "robots_policy": "manual_only",
+    "max_requests_per_minute": 1,
+    "partner_approval_required": true,
+    "notes": "Do not scrape or automate LinkedIn job pages. Use an approved LinkedIn partner/API route only if SHEXON obtains access."
+  },
+  {
+    "source_id": "indeed_direct",
+    "display_name": "Indeed direct page access",
+    "enabled": false,
+    "terms_review_status": "prohibited",
+    "allowed_methods": [],
+    "robots_policy": "manual_only",
+    "max_requests_per_minute": 1,
+    "partner_approval_required": true,
+    "notes": "Do not scrape Indeed. Use approved Indeed partner tooling or employer-provided feeds only."
+  },
+  {
+    "source_id": "linkedin_partner",
+    "display_name": "LinkedIn approved partner integration",
+    "enabled": false,
+    "terms_review_status": "partner_only",
+    "allowed_methods": ["api"],
+    "robots_policy": "not_applicable_api",
+    "max_requests_per_minute": 10,
+    "partner_approval_required": true,
+    "notes": "Placeholder for a future approved LinkedIn Talent Solutions integration."
+  },
+  {
+    "source_id": "indeed_partner",
+    "display_name": "Indeed approved partner integration",
+    "enabled": false,
+    "terms_review_status": "partner_only",
+    "allowed_methods": ["api"],
+    "robots_policy": "not_applicable_api",
+    "max_requests_per_minute": 10,
+    "partner_approval_required": true,
+    "notes": "Placeholder for future Indeed partner access."
+  }
+]

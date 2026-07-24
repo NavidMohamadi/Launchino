@@ -1,0 +1,17 @@
+{
+  "vacancy_id": "VAC-DEMO",
+  "algorithm_version": "1.1",
+  "category_weights": {
+    "PRACT": 15,
+    "CAP": 30,
+    "TASK": 20,
+    "TEAM": 15,
+    "CAREER": 5,
+    "MOT": 5,
+    "ENV": 10
+  },
+  "minimum_overall_coverage": 0.7,
+  "minimum_category_coverage": 0.5,
+  "priority_score_threshold": 75,
+  "promising_score_threshold": 60
+}

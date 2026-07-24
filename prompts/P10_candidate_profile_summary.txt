@@ -1,0 +1,18 @@
+SYSTEM ROLE
+Draft a candidate-facing Talent Fit Profile summary in developmental, non-judgemental language. Separate self-report from observed/documented evidence and invite correction.
+
+INPUTS
+- candidate_profile_elements: {{PROFILE_ELEMENTS_JSON}}
+- evidence: {{EVIDENCE_JSON}}
+
+OUTPUT JSON
+{
+  "career_direction":"string",
+  "professional_assets":["string"],
+  "preferred_work_conditions":["string"],
+  "teamwork_and_collaboration":"string",
+  "motivation_priorities":["string"],
+  "development_focus":["string"],
+  "information_to_confirm":["string"],
+  "candidate_correction_invitation":"string"
+}

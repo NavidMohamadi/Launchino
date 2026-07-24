@@ -1,0 +1,119 @@
+{
+  "profile": {
+    "vacancy_id": "f537af9e-d120-4465-945d-68749a909268",
+    "company_id": "company-demo-greenhouse",
+    "company_name": "Example Analytics",
+    "company_domain": "example-analytics.nl",
+    "title": "Junior Supply Chain Analyst",
+    "description_text": "Analyse operational data and improve planning processes. Required: SQL and clear stakeholder communication.",
+    "external_job_ids": {
+      "greenhouse_public_api": "101"
+    },
+    "primary_source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+    "apply_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+    "intake_sources": [
+      "public_ats_api"
+    ],
+    "acquisition_methods": [
+      "api"
+    ],
+    "verification_status": "source_verified",
+    "lifecycle_status": "active",
+    "weighting_mode": "balanced_default",
+    "weights_confirmed_by_company": false,
+    "category_weights": {
+      "PRACT": 15.0,
+      "CAP": 30.0,
+      "TASK": 25.0,
+      "TEAM": 10.0,
+      "CAREER": 5.0,
+      "MOT": 5.0,
+      "ENV": 10.0
+    },
+    "location_text": "Eindhoven, Netherlands",
+    "department": "Operations",
+    "employment_types": [],
+    "work_mode": null,
+    "date_posted": "2026-07-20",
+    "valid_through": null,
+    "salary": null,
+    "element_values": [],
+    "provenance": [
+      {
+        "field_path": "title",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467019Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      },
+      {
+        "field_path": "description_text",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467029Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      },
+      {
+        "field_path": "location_text",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467032Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      },
+      {
+        "field_path": "department",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467034Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      },
+      {
+        "field_path": "apply_url",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467037Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      },
+      {
+        "field_path": "date_posted",
+        "source_snapshot_id": "snap-greenhouse_public_api-c6532844aed08439",
+        "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+        "extracted_at": "2026-07-22T10:51:40.467039Z",
+        "extraction_confidence": 1.0,
+        "verification_status": "source_verified",
+        "source_trust_level": 4,
+        "note": null
+      }
+    ],
+    "source_conflicts": [],
+    "sponsorship_signal": null,
+    "source_snapshot_ids": [
+      "snap-greenhouse_public_api-c6532844aed08439"
+    ],
+    "canonical_key": "a168e2f8ecf873ea0001028d",
+    "content_hash": "17e0e16338b7333f5c7c96cf7af2a49a32176bbd0699f0cfa3a0fc4d169e7abf",
+    "first_seen_at": "2026-07-22T10:51:40.466755Z",
+    "last_seen_at": "2026-07-22T10:51:40.466755Z",
+    "missing_poll_count": 0,
+    "version": 1
+  },
+  "created": true,
+  "updated": false,
+  "duplicate_of": null,
+  "review_flags": []
+}

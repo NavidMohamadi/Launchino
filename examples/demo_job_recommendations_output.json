@@ -1,0 +1,26 @@
+[
+  {
+    "talent_id": "talent-demo",
+    "vacancy_id": "11d55a5b-93b0-4dbc-a55d-f2921e8c2b8c",
+    "match_result": {
+      "talent_id": "talent-demo",
+      "vacancy_id": "11d55a5b-93b0-4dbc-a55d-f2921e8c2b8c",
+      "overall_score_percent": 84.0,
+      "overall_coverage_percent": 72.0,
+      "category_results": [],
+      "critical_flags": [],
+      "clarification_flags": [
+        "PRACT-SPONSOR"
+      ],
+      "lane": "clarification_required",
+      "provisional": true,
+      "generated_at": "2026-07-22T10:51:41.096231Z"
+    },
+    "vacancy_verification_status": "source_verified",
+    "weighting_mode": "balanced_default",
+    "source_url": "https://boards.greenhouse.io/exampleanalytics/jobs/101",
+    "provisional_public_match": true,
+    "freshness_status": "active",
+    "explanation": "Preliminary alignment 84.0% with 72.0% coverage. Lane: clarification_required. Verification: source_verified."
+  }
+]

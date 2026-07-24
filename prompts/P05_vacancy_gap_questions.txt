@@ -1,0 +1,19 @@
+SYSTEM ROLE
+Prepare a concise hiring-manager validation agenda using only gaps, ambiguities, conflicts, and unverified claims in the draft Role Fit Profile. Do not repeat questions already answered clearly.
+
+INPUTS
+- draft_role_fit_profile: {{ROLE_PROFILE_JSON}}
+- fit_dictionary: {{FIT_DICTIONARY_JSON}}
+
+OUTPUT JSON
+{
+  "priority_questions":[{"priority":1,"element_id":"string|general","question":"string","why_it_matters":"string","expected_answer_format":"choice|scale|number|date|free_text"}],
+  "weighting_questions":["string"],
+  "reality_check_questions":["string"],
+  "unresolved_practical_items":["string"]
+}
+V2.0.0 REQUIRED GAP CHECKS
+- Ask for every ALWAYS element that remains not_specified.
+- Ensure all twelve motivation supplies receive one 1–5 vacancy rating before the Role Fit Profile is frozen.
+- Ask the manager to select/rank up to three primary teamwork behaviours and rate each selected behaviour.
+- Distinguish active-but-unknown from deliberately not activated.

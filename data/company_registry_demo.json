@@ -1,0 +1,48 @@
+{
+  "version": "2.0.0",
+  "companies": [
+    {
+      "company_id": "company-demo-greenhouse",
+      "legal_name": "Example Analytics B.V.",
+      "display_name": "Example Analytics",
+      "website_domain": "example-analytics.nl",
+      "career_page_url": "https://boards.greenhouse.io/exampleanalytics",
+      "country": "NL",
+      "kvk_number": "12345678",
+      "active": true
+    },
+    {
+      "company_id": "company-demo-lever",
+      "legal_name": "Example Robotics B.V.",
+      "display_name": "Example Robotics",
+      "website_domain": "example-robotics.nl",
+      "career_page_url": "https://jobs.lever.co/examplerobotics",
+      "country": "NL",
+      "active": true
+    }
+  ],
+  "sources": [
+    {
+      "source_record_id": "src-example-greenhouse",
+      "company_id": "company-demo-greenhouse",
+      "source_id": "greenhouse_public_api",
+      "intake_source": "public_ats_api",
+      "acquisition_method": "api",
+      "board_identifier": "exampleanalytics",
+      "listing_url": "https://boards.greenhouse.io/exampleanalytics",
+      "enabled": true,
+      "polling_interval_minutes": 1440
+    },
+    {
+      "source_record_id": "src-example-lever",
+      "company_id": "company-demo-lever",
+      "source_id": "lever_public_api",
+      "intake_source": "public_ats_api",
+      "acquisition_method": "api",
+      "board_identifier": "examplerobotics",
+      "listing_url": "https://jobs.lever.co/examplerobotics",
+      "enabled": true,
+      "polling_interval_minutes": 1440
+    }
+  ]
+}

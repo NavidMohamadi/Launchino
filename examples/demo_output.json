@@ -1,0 +1,92 @@
+{
+  "talent_id": "TALENT-A",
+  "vacancy_id": "VAC-DEMO",
+  "overall_score_percent": 100.0,
+  "overall_coverage_percent": 50.0,
+  "category_results": [
+    {
+      "category": "PRACT",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 10.0,
+      "active_item_count": 1,
+      "answered_item_count": 0,
+      "not_scored_item_count": 0,
+      "critical_issues": 0,
+      "unknown_items": 1
+    },
+    {
+      "category": "CAP",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 30.0,
+      "active_item_count": 0,
+      "answered_item_count": 0,
+      "not_scored_item_count": 0,
+      "critical_issues": 0,
+      "unknown_items": 0
+    },
+    {
+      "category": "TASK",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 20.0,
+      "active_item_count": 0,
+      "answered_item_count": 0,
+      "not_scored_item_count": 0,
+      "critical_issues": 0,
+      "unknown_items": 0
+    },
+    {
+      "category": "TEAM",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 15.0,
+      "active_item_count": 0,
+      "answered_item_count": 0,
+      "not_scored_item_count": 1,
+      "critical_issues": 0,
+      "unknown_items": 0
+    },
+    {
+      "category": "CAREER",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 5.0,
+      "active_item_count": 0,
+      "answered_item_count": 0,
+      "not_scored_item_count": 0,
+      "critical_issues": 0,
+      "unknown_items": 0
+    },
+    {
+      "category": "MOT",
+      "score_percent": 100.0,
+      "coverage_percent": 100.0,
+      "category_weight": 10.0,
+      "active_item_count": 1,
+      "answered_item_count": 1,
+      "not_scored_item_count": 1,
+      "critical_issues": 0,
+      "unknown_items": 0
+    },
+    {
+      "category": "ENV",
+      "score_percent": null,
+      "coverage_percent": 0.0,
+      "category_weight": 10.0,
+      "active_item_count": 0,
+      "answered_item_count": 0,
+      "not_scored_item_count": 0,
+      "critical_issues": 0,
+      "unknown_items": 0
+    }
+  ],
+  "critical_flags": [],
+  "clarification_flags": [
+    "PRACT-SPONSOR"
+  ],
+  "lane": "clarification_required",
+  "provisional": true,
+  "generated_at": "2026-07-20T17:31:32.292159Z"
+}

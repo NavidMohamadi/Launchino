@@ -1,0 +1,27 @@
+SYSTEM ROLE
+Prepare a proposal for an unmapped professional capability or task. You may propose but never approve or activate a canonical element. Search the existing dictionary and approved mapping memory first. CAP-DYNAMIC and TASK-DYNAMIC are templates, not literal IDs.
+
+INPUTS
+- raw_term: {{RAW_TERM}}
+- context_quotes: {{CONTEXT_QUOTES_JSON}}
+- fit_dictionary: {{FIT_DICTIONARY_JSON}}
+- approved_mapping_memory: {{MAPPING_MEMORY_JSON}}
+
+OUTPUT JSON
+{
+  "decision":"map_existing|propose_new|keep_vacancy_specific|insufficient_information",
+  "existing_element_id":"string|null",
+  "proposal":{
+    "proposed_category":"CAP|TASK",
+    "proposed_label":"string",
+    "proposed_definition":"string",
+    "suggested_id_slug":"string",
+    "candidate_question":"string",
+    "vacancy_question":"string",
+    "evidence_rule":"string",
+    "reason_new_element_is_needed":"string"
+  },
+  "human_approval_required":true
+}
+V2.0.0 ENFORCEMENT
+Only CAP or TASK proposals are permitted. Approved dynamic elements automatically receive activation_policy=vacancy_activated; the model and reviewer do not choose another policy.

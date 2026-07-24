@@ -1,0 +1,22 @@
+[
+  {
+    "template_id": "CAP-DYNAMIC",
+    "category": "CAP",
+    "id_pattern": "CAP-{CANONICAL-SLUG}",
+    "purpose": "Template for a distinct capability, tool, or knowledge item. Never store all capabilities under CAP-DYNAMIC.",
+    "example": "CAP-SQL",
+    "minting_rule": "Search canonical dictionary and approved mapping memory first; human reviewer approves a new ID only when no adequate element exists.",
+    "version": "2.0.0",
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "template_id": "TASK-DYNAMIC",
+    "category": "TASK",
+    "id_pattern": "TASK-{CANONICAL-SLUG}",
+    "purpose": "Template for a distinct task or work activity. Never store all tasks under TASK-DYNAMIC.",
+    "example": "TASK-ANALYSE-OPERATIONAL-DATA",
+    "minting_rule": "Search canonical dictionary and approved mapping memory first; human reviewer approves a new ID only when no adequate element exists.",
+    "version": "2.0.0",
+    "activation_policy": "vacancy_activated"
+  }
+]

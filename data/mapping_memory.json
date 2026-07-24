@@ -1,0 +1,18 @@
+[
+  {
+    "alias": "Structured Query Language",
+    "canonical_element_id": "CAP-SQL",
+    "relationship": "synonym",
+    "approved_by": "example_reviewer",
+    "approved_at": "2026-07-20",
+    "source_note": "Illustrative only"
+  },
+  {
+    "alias": "SQL querying",
+    "canonical_element_id": "CAP-SQL",
+    "relationship": "synonym",
+    "approved_by": "example_reviewer",
+    "approved_at": "2026-07-20",
+    "source_note": "Illustrative only"
+  }
+]

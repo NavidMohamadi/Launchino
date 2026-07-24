@@ -1,0 +1,25 @@
+SYSTEM ROLE
+Normalise candidate and vacancy terminology into the SHEXON Fit Dictionary. Search approved mapping memory first, then the supplied dictionary. ESCO or O*NET labels may be reference suggestions only. Never invent a mapping to increase coverage and never mint a new canonical ID.
+
+INPUTS
+- raw_terms: {{RAW_TERMS_JSON}}
+- fit_dictionary: {{FIT_DICTIONARY_JSON}}
+- approved_mapping_memory: {{MAPPING_MEMORY_JSON}}
+- optional_esco_candidates: {{ESCO_RESULTS_JSON}}
+- optional_onet_candidates: {{ONET_RESULTS_JSON}}
+
+OUTPUT JSON
+{
+  "mappings":[{
+    "raw_term":"string",
+    "element_id":"string|unmapped",
+    "category":"CAP|TASK|other|unknown",
+    "canonical_label":"string|unknown",
+    "relationship":"exact|synonym|broader|narrower|related|unmapped",
+    "confidence":0.0,
+    "reason":"string",
+    "mapping_memory_hit":false,
+    "human_review_required":true
+  }],
+  "unmapped_terms_for_P13":["string"]
+}

@@ -1,0 +1,158 @@
+{
+  "ordinal_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "very_low",
+      "2": "low",
+      "3": "moderate",
+      "4": "high",
+      "5": "very_high"
+    }
+  },
+  "motivation_supply_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "very_limited",
+      "2": "limited",
+      "3": "moderate",
+      "4": "strong",
+      "5": "very_strong"
+    }
+  },
+  "env_structure_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "very_open",
+      "2": "mostly_open",
+      "3": "balanced",
+      "4": "mostly_defined",
+      "5": "highly_defined"
+    }
+  },
+  "env_priority_change_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "rarely",
+      "2": "monthly",
+      "3": "weekly",
+      "4": "several_times_weekly",
+      "5": "daily"
+    }
+  },
+  "env_method_autonomy_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "method_defined",
+      "2": "mostly_defined",
+      "3": "shared_choice",
+      "4": "mostly_autonomous",
+      "5": "full_method_autonomy"
+    }
+  },
+  "env_manager_involvement_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "monthly_or_less",
+      "2": "every_two_weeks",
+      "3": "weekly",
+      "4": "several_times_weekly",
+      "5": "daily"
+    }
+  },
+  "env_feedback_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "quarterly_or_less",
+      "2": "monthly",
+      "3": "every_two_weeks",
+      "4": "weekly",
+      "5": "continuous_or_on_demand"
+    }
+  },
+  "env_process_maturity_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "no_established_processes",
+      "2": "mostly_being_built",
+      "3": "mixed",
+      "4": "mostly_established",
+      "5": "established"
+    }
+  },
+  "env_reactivity_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "predictable",
+      "2": "mostly_planned",
+      "3": "mixed",
+      "4": "fast_changing",
+      "5": "highly_reactive"
+    }
+  },
+  "env_role_breadth_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "deep_specialist",
+      "2": "specialist_with_variety",
+      "3": "balanced",
+      "4": "broad",
+      "5": "very_broad_generalist"
+    }
+  },
+  "env_stakeholder_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "limited",
+      "2": "occasional",
+      "3": "regular",
+      "4": "substantial",
+      "5": "most_of_role"
+    }
+  },
+  "team_collaboration_1_5": {
+    "type": "ordinal",
+    "min": 1,
+    "max": 5,
+    "labels": {
+      "1": "0_20_percent",
+      "2": "21_40_percent",
+      "3": "41_60_percent",
+      "4": "61_80_percent",
+      "5": "81_100_percent"
+    }
+  },
+  "capability_0_4": {
+    "type": "ordinal",
+    "min": 0,
+    "max": 4,
+    "labels": {
+      "0": "no_evidence",
+      "1": "awareness",
+      "2": "with_support",
+      "3": "independent",
+      "4": "complex_or_guides_others"
+    }
+  }
+}
