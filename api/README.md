@@ -8,7 +8,7 @@ then hands stored values to the unmodified `src/` functions to run a match.
 ## Setup
 
 ```bash
-python -m pip install -r api/requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 Point at a PostgreSQL database (created empty; the app creates its own
