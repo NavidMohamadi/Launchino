@@ -26,13 +26,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Local-dev-only CORS for frontend/ (Vite dev server, default port 5173, but
-# Vite increments if that's busy -- allow any localhost/127.0.0.1 port rather
-# than hardcode one). This is not a deployment configuration; boundary for
-# this build is explicitly local-only (see PROJECT_NOTES.md/the frontend
-# task) -- tighten to an explicit origin allowlist before any real hosting.
+# CORS: explicit allowlist for the real deployed frontend, plus a permissive
+# localhost/127.0.0.1 regex kept only for continued local dev (any port, since
+# Vite increments if its default is busy). Add launchino.com here once the
+# custom domain is connected (see PROJECT_NOTES.md/the deployment task).
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=["https://launchino.vercel.app"],
     allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
     allow_credentials=True,
     allow_methods=["*"],
