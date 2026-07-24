@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
-_RAW_DATABASE_URL = os.environ.get(
-    "DATABASE_URL",
-    "postgresql+psycopg://shexon:shexon@localhost:5432/shexon_talent_fit",
-)
+# No default -- a missing DATABASE_URL should fail loudly (see JWT_SECRET_KEY
+# below for the same reasoning) rather than silently fall back to a bogus
+# local connection string in a publicly deployed app.
+_RAW_DATABASE_URL = os.environ.get("DATABASE_URL", "")
 
 
 def _with_psycopg_driver(url: str) -> str:
