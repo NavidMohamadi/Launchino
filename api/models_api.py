@@ -13,9 +13,12 @@ from schemas import (
 
 
 class TalentCreate(BaseModel):
-    full_name: str
-    email: EmailStr
-    password: str = Field(min_length=8)
+    full_name: str = Field(min_length=1, max_length=200)
+    email: EmailStr = Field(max_length=254)
+    # max_length=72: bcrypt hard-fails (raises ValueError) on inputs longer than
+    # 72 bytes -- an uncapped password field would let a client crash this
+    # endpoint with a 500 rather than getting a clean 422.
+    password: str = Field(min_length=8, max_length=72)
     job_discovery_subscription: JobDiscoverySubscription = JobDiscoverySubscription.NONE
     subscription_expires_at: Optional[datetime] = None
     job_discovery_campaign_opt_in: bool = False
@@ -36,8 +39,8 @@ class TalentOut(BaseModel):
 
 
 class CandidateLoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(max_length=254)
+    password: str = Field(max_length=72)
 
 
 class CandidateAuthResponse(BaseModel):
@@ -47,14 +50,14 @@ class CandidateAuthResponse(BaseModel):
 
 
 class CompanyCreate(BaseModel):
-    legal_name: str
-    display_name: str
-    website_domain: str
-    contact_email: EmailStr
-    password: str = Field(min_length=8)
-    career_page_url: Optional[str] = None
-    country_code: Optional[str] = None
-    kvk_number: Optional[str] = None
+    legal_name: str = Field(min_length=1, max_length=200)
+    display_name: str = Field(min_length=1, max_length=200)
+    website_domain: str = Field(min_length=1, max_length=253)
+    contact_email: EmailStr = Field(max_length=254)
+    password: str = Field(min_length=8, max_length=72)
+    career_page_url: Optional[str] = Field(default=None, max_length=2048)
+    country_code: Optional[str] = Field(default=None, max_length=10)
+    kvk_number: Optional[str] = Field(default=None, max_length=20)
 
 
 class CompanyOut(BaseModel):
@@ -66,8 +69,8 @@ class CompanyOut(BaseModel):
 
 
 class CompanyLoginRequest(BaseModel):
-    email: EmailStr
-    password: str
+    email: EmailStr = Field(max_length=254)
+    password: str = Field(max_length=72)
 
 
 class CompanyAuthResponse(BaseModel):
@@ -82,8 +85,8 @@ class AdminLoginRequest(BaseModel):
     # mailbox -- EmailStr's reserved-TLD check (e.g. rejecting .local)
     # would otherwise constrain what admin identifiers are usable for no
     # real benefit.
-    email: str
-    password: str
+    email: str = Field(max_length=254)
+    password: str = Field(max_length=72)
 
 
 class AdminAuthResponse(BaseModel):
@@ -102,7 +105,7 @@ class SubscriptionUpdateRequest(BaseModel):
 class ElementValueIn(BaseModel):
     """One survey answer, shaped like a talent_element_value / vacancy_element_value row."""
 
-    element_id: str
+    element_id: str = Field(min_length=1, max_length=100)
     value: Dict[str, Any] = Field(default_factory=dict)
     value_status: ValueStatus = ValueStatus.ANSWERED
     unknown_reason: Optional[UnknownReason] = None
@@ -122,19 +125,25 @@ class VacancyElementValueIn(ElementValueIn):
 
 
 class CandidateSurveySubmission(BaseModel):
-    values: List[CandidateElementValueIn]
+    # 200 is well above the ~41-element starter Fit Dictionary plus room for
+    # vacancy-specific CAP/TASK growth -- caps against a single request
+    # submitting an absurd number of fabricated entries.
+    values: List[CandidateElementValueIn] = Field(max_length=200)
 
 
 class VacancyWorkshopSubmission(BaseModel):
-    values: List[VacancyElementValueIn]
+    values: List[VacancyElementValueIn] = Field(max_length=200)
 
 
 class CVExtractionRequest(BaseModel):
-    cv_text: str
+    # 20,000 chars comfortably covers any real CV (most are under 10,000) while
+    # capping the AI-extraction endpoint's per-call cost against a pasted-in
+    # oversized/spam document.
+    cv_text: str = Field(min_length=1, max_length=20_000)
 
 
 class VacancyDescriptionExtractionRequest(BaseModel):
-    description_text: str
+    description_text: str = Field(min_length=1, max_length=20_000)
 
 
 class VacancyCreate(BaseModel):
@@ -153,20 +162,20 @@ class VacancyCreate(BaseModel):
     """
 
     category_weights: Dict[Category, float]
-    company_name: str
-    company_domain: Optional[str] = None
-    title: str
-    description_text: str
-    location_text: Optional[str] = None
-    department: Optional[str] = None
-    employment_types: List[str] = Field(default_factory=list)
-    work_mode: Optional[str] = None
-    apply_url: Optional[str] = None
+    company_name: str = Field(min_length=1, max_length=200)
+    company_domain: Optional[str] = Field(default=None, max_length=253)
+    title: str = Field(min_length=1, max_length=300)
+    description_text: str = Field(min_length=1, max_length=20_000)
+    location_text: Optional[str] = Field(default=None, max_length=200)
+    department: Optional[str] = Field(default=None, max_length=200)
+    employment_types: List[str] = Field(default_factory=list, max_length=20)
+    work_mode: Optional[str] = Field(default=None, max_length=50)
+    apply_url: Optional[str] = Field(default=None, max_length=2048)
     date_posted: Optional[date] = None
     valid_through: Optional[date] = None
     salary: Optional[Dict[str, Any]] = None
-    source_url: Optional[str] = None
-    external_job_id: Optional[str] = None
+    source_url: Optional[str] = Field(default=None, max_length=2048)
+    external_job_id: Optional[str] = Field(default=None, max_length=200)
 
 
 class MatchRunRequest(BaseModel):
