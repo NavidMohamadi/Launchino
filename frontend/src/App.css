@@ -77,3 +77,13 @@ table.report-table th { color: #666; font-weight: 600; text-transform: uppercase
 
 .search-box { display: flex; gap: 8px; margin-bottom: 16px; }
 .search-box input { flex: 1; max-width: 400px; padding: 8px; border-radius: 6px; border: 1px solid #ccc; }
+
+.policy-page { max-width: 720px; }
+.policy-content { line-height: 1.6; }
+.policy-content h3 { margin-top: 28px; }
+.policy-content h3:first-child { margin-top: 0; }
+.policy-content table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 14px; }
+.policy-content th, .policy-content td { border: 1px solid #e2e2e6; padding: 8px 10px; text-align: left; vertical-align: top; }
+.policy-content th { background: #f7f7fb; }
+.policy-content ul { padding-left: 22px; }
+.policy-content em:first-of-type { color: #666; }

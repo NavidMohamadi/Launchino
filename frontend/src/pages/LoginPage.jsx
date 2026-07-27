@@ -102,7 +102,10 @@ export default function LoginPage() {
                 type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required
                 style={{ marginTop: 3 }}
               />
-              I agree to my data being processed as described in the privacy policy.
+              I agree to the{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              {' '}and{' '}
+              <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a>.
             </label>
           )}
 

@@ -5,6 +5,8 @@ import MatchPage from './pages/MatchPage'
 import LoginPage from './pages/LoginPage'
 import AdminPage from './pages/AdminPage'
 import AdminDashboardPage from './pages/admin/AdminDashboardPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsOfServicePage from './pages/TermsOfServicePage'
 import { AuthProvider, useAuth } from './auth/AuthContext'
 import './App.css'
 
@@ -62,6 +64,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={auth ? <Navigate to={DEFAULT_PATH_BY_ROLE[auth.role] || '/login'} replace /> : <LoginPage />} />
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      <Route path="/terms" element={<TermsOfServicePage />} />
       <Route path="/candidate" element={<RequireRole role="candidate"><AuthedLayout><CandidateSurveyPage /></AuthedLayout></RequireRole>} />
       <Route path="/vacancy" element={<RequireRole role="company"><AuthedLayout><VacancyWorkshopPage /></AuthedLayout></RequireRole>} />
       <Route path="/match" element={<RequireRole role="company"><AuthedLayout><MatchPage /></AuthedLayout></RequireRole>} />
