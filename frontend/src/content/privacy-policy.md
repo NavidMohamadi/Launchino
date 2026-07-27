@@ -1,4 +1,4 @@
-*Last updated: [PUBLISH_DATE]*
+*Last updated: 27.07.2026*
 
 *Launchino is currently in beta. This policy may be updated as the product evolves; active users will be notified of material changes.*
 
@@ -6,7 +6,7 @@
 
 Launchino is operated by **Shexon BV**, a company registered in the Netherlands. Shexon BV is the data controller for the personal data described in this policy.
 
-Contact for privacy matters: [CONTACT_EMAIL]
+Contact for privacy matters: info@shexon.com
 
 ### 2. What personal data we collect
 
@@ -54,7 +54,7 @@ What AI does **not** do:
 
 **Service providers (processors) that host and power the platform:**
 - **Anthropic** (USA) — AI processing of text you submit for extraction, and generation of match explanations
-- **Render** (backend hosting), **Vercel** (frontend hosting), **Neon** (database hosting) — infrastructure; regions: [DATA_REGIONS]
+- **Render** (backend hosting), **Vercel** (frontend hosting), **Neon** (database hosting) — infrastructure; regions: west EU
 
 We do not sell personal data, and we do not share it with advertisers.
 
@@ -81,7 +81,7 @@ Under the GDPR you have the right to:
 - **Object** to processing based on legitimate interest
 - **Withdraw consent** at any time, where processing is based on consent, without affecting prior processing
 
-To exercise any of these rights, contact [CONTACT_EMAIL] or use the export/deletion functions in your account. We will respond within one month.
+To exercise any of these rights, contact info@shexon.com or use the export/deletion functions in your account. We will respond within one month.
 
 You also have the right to lodge a complaint with the Dutch supervisory authority: **Autoriteit Persoonsgegevens** (autoriteitpersoonsgegevens.nl), or the supervisory authority of your own EU member state.
 

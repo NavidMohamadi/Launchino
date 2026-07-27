@@ -1,4 +1,4 @@
-*Last updated: [PUBLISH_DATE]*
+*Last updated: 27.07.2026*
 
 *Launchino is currently in beta. Features may change, and these terms may be updated as the product evolves.*
 
@@ -70,4 +70,4 @@ These terms are governed by the laws of the Netherlands. Disputes will be submit
 
 ### 15. Contact
 
-Shexon BV — [CONTACT_EMAIL]
+Shexon BV — info@shexon.com
