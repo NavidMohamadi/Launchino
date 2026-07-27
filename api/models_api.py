@@ -4,12 +4,19 @@ from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from schemas import (
     Category, JobDiscoverySubscription, NotScoredReason, RequirementType,
     SourceType, SubscriptionSource, TrainabilityWindow, UnknownReason, ValueStatus,
 )
+
+# GDPR technical building block (see PROJECT_NOTES.md): a checkbox + timestamp
+# is enough for now, not a full legal document. This version string identifies
+# which privacy-policy text was in effect when consent was recorded -- bump it
+# whenever that (not-yet-drafted) document materially changes, so past
+# consent records stay attributable to the text the person actually agreed to.
+CONSENT_POLICY_VERSION = "unpublished-draft-2026-07"
 
 
 class TalentCreate(BaseModel):
@@ -19,11 +26,21 @@ class TalentCreate(BaseModel):
     # 72 bytes -- an uncapped password field would let a client crash this
     # endpoint with a 500 rather than getting a clean 422.
     password: str = Field(min_length=8, max_length=72)
+    data_processing_consent: bool = Field(
+        description="Must be true -- explicit consent checkbox, required at registration."
+    )
     job_discovery_subscription: JobDiscoverySubscription = JobDiscoverySubscription.NONE
     subscription_expires_at: Optional[datetime] = None
     job_discovery_campaign_opt_in: bool = False
     subscription_updated_at: Optional[datetime] = None
     subscription_source: Optional[SubscriptionSource] = None
+
+    @field_validator("data_processing_consent")
+    @classmethod
+    def _consent_must_be_given(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Registration requires agreeing to data processing")
+        return value
 
 
 class TalentOut(BaseModel):
@@ -55,9 +72,19 @@ class CompanyCreate(BaseModel):
     website_domain: str = Field(min_length=1, max_length=253)
     contact_email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=8, max_length=72)
+    data_processing_consent: bool = Field(
+        description="Must be true -- explicit consent checkbox, required at registration."
+    )
     career_page_url: Optional[str] = Field(default=None, max_length=2048)
     country_code: Optional[str] = Field(default=None, max_length=10)
     kvk_number: Optional[str] = Field(default=None, max_length=20)
+
+    @field_validator("data_processing_consent")
+    @classmethod
+    def _consent_must_be_given(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Registration requires agreeing to data processing")
+        return value
 
 
 class CompanyOut(BaseModel):

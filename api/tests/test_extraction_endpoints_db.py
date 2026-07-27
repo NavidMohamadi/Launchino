@@ -83,7 +83,7 @@ def test_extraction_endpoints_do_not_write_to_the_database():
         with TestClient(app) as client:
             r = client.post("/candidates", json={
                 "full_name": "Extraction No-Write Test", "email": f"extraction-nowrite-{uuid.uuid4()}@example.com",
-                "password": "test-password-123",
+                "password": "test-password-123", "data_processing_consent": True,
             })
             assert r.status_code == 201, r.text
             talent_id = r.json()["candidate"]["talent_id"]
@@ -93,6 +93,7 @@ def test_extraction_endpoints_do_not_write_to_the_database():
                 "legal_name": "No Write BV", "display_name": "No Write BV",
                 "website_domain": f"no-write-{uuid.uuid4()}.example.com",
                 "contact_email": f"hr-{uuid.uuid4()}@example.com", "password": "test-password-123",
+                "data_processing_consent": True,
             })
             assert r.status_code == 201, r.text
             company_id = r.json()["company"]["company_id"]
@@ -157,6 +158,7 @@ def test_confirmed_extraction_is_recorded_at_company_direct_trust_not_auto_extra
                 "legal_name": "Trust Level Check BV", "display_name": "Trust Level Check BV",
                 "website_domain": f"trust-check-{uuid.uuid4()}.example.com",
                 "contact_email": f"hr-{uuid.uuid4()}@example.com", "password": "test-password-123",
+                "data_processing_consent": True,
             })
             assert r.status_code == 201, r.text
             company_id = r.json()["company"]["company_id"]

@@ -88,6 +88,14 @@ def require_candidate_self_or_admin(talent_id: UUID, claims: dict = Depends(requ
     return claims
 
 
+def require_company_self_or_admin(company_id: UUID, claims: dict = Depends(require_role("company", "admin"))) -> dict:
+    """Shared ownership check for company-scoped routes: the token must
+    belong to this exact company_id, or be an admin token."""
+    if claims["role"] == "company" and claims["sub"] != str(company_id):
+        raise HTTPException(status_code=403, detail="Cannot access another company's record")
+    return claims
+
+
 def check_vacancy_ownership(claims: dict, vacancy_company_id: Optional[UUID]) -> None:
     """Manual ownership check for vacancy-scoped routes -- not a Depends() factory,
     because the thing being checked against (the vacancy's real company_id) can

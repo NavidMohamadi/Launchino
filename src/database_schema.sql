@@ -72,6 +72,12 @@ create table talent (
     subscription_updated_at timestamptz,
     subscription_source text
         check (subscription_source is null or subscription_source in ('manual','stripe','trial','university','company_sponsored','promotion')),
+    -- GDPR: explicit consent record at registration (checkbox + timestamp,
+    -- not a full legal document -- see PROJECT_NOTES.md). consent_version
+    -- identifies which privacy-policy version was in effect when consent
+    -- was given, since that text will change over time.
+    consent_at timestamptz,
+    consent_version text,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
@@ -131,6 +137,8 @@ create table company (
     -- Set only by a successful POST /companies/login (api/routers/companies.py).
     last_login_at timestamptz,
     active boolean not null default true,
+    consent_at timestamptz,
+    consent_version text,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );

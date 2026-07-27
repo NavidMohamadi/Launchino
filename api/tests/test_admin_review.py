@@ -54,6 +54,7 @@ def _make_company(client):
             "legal_name": "Admin Review Test Co", "display_name": "Admin Review Test Co",
             "website_domain": f"admin-review-{uuid.uuid4()}.example.com",
             "contact_email": f"hr-{uuid.uuid4()}@example.com", "password": "test-password-123",
+            "data_processing_consent": True,
         },
     )
     assert r.status_code == 201, r.text
@@ -277,7 +278,7 @@ def test_extraction_review_lists_ai_extraction_submissions():
                 "/candidates",
                 json={
                     "full_name": "Extraction Review Test", "email": f"extraction-review-{uuid.uuid4()}@example.com",
-                    "password": "test-password-123",
+                    "password": "test-password-123", "data_processing_consent": True,
                 },
             )
             assert r.status_code == 201, r.text

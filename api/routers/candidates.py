@@ -18,8 +18,8 @@ from api.database import get_connection
 from api.extraction_service import run_cv_extraction
 from api.matching_service import load_dictionary
 from api.models_api import (
-    CandidateAuthResponse, CandidateLoginRequest, CandidateSurveySubmission, CVExtractionRequest,
-    SubscriptionUpdateRequest, TalentCreate, TalentOut,
+    CONSENT_POLICY_VERSION, CandidateAuthResponse, CandidateLoginRequest, CandidateSurveySubmission,
+    CVExtractionRequest, SubscriptionUpdateRequest, TalentCreate, TalentOut,
 )
 from api.rate_limit import limiter
 from candidate_extraction import CandidateExtractionResult
@@ -59,10 +59,12 @@ def create_candidate(
             """
             insert into talent (
                 talent_id, full_name, email, password_hash, last_login_at, job_discovery_subscription,
-                subscription_expires_at, job_discovery_campaign_opt_in, subscription_updated_at, subscription_source
+                subscription_expires_at, job_discovery_campaign_opt_in, subscription_updated_at, subscription_source,
+                consent_at, consent_version
             ) values (
                 :talent_id, :full_name, :email, :password_hash, now(), :job_discovery_subscription,
-                :subscription_expires_at, :job_discovery_campaign_opt_in, :subscription_updated_at, :subscription_source
+                :subscription_expires_at, :job_discovery_campaign_opt_in, :subscription_updated_at, :subscription_source,
+                now(), :consent_version
             )
             """
         ),
@@ -76,6 +78,7 @@ def create_candidate(
             "job_discovery_campaign_opt_in": payload.job_discovery_campaign_opt_in,
             "subscription_updated_at": payload.subscription_updated_at,
             "subscription_source": payload.subscription_source.value if payload.subscription_source else None,
+            "consent_version": CONSENT_POLICY_VERSION,
         },
     )
     candidate = TalentOut(
@@ -261,3 +264,140 @@ def extract_cv(
         return run_cv_extraction(candidate_id=str(talent_id), cv_text=payload.cv_text, dictionary=dictionary)
     except AIExtractionError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.get("/{talent_id}/export")
+def export_candidate_data(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> dict:
+    """GDPR data-export mechanism: every piece of personal data held about
+    this candidate, in one response. Self-or-admin only (same ownership rule
+    as every other candidate-scoped route)."""
+    talent_row = conn.execute(
+        text(
+            "select talent_id, full_name, email, profile_status, job_discovery_subscription, "
+            "subscription_expires_at, job_discovery_campaign_opt_in, subscription_source, "
+            "consent_at, consent_version, last_login_at, created_at, updated_at "
+            "from talent where talent_id = :talent_id"
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().first()
+    if not talent_row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    survey_answers = conn.execute(
+        text(
+            "select element_id, value, value_status, unknown_reason, not_scored_reason, source_type, "
+            "last_confirmed_at, shareable_with_employer, record_version, created_at "
+            "from talent_element_value where talent_id = :talent_id order by element_id, record_version"
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().all()
+
+    evidence = conn.execute(
+        text(
+            "select evidence_id, element_id, source_type, description, quality, observed_at, "
+            "shareable_with_employer, created_at from talent_evidence where talent_id = :talent_id"
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().all()
+
+    match_history = conn.execute(
+        text(
+            """
+            select ms.match_run_id, mr.vacancy_id, mr.algorithm_version, ms.overall_score,
+                   ms.overall_coverage, ms.result_lane, mr.created_at
+            from match_summary ms join match_run mr on mr.match_run_id = ms.match_run_id
+            where ms.talent_id = :talent_id order by mr.created_at desc
+            """
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().all()
+
+    recommendations = conn.execute(
+        text(
+            "select recommendation_id, vacancy_id, result_lane, overall_score, overall_coverage, "
+            "generated_at from job_recommendation where talent_id = :talent_id order by generated_at desc"
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().all()
+
+    ai_usage = conn.execute(
+        text(
+            "select usage_id, occurred_at, task, model, input_tokens, output_tokens, "
+            "estimated_cost_usd, success from ai_usage_log where talent_id = :talent_id order by occurred_at"
+        ),
+        {"talent_id": str(talent_id)},
+    ).mappings().all()
+
+    def _row(r: dict) -> dict:
+        return {k: (v.isoformat() if hasattr(v, "isoformat") else (str(v) if isinstance(v, UUID) else v)) for k, v in dict(r).items()}
+
+    return {
+        "profile": _row(talent_row),
+        "survey_answers": [_row(r) for r in survey_answers],
+        "evidence": [_row(r) for r in evidence],
+        "match_history": [_row(r) for r in match_history],
+        "job_recommendations": [_row(r) for r in recommendations],
+        "ai_usage_log": [_row(r) for r in ai_usage],
+    }
+
+
+@router.delete("/{talent_id}")
+def delete_candidate(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> dict:
+    """GDPR erasure mechanism.
+
+    DESIGN DECISION (flagged, not silently made -- see PROJECT_NOTES.md and
+    the security-hardening task this was built under): this anonymizes the
+    talent row rather than issuing a hard DELETE. A true row delete would
+    violate foreign-key constraints from every table that references
+    talent_id (talent_element_value, talent_evidence, match_item_result,
+    match_summary, job_recommendation, preliminary_opportunity_signal,
+    human_review, ai_usage_log) unless those were cascade-deleted too --
+    which would also destroy a company's own legitimate record of "we ran a
+    match against some candidate" / "we received this recommendation," data
+    that isn't solely this candidate's to unilaterally erase.
+
+    What this actually does:
+      - full_name/email are replaced with a non-identifying tombstone value,
+        password_hash is cleared (the account can never log in again).
+      - talent_evidence and talent_element_value rows (the candidate's own
+        free-text survey content) are hard-deleted outright -- nothing else
+        references these rows, so there's no FK/retention reason to keep them.
+      - match_run/match_summary/job_recommendation/ai_usage_log rows that
+        reference this talent_id are left in place, but they no longer
+        resolve to an identifiable person once the profile above is
+        anonymized -- they become anonymous aggregate/business records.
+
+    This is a considered default, not a rubber-stamped assumption -- flagged
+    explicitly to the user for their own (and likely legal) review, since
+    "what does erasure mean when data is shared with a third party" is a
+    real legal judgment call, not an engineering one.
+    """
+    talent_row = conn.execute(
+        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).first()
+    if not talent_row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    conn.execute(text("delete from talent_evidence where talent_id = :talent_id"), {"talent_id": str(talent_id)})
+    conn.execute(text("delete from talent_element_value where talent_id = :talent_id"), {"talent_id": str(talent_id)})
+    conn.execute(
+        text(
+            """
+            update talent set
+                full_name = 'Deleted user',
+                email = :tombstone_email,
+                password_hash = null,
+                profile_status = 'deleted',
+                updated_at = now()
+            where talent_id = :talent_id
+            """
+        ),
+        {"talent_id": str(talent_id), "tombstone_email": f"deleted-{talent_id}@deleted.invalid"},
+    )
+    return {"talent_id": talent_id, "status": "deleted"}

@@ -13,6 +13,62 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-26 — Security/GDPR hardening pass: rate limiting, input validation, GDPR technical mechanisms
+
+Built ahead of real users onboarding. Full details in the phase's own commits;
+key decisions and open items logged here.
+
+**Deletion = anonymization, not a hard row delete -- flagged for legal
+review, not silently decided.** `DELETE /candidates/{id}` and
+`DELETE /companies/{id}` (`api/routers/candidates.py`,
+`api/routers/companies.py`) replace directly-identifying fields
+(full_name/email or contact_email, password_hash) with a tombstone value and
+hard-delete the candidate's own free-text content (`talent_evidence`,
+`talent_element_value`) -- but leave `match_run`/`match_summary`/
+`job_recommendation`/`ai_usage_log` rows referencing the account in place,
+since a true cascade delete would also destroy a company's own legitimate
+record of "we ran a match against some candidate," and no FK in the schema
+has `ON DELETE CASCADE` (a real hard delete would just fail on the FK
+constraint). **This is a real legal judgment call about what "erasure"
+means when data is shared with a third party, not an engineering decision
+-- needs the user's (and likely a lawyer's) explicit sign-off**, not just
+acceptance of this default.
+
+**`ai_usage_log.error_message` can retain fragments of submitted content on
+a schema-validation failure -- flagged, not fixed.** `api/ai_client.py`'s
+`call_claude_structured` logs `f"schema validation failed: {exc}"` where
+`exc` is a Pydantic `ValidationError` -- Pydantic's own error messages
+include the offending input value. On rare AI-extraction outputs that fail
+schema validation, this could echo a fragment of the candidate's/vacancy's
+actual extracted content into a table with no retention limit. Not fixed in
+this pass because sanitizing it well (without losing the debugging signal
+the message currently provides) is its own small task, not a one-line
+change. `poll_run` was also checked and is genuinely clean -- no personal
+data, only per-source polling stats.
+
+**Consent version is a placeholder.** `CONSENT_POLICY_VERSION` in
+`api/models_api.py` is `"unpublished-draft-2026-07"` since no real privacy
+policy text exists yet -- the mechanism (checkbox required at registration,
+`consent_at`/`consent_version` recorded) is real and enforced, but the
+version string needs to be replaced once real policy text is published, and
+bumped every time that text materially changes.
+
+**Rate limits are per-IP via `slowapi`, using `X-Forwarded-For`'s first
+entry as the key** (`api/rate_limit.py`) -- `request.client.host` alone
+would be Render/Cloudflare's own address in production, not the real
+caller's. Defaults: 5/hour registration, 10/minute candidate/company login,
+5/minute admin login, 20/hour on both AI-extraction endpoints. These are
+reasonable starting points, not values tuned against real traffic -- revisit
+once real usage patterns exist.
+
+**SQL injection: confirmed clean.** No raw string-formatted SQL anywhere in
+`api/` -- every query uses SQLAlchemy `text()` with named `:param` binds,
+including the one query that takes a caller-controlled value used inside the
+SQL itself (`signups_over_time`'s `granularity`), which is additionally
+validated against a fixed whitelist before use.
+
+---
+
 ## 2026-07-24 — Admin review queues (Phase 2): sponsor-match registry was never wired up; dedup-review merge is bookkeeping-only; extraction-review makes the trust-boundary gap visible, doesn't close it
 
 Built `GET/POST /admin/dedup-review`, `/admin/sponsor-review`, and

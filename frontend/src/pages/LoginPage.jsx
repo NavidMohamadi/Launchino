@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [legalName, setLegalName] = useState('')
   const [displayName, setDisplayName] = useState('')
   const [websiteDomain, setWebsiteDomain] = useState('')
+  const [consent, setConsent] = useState(false)
 
   function selectRole(nextRole) {
     setRole(nextRole)
@@ -35,14 +36,14 @@ export default function LoginPage() {
     try {
       if (role === 'candidate') {
         const result = mode === 'register'
-          ? await api.createCandidate({ full_name: fullName, email, password })
+          ? await api.createCandidate({ full_name: fullName, email, password, data_processing_consent: consent })
           : await api.loginCandidate(email, password)
         login('candidate', result.access_token, result.candidate)
       } else if (role === 'company') {
         const result = mode === 'register'
           ? await api.createCompany({
               legal_name: legalName, display_name: displayName, website_domain: websiteDomain,
-              contact_email: email, password,
+              contact_email: email, password, data_processing_consent: consent,
             })
           : await api.loginCompany(email, password)
         login('company', result.access_token, result.company)
@@ -95,6 +96,15 @@ export default function LoginPage() {
           <label className="field">Password
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
           </label>
+          {mode === 'register' && (
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8, fontSize: 14 }}>
+              <input
+                type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} required
+                style={{ marginTop: 3 }}
+              />
+              I agree to my data being processed as described in the privacy policy.
+            </label>
+          )}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button type="submit" disabled={submitting}>
