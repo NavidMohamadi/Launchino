@@ -13,7 +13,73 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-27 — Correction to the same day's earlier entry, plus the default changed to equal weighting
+
+**Correction, found while implementing a follow-up request to "confirm both paths use the same
+default, not two separately-maintained values": the entry below is wrong about which file was
+the real root cause.** `data/public_weight_profile.json` and its loader
+(`src/public_weighting.py`'s `load_public_weight_profile()`) are **not called by any real
+application code path** -- confirmed via `grep -rln "load_public_weight_profile"`, which returns
+only the function's own definition and its own test (`tests/test_public_weighting.py`). Fixing
+that file (as the entry below describes) had **zero effect on real production behavior**. There
+are actually **three** default-weight locations, not the two assumed at the time:
+
+1. **`src/canonical_vacancy.py`'s `DEFAULT_PUBLIC_WEIGHTS`** -- the *real* default for every
+   scraped/ingested vacancy. Confirmed via `src/vacancy_ingestion.py:166`: it calls
+   `canonicalise_raw_vacancy()` without passing `category_weights` at all, which falls through to
+   this constant (`category_weights=category_weights or DEFAULT_PUBLIC_WEIGHTS`). This is what
+   actually drove the 81 affected real vacancies -- was still `CAP: 30, TASK: 25` until this
+   entry's fix, below.
+2. **`frontend/src/pages/VacancyWorkshopPage.jsx`'s `DEFAULT_CATEGORY_WEIGHTS`** -- the default
+   sent by the company-direct-submission form when a company doesn't customize weights. Also
+   still `CAP: 30, TASK: 25` until this entry's fix.
+3. **`data/public_weight_profile.json`** -- the dead file described above. Kept up to date (now
+   matching the new default below) for whoever eventually wires it in for real, and explicitly
+   marked `"_status"` as unused in the file itself so a future reader doesn't assume it's
+   authoritative.
+
+**The actual fix, per this session's follow-up request**: both real locations (#1 and #2) changed
+from the proportionally-redistributed profile to **equal weighting across the 5 categories with
+real seeded elements** -- `PRACT: 20, TEAM: 20, CAREER: 20, MOT: 20, ENV: 20, CAP: 0, TASK: 0`.
+Values kept byte-for-byte identical between the two locations, with a comment on each pointing at
+the other -- there is still no runtime single-sourcing between a Python backend constant and a
+bundled frontend constant, so this remains something a future change could accidentally desync;
+the comments are the only guard against that today.
+
+**Verified for real**: created a real vacancy via the company-direct path
+(`company_intake.canonicalise_company_submission`) using the exact new default, confirmed
+`profile.category_weights` is exactly `{PRACT: 20, CAP: 0, TASK: 0, TEAM: 20, CAREER: 20, MOT: 20,
+ENV: 20}`, then ran a real match against Jordan Vance (`dab612a2-...`, a real candidate with real
+answers) and confirmed `clarification_flags` contains **zero** `CAP:`/`TASK:` "no data available"
+entries -- the fix from earlier today correctly does not fire when a category's weight is
+genuinely `0`, only when it's nonzero with no backing data. (Test vacancy and its match rows were
+deleted after verification -- this was check-only data, not meant to persist.) Separately
+confirmed `src/canonical_vacancy.DEFAULT_PUBLIC_WEIGHTS` (the scraped-ingestion path) produces the
+identical dict when `category_weights=None`.
+
+**Real, and separately noteworthy**: `MOT` *did* show a "no data available for this category"
+flag in that same verification run -- not a bug. `MOT` elements are `CANDIDATE_SELECTED`-activated
+(only active if the candidate ranked them in their own top-5), and Jordan Vance's real profile
+doesn't select any MOT factors, so MOT genuinely has zero active items *for this specific
+candidate* -- same as it did before any of today's fixes, with the old weights. The flag is
+working exactly as specified ("any category where weight > 0 and active_item_count == 0"): CAP/TASK
+is the systemic zero-data case, a candidate not activating a category they're eligible for is a
+normal per-match case, and both are honestly disclosed the same way, which is correct, not a
+regression.
+
+**Full test suite (116) passes.** `ARCHITECTURE.md` updated to reflect both the correction and the
+new equal-weighting default.
+
+---
+
 ## 2026-07-27 — CAP/TASK-weighted vacancies silently renormalize instead of scoring or erroring — RESOLVED 2026-07-27
+
+**See the correction entry directly above this one, dated the same day** -- this entry's claim
+that `data/public_weight_profile.json` was the real root cause / fix for the 81 affected real
+vacancies is wrong; that file is dead code, never called by any real path. The actual fix landed
+in `src/canonical_vacancy.py`'s `DEFAULT_PUBLIC_WEIGHTS` and
+`frontend/.../VacancyWorkshopPage.jsx`'s `DEFAULT_CATEGORY_WEIGHTS`. The mechanism described below
+(the bug itself, and the `_flag_categories_with_no_data()` signal fix) is still accurate.
 
 Found while cross-checking the technical handover doc (`ARCHITECTURE.md`) against the real
 codebase, then confirmed as a real correctness bug, not just a doc gap.

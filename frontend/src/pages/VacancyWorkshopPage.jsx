@@ -6,7 +6,9 @@ import { useAuth } from '../auth/AuthContext'
 
 // Same default category weights the backend itself falls back to
 // (src/canonical_vacancy.py's DEFAULT_PUBLIC_WEIGHTS) -- not invented here.
-const DEFAULT_CATEGORY_WEIGHTS = { PRACT: 15.0, CAP: 30.0, TASK: 25.0, TEAM: 10.0, CAREER: 5.0, MOT: 5.0, ENV: 10.0 }
+// Keep this in exact sync with that constant; there is no runtime
+// single-sourcing between the two (see PROJECT_NOTES.md).
+const DEFAULT_CATEGORY_WEIGHTS = { PRACT: 20.0, CAP: 0.0, TASK: 0.0, TEAM: 20.0, CAREER: 20.0, MOT: 20.0, ENV: 20.0 }
 
 function blankAnswer(elementId) {
   return { element_id: elementId, value: {}, value_status: 'answered', unknown_reason: null, not_scored_reason: null, source_type: 'job_description' }

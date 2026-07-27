@@ -11,14 +11,22 @@ from source_schemas import (
 from vacancy_utils import canonical_job_key, normalise_domain, stable_hash
 
 
+# Equal weighting across the 5 categories with real seeded elements today
+# (PRACT/TEAM/CAREER/MOT/ENV). CAP/TASK stay at 0 -- the Fit Dictionary has zero
+# seeded elements for either (see PROJECT_NOTES.md); a nonzero weight here would
+# either be silently renormalized away (pre-fix behavior) or now correctly
+# trigger a "no data available for this category" clarification flag -- neither
+# of which is useful when it can just be 0 instead. Keep this in exact sync with
+# frontend/src/pages/VacancyWorkshopPage.jsx's DEFAULT_CATEGORY_WEIGHTS -- there
+# is no runtime single-sourcing between the two (see PROJECT_NOTES.md).
 DEFAULT_PUBLIC_WEIGHTS = {
-    Category.PRACT: 15.0,
-    Category.CAP: 30.0,
-    Category.TASK: 25.0,
-    Category.TEAM: 10.0,
-    Category.CAREER: 5.0,
-    Category.MOT: 5.0,
-    Category.ENV: 10.0,
+    Category.PRACT: 20.0,
+    Category.CAP: 0.0,
+    Category.TASK: 0.0,
+    Category.TEAM: 20.0,
+    Category.CAREER: 20.0,
+    Category.MOT: 20.0,
+    Category.ENV: 20.0,
 }
 
 
