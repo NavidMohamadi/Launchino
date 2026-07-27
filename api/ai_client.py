@@ -51,6 +51,24 @@ def validate_tool_output(raw: Any, response_model: Type[T]) -> T:
         raise AIExtractionError(f"Claude output failed schema validation: {exc}", raw=raw) from exc
 
 
+def _sanitize_error_for_logging(exc: BaseException) -> str:
+    """Safe-to-persist summary of exc for ai_usage_log.error_message (which has
+    no retention limit -- see PROJECT_NOTES.md).
+
+    Never the raw exception text: a pydantic ValidationError's own message
+    embeds the actual submitted/extracted value that failed validation (real
+    candidate/vacancy content), and other exceptions could in principle echo
+    request fragments too (e.g. an API "bad request" error quoting back part
+    of the input). Logs error type/category and, for a ValidationError, which
+    fields failed and why -- never the values themselves.
+    """
+    cause = exc.__cause__ if isinstance(exc, AIExtractionError) else exc
+    if isinstance(cause, ValidationError):
+        field_errors = "; ".join(f"{'.'.join(str(p) for p in e['loc'])}: {e['type']}" for e in cause.errors())
+        return f"ValidationError ({len(cause.errors())} field(s)): {field_errors}"
+    return f"{type(exc).__name__}: {str(exc)[:200]}"
+
+
 _client = None
 
 
@@ -109,7 +127,7 @@ def call_claude_structured(
     except Exception as exc:
         log_ai_usage(
             task=task, model=model, input_tokens=0, output_tokens=0, success=False,
-            talent_id=candidate_id, vacancy_id=vacancy_id, error_message=f"API call failed: {exc}",
+            talent_id=candidate_id, vacancy_id=vacancy_id, error_message=_sanitize_error_for_logging(exc),
         )
         raise
 
@@ -141,7 +159,7 @@ def call_claude_structured(
     try:
         result = validate_tool_output(tool_use.input, response_model)
     except AIExtractionError as exc:
-        log_ai_usage(**log_kwargs, success=False, error_message=f"schema validation failed: {exc}")
+        log_ai_usage(**log_kwargs, success=False, error_message=_sanitize_error_for_logging(exc))
         raise
 
     log_ai_usage(**log_kwargs, success=True)
@@ -171,7 +189,7 @@ def call_claude_text(
     except Exception as exc:
         log_ai_usage(
             task=task, model=model, input_tokens=0, output_tokens=0, success=False,
-            talent_id=candidate_id, vacancy_id=vacancy_id, error_message=f"API call failed: {exc}",
+            talent_id=candidate_id, vacancy_id=vacancy_id, error_message=_sanitize_error_for_logging(exc),
         )
         raise
 

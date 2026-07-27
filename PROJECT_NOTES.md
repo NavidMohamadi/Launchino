@@ -34,17 +34,17 @@ means when data is shared with a third party, not an engineering decision
 -- needs the user's (and likely a lawyer's) explicit sign-off**, not just
 acceptance of this default.
 
-**`ai_usage_log.error_message` can retain fragments of submitted content on
-a schema-validation failure -- flagged, not fixed.** `api/ai_client.py`'s
-`call_claude_structured` logs `f"schema validation failed: {exc}"` where
-`exc` is a Pydantic `ValidationError` -- Pydantic's own error messages
-include the offending input value. On rare AI-extraction outputs that fail
-schema validation, this could echo a fragment of the candidate's/vacancy's
-actual extracted content into a table with no retention limit. Not fixed in
-this pass because sanitizing it well (without losing the debugging signal
-the message currently provides) is its own small task, not a one-line
-change. `poll_run` was also checked and is genuinely clean -- no personal
-data, only per-source polling stats.
+**`ai_usage_log.error_message` no longer echoes submitted content -- RESOLVED
+2026-07-27.** `api/ai_client.py`'s `_sanitize_error_for_logging()` replaces
+the raw exception text logged on both a schema-validation failure (a
+Pydantic `ValidationError`'s own message embeds the offending input value)
+and a generic Claude API-call failure (which could in principle echo a
+request fragment back, e.g. in a "bad request" error) with a safe summary:
+error type/category, and for a `ValidationError`, which fields failed and
+why (`loc`/`type` only, never the value). Verified directly: a real
+`ValidationError` containing a sensitive test string produced a sanitized
+log line with zero trace of that string. `poll_run` was also checked and is
+genuinely clean -- no personal data, only per-source polling stats.
 
 **Consent version is a placeholder.** `CONSENT_POLICY_VERSION` in
 `api/models_api.py` is `"unpublished-draft-2026-07"` since no real privacy
