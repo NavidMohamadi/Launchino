@@ -1,20 +1,21 @@
 {
-  "version": "2.0.0",
+  "version": "2.0.1",
   "name": "SHEXON public-vacancy discovery ordering",
   "purpose": "A transparent provisional profile used only when the employer has not validated vacancy-specific category weights.",
   "category_weights": {
-    "PRACT": 15,
-    "CAP": 30,
-    "TASK": 25,
-    "TEAM": 10,
-    "CAREER": 5,
-    "MOT": 5,
-    "ENV": 10
+    "PRACT": 33.34,
+    "CAP": 0,
+    "TASK": 0,
+    "TEAM": 22.22,
+    "CAREER": 11.11,
+    "MOT": 11.11,
+    "ENV": 22.22
   },
   "rules": [
     "The result must be labelled preliminary and provisional.",
     "Explicit requirement wording may adjust item importance, but AI may not invent company priorities.",
     "A company-validated profile replaces this profile without creating a second vacancy record.",
-    "Unknown fields reduce coverage and generate clarification; they never score as zero."
+    "Unknown fields reduce coverage and generate clarification; they never score as zero.",
+    "CAP and TASK are weighted 0 as of v2.0.1: the Fit Dictionary has zero seeded elements for either category today (see PROJECT_NOTES.md), so any nonzero weight here would be silently excluded from the score by aggregate_match rather than actually assessed. The remaining five categories' original relative weights (PRACT 15 : TEAM 10 : CAREER 5 : MOT 5 : ENV 10) are preserved, scaled up to sum to 100."
   ]
 }

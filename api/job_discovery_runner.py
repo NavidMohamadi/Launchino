@@ -30,7 +30,7 @@ from source_schemas import CanonicalVacancyProfile
 
 from api.explanation_service import generate_match_explanation
 from api.job_discovery_store import insert_batch_run, insert_recommendation
-from api.matching_service import build_item_results, load_dictionary, load_talent_values
+from api.matching_service import _flag_categories_with_no_data, build_item_results, load_dictionary, load_talent_values
 from api.vacancy_store import load_element_values, row_to_profile
 
 
@@ -78,9 +78,10 @@ def make_deterministic_matcher(
             talent_values=talent_values_cache[talent.talent_id], vacancy_values=_vacancy_values_dict(vacancy),
         )
         config = MatchConfiguration(vacancy_id=vacancy.vacancy_id, category_weights=vacancy.category_weights)
-        return aggregate_match(
+        result = aggregate_match(
             talent_id=talent.talent_id, vacancy_id=vacancy.vacancy_id, item_results=item_results, config=config,
         )
+        return _flag_categories_with_no_data(result, config=config)
 
     return matcher
 

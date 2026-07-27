@@ -18,12 +18,12 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from activation import resolve_scope
-from match_engine import aggregate_match, make_item_result, make_not_scored_item_result
+from match_engine import _assign_lane, aggregate_match, make_item_result, make_not_scored_item_result
 
 from api.comparators_dispatch import compare_answered_values
 from schemas import (
     ActivationPolicy, Alignment, FitElement, ItemResult, MatchConfiguration,
-    MatchResult, RequirementType, UnknownReason, ValueStatus,
+    MatchResult, RequirementType, ResultLane, UnknownReason, ValueStatus,
 )
 
 
@@ -171,6 +171,39 @@ def build_item_results(
     return items
 
 
+def _flag_categories_with_no_data(result: MatchResult, *, config: MatchConfiguration) -> MatchResult:
+    """Post-aggregation check -- deliberately kept out of match_engine.py (frozen
+    since v1.2.1, see PROJECT_NOTES.md), not a change to aggregate_match itself.
+
+    aggregate_match() silently excludes a category's configured weight from the
+    overall score whenever that category has zero active elements (e.g. CAP/TASK
+    today -- the Fit Dictionary has no seeded elements for either) -- the score
+    gets renormalized over the remaining categories with no signal that anything
+    was left out. This surfaces that gap the same way the system already surfaces
+    any other incomplete data: as a clarification_flags entry, which _assign_lane
+    (unmodified, imported from match_engine) already treats as forcing
+    CLARIFICATION_REQUIRED -- not a new signal type.
+    """
+    missing_data_flags = [
+        f"{cr.category.value}: no data available for this category"
+        for cr in result.category_results
+        if cr.category_weight > 0 and cr.active_item_count == 0
+    ]
+    if not missing_data_flags:
+        return result
+
+    clarification_flags = sorted(set(result.clarification_flags) | set(missing_data_flags))
+    lane = _assign_lane(
+        overall_score=result.overall_score_percent, overall_coverage=result.overall_coverage_percent,
+        critical_flags=result.critical_flags, clarification_flags=clarification_flags, config=config,
+    )
+    return result.model_copy(update={
+        "clarification_flags": clarification_flags,
+        "lane": lane,
+        "provisional": lane in {ResultLane.CLARIFICATION_REQUIRED, ResultLane.CRITICAL_REVIEW},
+    })
+
+
 def persist_match_run(
     conn: Connection, *, vacancy_id: UUID, config: MatchConfiguration, approved_by: Optional[str], weighting_mode: str,
 ) -> UUID:
@@ -295,6 +328,7 @@ def run_match(
         result = aggregate_match(
             talent_id=str(talent_id), vacancy_id=str(vacancy_id), item_results=item_results, config=config
         )
+        result = _flag_categories_with_no_data(result, config=config)
         persist_item_results(conn, match_run_id=match_run_id, item_results=item_results)
         persist_match_summary(conn, match_run_id=match_run_id, result=result)
         results.append(result)

@@ -13,6 +13,105 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-27 — CAP/TASK-weighted vacancies silently renormalize instead of scoring or erroring — RESOLVED 2026-07-27
+
+Found while cross-checking the technical handover doc (`ARCHITECTURE.md`) against the real
+codebase, then confirmed as a real correctness bug, not just a doc gap.
+
+**The bug**: `data/fit_dictionary_starter.json` seeds 41 elements across only 5 categories
+(PRACT/TEAM/CAREER/MOT/ENV) -- confirmed live: `select category, count(*) from fit_element
+group by category` on production returns zero rows for `CAP`/`TASK`. The `fit_element_alias`/
+`fit_element_proposal` tables meant to support dynamic, vacancy-specific CAP/TASK elements
+have **zero application-code references anywhere** -- fully unwired.
+
+`src/match_engine.py`'s `aggregate_match()` (frozen since v1.2.1, must not be touched) iterates
+over the *caller's configured* `category_weights`, not over what data exists. For CAP/TASK,
+`items = by_category.get(category, [])` comes back empty -> `score_percent = None` -> the
+`if score_percent is not None and coverage >= config.minimum_category_coverage` check on line
+139 excludes that category's weight from `usable_category_weight` entirely. The overall score
+is then computed and **silently renormalized** using only the categories that had real data --
+no error, no warning, and `clarification_flags` never fires for this case (it only fires for
+items that exist and are `unknown`; a category with *zero* items never gets there at all).
+
+**Real-world exposure, checked directly against the live DB (not assumed)**:
+- **81 of 86 real vacancies** carry `CAP: 30, TASK: 25` (55% of total weight) -- identical
+  values across all 81, because this is `data/public_weight_profile.json`, the single default
+  weight profile `src/public_weighting.py` applies automatically to every scraped/ingested
+  vacancy without company-validated weights. **This is a systemic default, not scattered bad
+  input from individual companies.**
+- Only **4 real `match_run` rows** exist against any of those 81 vacancies -- all against 2
+  vacancies with `company_id IS NULL` and titles containing "E2E test"/"fix-verify", matched
+  against test accounts (`jordan.vance.e2etest@example.com`, `priya.nair.fix-verify@example.com`).
+  **No real beta user has triggered an affected match.**
+- **Zero `job_recommendation` rows** exist against any affected vacancy -- the live Job
+  Discovery pipeline (the path that reaches real subscribed candidates) has never produced a
+  recommendation using one of these mis-weighted vacancies.
+- Pulled the actual `category_results` from the 4 test runs to confirm the mechanism, not just
+  infer it: `CAP`/`TASK` both show `score_percent: null, active_item_count: 0, category_weight:
+  30.0/25.0` exactly as the code predicts, with the overall score renormalized over the
+  remaining 5 categories.
+
+**Two fix options on the table, not yet decided between**:
+1. **Reject nonzero weights on categories with zero real elements at vacancy-creation time.**
+   Would require threading a DB-backed "which categories have real elements" check into
+   `company_intake.py`/`canonical_vacancy.py` (currently DB-connection-free, framework-agnostic
+   `src/` files) -- and would immediately break automatic ingestion for virtually every future
+   scraped vacancy, since the *default profile itself* is the noncompliant thing; the default
+   would need fixing in the same change just to keep ingestion working.
+2. **Surface a clear "no data for this category" signal in the match result itself.** Fully
+   computable from `CategoryResult` fields already present (`category_weight`,
+   `active_item_count`, `score_percent`) in a new, small, non-frozen function running *after*
+   `aggregate_match()` -- zero changes to `match_engine.py`, zero risk to the frozen boundary.
+   Matches the system's existing "never silently collapse unknown into a default" philosophy
+   (the tri-state model, `clarification_required` lane) better than a silent renormalization
+   ever did.
+
+**Resolution: option 2 chosen (surface a clear signal), plus the default profile fixed
+immediately.**
+
+1. **`api/matching_service.py`'s new `_flag_categories_with_no_data()`** runs immediately after
+   every `aggregate_match()` call (both real call sites: `matching_service.run_match` and
+   `api/job_discovery_runner.py`'s `make_deterministic_matcher`, which called `aggregate_match`
+   directly and would otherwise have bypassed the fix entirely). For any category with
+   `category_weight > 0 and active_item_count == 0`, it adds
+   `"{CATEGORY}: no data available for this category"` into the *existing* `clarification_flags`
+   list (not a new signal type, per the ask) and recomputes `lane`/`provisional` by calling
+   `match_engine.py`'s own unmodified `_assign_lane()` with the updated flags -- so a
+   CAP/TASK-heavy vacancy that would otherwise have looked like a confident `priority_match` now
+   correctly lands in `clarification_required`. `match_engine.py` itself was not touched.
+2. **`data/public_weight_profile.json`** (v2.0.0 -> v2.0.1): `CAP`/`TASK` set to `0` (from
+   `30`/`25`), the freed 55% redistributed proportionally across the original five working
+   categories' relative weights (`PRACT 33.34 : TEAM 22.22 : CAREER 11.11 : MOT 11.11 :
+   ENV 22.22`, sums to exactly 100 -- verified via `load_public_weight_profile()`, which itself
+   enforces the sum-to-100 check). This is the actual root cause fix for the 81 affected real
+   vacancies' *default*, independent of the signal fix above.
+
+**Verified for real, not just unit-tested**: re-ran `run_match()` directly against the exact two
+real, already-existing test vacancies that originally demonstrated the bug (`c8328394-...`
+"Robotics Software Engineer (E2E test)" / talent `dab612a2-...` "Jordan Vance", and
+`dace678f-...` "(fix-verify)" / talent `5823cc9e-...` "Priya Nair"), using their genuinely
+already-stored (pre-fix) `CAP: 30, TASK: 25` weights against the real live Neon DB. Both now show
+`'CAP: no data available for this category'` and `'TASK: no data available for this category'`
+correctly present in `clarification_flags` alongside the normal element-level flags, with
+`provisional: True`. `overall_score_percent` is unchanged from the original buggy runs (83.3 and
+100.0 respectively) -- correct, since this is a disclosure fix, not a rescoring fix, and these
+two legacy vacancies still carry their original stored weights (not retroactively rewritten --
+see below). Also confirmed the corrected `public_weight_profile.json` itself loads validly and
+sums to exactly 100.0.
+
+**What this does and doesn't fix**: the 81 already-created vacancy rows in the live DB keep their
+original stored `CAP: 30, TASK: 25` weights -- `public_weight_profile.json` only affects vacancies
+ingested from now on, and no data migration/backfill of existing rows was requested or performed.
+Any future match against one of those 81 legacy vacancies will still compute its score the same
+way it always did, but will now correctly surface the clarification flag rather than silently
+renormalizing -- the safety net applies regardless of which weight configuration produced the
+gap, so the legacy rows are still meaningfully protected without needing a backfill.
+
+**Full test suite (116 tests) passes after both changes.** `ARCHITECTURE.md` updated separately
+to describe the fixed behavior.
+
+---
+
 ## 2026-07-26 — Security/GDPR hardening pass: rate limiting, input validation, GDPR technical mechanisms
 
 Built ahead of real users onboarding. Full details in the phase's own commits;
