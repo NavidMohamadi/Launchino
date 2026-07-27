@@ -13,6 +13,34 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-27 — Follow-up: single-source the default category weights next time this area is touched
+
+Not urgent, not a bug today -- a forward-looking note for whoever next touches vacancy default
+weighting, prompted directly by the entry below this one.
+
+**The problem this would prevent**: `src/canonical_vacancy.py`'s `DEFAULT_PUBLIC_WEIGHTS` and
+`frontend/src/pages/VacancyWorkshopPage.jsx`'s `DEFAULT_CATEGORY_WEIGHTS` are two independently
+hardcoded copies of the same value, kept in sync only by a comment on each pointing at the other
+-- nothing enforces they stay identical. This is exactly the shape of bug that already happened
+once today: the CAP:30/TASK:25 default got fixed in one place and not the other (and, separately,
+in a third file that turned out to be dead code -- see the entry below). Nothing stops the same
+kind of silent desync happening again the next time someone updates one copy and forgets the
+other.
+
+**Suggested direction, not decided or scoped yet**: expose the default via a single backend
+endpoint (the Python constant is the natural source of truth, since it's what actually drives
+scraped-ingestion behavior) and have the frontend fetch it at runtime instead of hardcoding its
+own copy -- e.g. a small addition to the existing `GET /fit-dictionary` response, or a new
+dedicated endpoint. This was deliberately not implemented as part of today's fix: it's a real
+architecture change (new API surface, a runtime fetch replacing a hardcoded constant) beyond what
+"fix the default value and confirm both paths match" asked for, and deserves its own scoping
+rather than being bundled in as a side effect.
+
+**Revisit when**: the default weighting is touched again for any reason, or if this exact kind of
+two-copies-drift bug recurs a second time, whichever comes first.
+
+---
+
 ## 2026-07-27 — Correction to the same day's earlier entry, plus the default changed to equal weighting
 
 **Correction, found while implementing a follow-up request to "confirm both paths use the same
