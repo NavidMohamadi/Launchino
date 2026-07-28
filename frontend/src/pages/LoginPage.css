@@ -19,6 +19,9 @@
 .ll-body {
   flex: 1;
   display: flex;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .ll-hero {
