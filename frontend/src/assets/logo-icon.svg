@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" role="img">
+  <title>Launchino icon</title>
+  <desc>The Launchino icon mark: a small navy dot, a medium purple dot, and a larger gold dot connected by a thin turquoise line along an upward diagonal.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#2FD8C7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    </marker>
+  </defs>
+
+  <g transform="translate(100,100)">
+    <path d="M-55 55 Q-14 -20 55 -48" fill="none" stroke="#2FD8C7" stroke-width="2" stroke-linecap="round" marker-end="url(#arrow)"></path>
+    <circle cx="-55" cy="55" r="12" fill="#151A45"></circle>
+    <circle cx="-8" cy="-3" r="18" fill="#7F2FA3"></circle>
+    <circle cx="55" cy="-48" r="23" fill="#B7952B" stroke="#8C7020" stroke-width="1"></circle>
+  </g>
+</svg>
