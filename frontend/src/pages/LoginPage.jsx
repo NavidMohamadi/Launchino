@@ -88,6 +88,7 @@ export default function LoginPage() {
 
   return (
     <div className="ll-page">
+      <div className="ll-body">
       <div className="ll-hero">
         <div className="ll-hero-mark">
           <img src={logoIcon} alt="" width="56" height="56" />
@@ -106,7 +107,6 @@ export default function LoginPage() {
             <li>Be in full control always</li>
           </ul>
         )}
-        <div className="ll-powered-by">Powered by Shexon</div>
       </div>
 
       <div className="ll-form-wrap">
@@ -177,6 +177,8 @@ export default function LoginPage() {
           {error && <p className="ll-error">{error}</p>}
         </div>
       </div>
+      </div>
+      <div className="ll-powered-by">Powered by Shexon</div>
     </div>
   )
 }

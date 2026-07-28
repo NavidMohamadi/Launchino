@@ -10,6 +10,8 @@ function blankAnswer(elementId, sourceType) {
   return { element_id: elementId, value: {}, value_status: 'answered', unknown_reason: null, not_scored_reason: null, source_type: sourceType, shareable_with_employer: false }
 }
 
+const STEPS = ['input', 'review', 'done']
+
 export default function CandidateSurveyPage() {
   const { auth } = useAuth()
   const talentId = auth.profile.talent_id
@@ -105,21 +107,30 @@ export default function CandidateSurveyPage() {
 
   const motElements = (elements || []).filter((e) => e.category === 'MOT')
   const otherElements = (elements || []).filter((e) => e.category !== 'MOT' && (e.active || answers[e.element_id]))
+  const stepIndex = STEPS.indexOf(step)
 
   return (
     <div>
-      <h1>Candidate survey</h1>
+      <h1>Your profile survey</h1>
+      <div className="ll-step-progress">
+        {STEPS.map((s, i) => (
+          <div key={s} className={`ll-step ${i < stepIndex ? 'done' : i === stepIndex ? 'active' : ''}`} />
+        ))}
+      </div>
 
       {step === 'input' && (
         <div className="card">
-          <h2>1. CV text or manual entry</h2>
+          <h2>1. Share your CV, or start from scratch</h2>
           <p>Candidate: <strong>{auth.profile.full_name}</strong> (<code>{talentId}</code>)</p>
+          <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)', marginBottom: 12 }}>
+            Paste your CV text and we'll pre-fill your answers — you'll still review and confirm everything before it's saved.
+          </p>
           <textarea className="cv-input" placeholder="Paste raw CV text here..." value={cvText} onChange={(e) => setCvText(e.target.value)} />
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button onClick={handleExtract} disabled={extracting || !cvText.trim()}>
-              {extracting ? 'Extracting...' : 'Extract from CV'}
+              {extracting ? 'Reading your CV…' : 'Extract from CV'}
             </button>
-            <button className="secondary" onClick={skipToManual}>Skip -- fill in manually</button>
+            <button className="secondary" onClick={skipToManual}>Skip — fill in manually</button>
           </div>
           {extractError && <p className="hint-error">Extraction failed: {extractError}</p>}
         </div>
@@ -131,7 +142,7 @@ export default function CandidateSurveyPage() {
 
           {unmappedTerms.length > 0 && (
             <div className="unmapped-terms">
-              <strong>Terms found in the CV with no Fit Dictionary match yet:</strong>
+              <strong>Terms found in your CV we couldn't match yet:</strong>
               <ul>{unmappedTerms.map((t) => <li key={t}>{t}</li>)}</ul>
             </div>
           )}
@@ -142,8 +153,8 @@ export default function CandidateSurveyPage() {
             </div>
           )}
 
-          <h3 className="category-heading">Motivation -- pick your top {MOT_MAX_SELECTIONS}</h3>
-          <p style={{ fontSize: 13, color: '#666' }}>Selected: {motChecked.length}/{MOT_MAX_SELECTIONS}</p>
+          <h3 className="category-heading">Motivation — pick your top {MOT_MAX_SELECTIONS}</h3>
+          <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)' }}>Selected: {motChecked.length}/{MOT_MAX_SELECTIONS}</p>
           {motElements.map((el) => (
             <div key={el.element_id} className="element-question">
               <label className="checkbox">
@@ -177,7 +188,7 @@ export default function CandidateSurveyPage() {
           })}
 
           <div style={{ marginTop: 20 }}>
-            <button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting...' : 'Confirm and submit'}</button>
+            <button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting…' : 'Confirm and submit'}</button>
           </div>
           {submitError && <p className="hint-error">{submitError}</p>}
         </div>
@@ -186,7 +197,7 @@ export default function CandidateSurveyPage() {
       {step === 'done' && (
         <div className="card">
           <p className="hint-success">
-            Saved {submitResult.values_stored} answers for candidate <code>{talentId}</code>.
+            Nice work — saved {submitResult.values_stored} answers for candidate <code>{talentId}</code>. You're a step closer to your next role.
           </p>
         </div>
       )}

@@ -10,8 +10,15 @@
   --ll-font-script: 'Dancing Script', cursive;
 
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
   font-family: var(--ll-font-body);
+  background: linear-gradient(135deg, var(--ll-turquoise) 0%, var(--ll-purple) 55%, var(--ll-gradient-end) 100%);
+}
+
+.ll-body {
+  flex: 1;
+  display: flex;
 }
 
 .ll-hero {
@@ -21,7 +28,6 @@
   justify-content: center;
   gap: 18px;
   padding: 64px;
-  background: linear-gradient(135deg, var(--ll-turquoise) 0%, var(--ll-purple) 55%, var(--ll-gradient-end) 100%);
   color: #fff;
 }
 
@@ -70,7 +76,7 @@
 .ll-checklist li { display: flex; gap: 10px; align-items: center; }
 .ll-checklist li::before { content: '✓'; color: var(--ll-gold); font-weight: 700; }
 
-.ll-powered-by { margin-top: 24px; font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; opacity: 0.9; }
+.ll-powered-by { text-align: center; padding: 14px; font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: #fff; }
 
 .ll-form-wrap {
   flex: 1;
@@ -78,7 +84,6 @@
   align-items: center;
   justify-content: center;
   padding: 40px;
-  background: linear-gradient(135deg, var(--ll-turquoise) 0%, var(--ll-purple) 55%, var(--ll-gradient-end) 100%);
 }
 
 .ll-card {
@@ -126,6 +131,6 @@
 .ll-error { color: #B01818; font-size: 13px; background: #FDE8E8; padding: 10px 12px; border-radius: 8px; margin: 0; }
 
 @media (max-width: 860px) {
-  .ll-page { flex-direction: column; }
+  .ll-body { flex-direction: column; }
   .ll-hero { padding: 40px 32px; }
 }

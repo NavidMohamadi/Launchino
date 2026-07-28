@@ -8,6 +8,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsOfServicePage from './pages/TermsOfServicePage'
 import { AuthProvider, useAuth } from './auth/AuthContext'
+import logoIcon from './assets/logo-icon.svg'
 import './App.css'
 
 const DEFAULT_PATH_BY_ROLE = { candidate: '/candidate', company: '/vacancy', admin: '/admin/dashboard' }
@@ -39,12 +40,13 @@ function TopNav() {
 
   return (
     <nav className="top-nav">
+      <span className="brand"><img src={logoIcon} alt="" /><span>Launchino</span></span>
       {links.map(([to, label]) => (
         <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
       ))}
       <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <span style={{ fontSize: 13, color: '#666' }}>{identity} ({auth.role})</span>
-        <a href="#" onClick={(e) => { e.preventDefault(); logout() }}>Log out</a>
+        <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>{identity} ({auth.role})</span>
+        <a href="#" onClick={(e) => { e.preventDefault(); logout() }} style={{ color: '#fff' }}>Log out</a>
       </span>
     </nav>
   )
