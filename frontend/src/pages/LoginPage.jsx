@@ -14,8 +14,8 @@ const HERO_COPY = {
   candidate: {
     word: 'script',
     headline: 'Launch your career!',
-    motto: 'You can be anything you want — you just need the right resources.',
-    sub: 'Build a free profile, discover fit vacancies, get discovered by real companies, and move at your pace — no pressure, no cost to start.',
+    motto: null,
+    sub: 'Get to know yourself better, and let real companies discover you — free, and at your own pace.',
     showList: true,
   },
   company: {
@@ -91,20 +91,19 @@ export default function LoginPage() {
       <div className="ll-body">
       <div className="ll-hero">
         <div className="ll-hero-mark">
-          <img src={logoIcon} alt="" width="56" height="56" />
+          <img src={logoIcon} alt="" width="72" height="72" />
           <span className={hero.word === 'script' ? 'll-wordmark ll-wordmark-script' : 'll-wordmark ll-wordmark-sans'}>
             Launchino
           </span>
         </div>
         <h1 className="ll-headline">{hero.headline}</h1>
-        {hero.motto && <p className="ll-motto">&ldquo;{hero.motto}&rdquo;</p>}
+        {hero.showList && <p className="ll-motto">&ldquo;<span style={{ fontWeight: 'normal' }}>You can be anything you want<br />&mdash; you just need the</span> right resources.&rdquo;</p>}
         <p className="ll-sub">{hero.sub}</p>
         {hero.showList && (
           <ul className="ll-checklist">
-            <li>Free to build your profile</li>
-            <li>Find relevant vacancies</li>
-            <li>Optional matching when you&rsquo;re ready</li>
-            <li>Be in full control always</li>
+            <li>Show who you really are, not just your CV</li>
+            <li>Discover what actually fits you, from how you work to what drives you</li>
+            <li>Want us to actively find jobs for you? Sure, whenever you're ready!</li>
           </ul>
         )}
       </div>
@@ -178,7 +177,7 @@ export default function LoginPage() {
         </div>
       </div>
       </div>
-      <div className="ll-powered-by">Powered by Shexon</div>
+      <div className="ll-powered-by">Powered by SHEXON B.V.</div>
     </div>
   )
 }

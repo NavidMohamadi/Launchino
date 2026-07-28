@@ -29,15 +29,15 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 18px;
+  gap: 30px;
   padding: 64px;
   color: #fff;
 }
 
-.ll-hero-mark { display: flex; align-items: center; gap: 12px; }
+.ll-hero-mark { display: flex; align-items: center; gap: 14px; }
 
 .ll-wordmark { font-size: 24px; }
-.ll-wordmark-script { font-family: var(--ll-font-script); font-weight: 700; font-size: 52px; color: #fff; }
+.ll-wordmark-script { font-family: var(--ll-font-script); font-weight: 700; font-size: 68px; color: var(--ll-purple); text-shadow: 0 2px 10px rgba(255,255,255,0.65); }
 .ll-wordmark-sans { font-family: var(--ll-font-heading); font-weight: 600; letter-spacing: 0.01em; color: #fff; }
 
 .ll-headline {
@@ -47,15 +47,18 @@
   line-height: 1.2;
   max-width: 420px;
   margin: 0;
+  color: #11045F;
 }
 
 .ll-motto {
   font-style: italic;
   font-weight: 700;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.5;
   color: #FFF6E0;
   max-width: 400px;
+  width: 446px;
+  height: 50px;
   margin: 0;
 }
 
@@ -74,7 +77,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 14px;
+  font-size: 15px;
 }
 .ll-checklist li { display: flex; gap: 10px; align-items: center; }
 .ll-checklist li::before { content: '✓'; color: var(--ll-gold); font-weight: 700; }
