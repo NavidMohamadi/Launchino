@@ -172,6 +172,9 @@ table.report-table th { color: var(--ll-neutral-600); font-weight: 600; text-tra
 
 .ll-dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .ll-dash-card { position: relative; background: var(--ll-neutral-50); border-radius: var(--ll-radius-md); padding: 18px; }
+.ll-dash-card.clickable { cursor: pointer; }
+.ll-dash-card.clickable:hover { background: var(--ll-neutral-100); }
+.ll-dash-card.clickable:focus-visible { outline: 2px solid var(--ll-turquoise-dark); outline-offset: 2px; }
 .ll-dash-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--ll-turquoise-tint); color: var(--ll-turquoise-dark); margin-bottom: 12px; }
 .ll-dash-card-label { font-weight: 600; color: var(--ll-navy); margin-bottom: 4px; font-size: 14.5px; }
 .ll-dash-card-status { font-size: 13px; font-weight: 600; }

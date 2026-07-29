@@ -37,7 +37,11 @@ function TopNav() {
   const identity = auth.role === 'candidate' ? auth.profile?.full_name
     : auth.role === 'company' ? auth.profile?.display_name
     : 'Admin'
-  const links = auth.role === 'candidate' ? [['/candidate', 'Your profile'], ['/candidate/survey', 'Survey']]
+  // No standalone "Survey" nav link -- /candidate/survey is still a real route
+  // (the dashboard's category cards and "Continue" button both navigate there),
+  // but "Your profile" is the only real entry point now: it's what shows
+  // progress/framing/urgency before a candidate starts filling anything in.
+  const links = auth.role === 'candidate' ? [['/candidate', 'Your profile']]
     : auth.role === 'company' ? [['/vacancy', 'Vacancy workshop'], ['/match', 'Run match']]
     : [['/admin/dashboard', 'Dashboard'], ['/admin', 'Subscription tool']]
 

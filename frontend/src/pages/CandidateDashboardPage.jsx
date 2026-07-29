@@ -54,8 +54,13 @@ export default function CandidateDashboardPage() {
       <div className="ll-dash-grid">
         {completion.categories.map((cat) => {
           const Icon = CATEGORY_ICONS[cat.category]
+          const goToCategory = () => navigate(`/candidate/survey?focus=${cat.category}`)
           return (
-            <div key={cat.category} className="ll-dash-card">
+            <div
+              key={cat.category} className="ll-dash-card clickable"
+              role="button" tabIndex={0} onClick={goToCategory}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); goToCategory() } }}
+            >
               {cat.status === 'complete' && (
                 <span className="ll-dash-card-badge complete"><IconCheck size={20} /></span>
               )}
