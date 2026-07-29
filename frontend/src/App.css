@@ -198,7 +198,8 @@ table.report-table th { color: var(--ll-neutral-600); font-weight: 600; text-tra
 /* --- Premium page --- */
 .ll-premium-header { margin-bottom: 28px; }
 .ll-premium-header h1 { margin: 0 0 6px; }
-.ll-premium-header p { margin: 0; color: var(--ll-neutral-600); font-size: 15px; }
+.ll-premium-header p { margin: 0 0 12px; color: var(--ll-neutral-600); font-size: 15px; line-height: 1.5; }
+.ll-premium-header p:last-child { margin-bottom: 0; }
 
 .ll-premium-plans { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
 .ll-premium-plan { flex: 1; min-width: 220px; background: var(--ll-neutral-50); border: 1px solid var(--ll-neutral-200); border-radius: var(--ll-radius-lg); padding: 24px; position: relative; }

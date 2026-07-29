@@ -38,7 +38,7 @@ export default function CandidateDashboardPage() {
       <div className="ll-dash-header">
         <div>
           <h1>Your profile</h1>
-          <p className="ll-dash-subhead">Get to know yourself better, one area at a time.</p>
+          <p className="ll-dash-subhead">Get to know your professional self</p>
         </div>
         <div className="ll-dash-overall">
           {/* floor, not round -- must never display more progress than actually
@@ -69,21 +69,20 @@ export default function CandidateDashboardPage() {
         })}
       </div>
 
-      <div className="ll-dash-urgency">
-        <IconClock size={18} />
-        <span>New roles appear daily, don&rsquo;t miss the ones that fit you.</span>
-      </div>
-
       <hr className="ll-dash-divider" />
 
       <div className="ll-dash-valueprops">
         <div className="ll-dash-valueprop">
+          <IconClock size={18} color="var(--ll-warning)" />
+          <span>Great roles move fast, don&rsquo;t let an unfinished profile hold you back.</span>
+        </div>
+        <div className="ll-dash-valueprop">
           <IconEye size={18} color="var(--ll-success)" />
-          <span>Visible to companies from day one, free</span>
+          <span>You&rsquo;re already visible to companies, from day one, completely free.</span>
         </div>
         <div className="ll-dash-valueprop">
           <IconChartBar size={18} color="var(--ll-turquoise-dark)" />
-          <span>Complete profiles get noticed first</span>
+          <span>Finish it, and you&rsquo;ll be seen first, matched with real confidence.</span>
         </div>
         {completion.premium_ready && (
           <div className="ll-dash-valueprop">

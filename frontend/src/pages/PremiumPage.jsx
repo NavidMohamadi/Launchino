@@ -42,7 +42,17 @@ export default function PremiumPage() {
     <div>
       <div className="ll-premium-header">
         <h1>Launchino Premium</h1>
-        <p>Get proactive job matching -- we surface fit vacancies for you, instead of you searching for them.</p>
+        <p>
+          We continuously scan company career pages and job boards for new openings, then match
+          them against everything we&rsquo;ve learned about you: your practical fit, how you
+          work, where you&rsquo;re headed, what drives you, and your ideal environment. When we
+          find a real fit, we bring it straight to you, no searching required.
+        </p>
+        <p>
+          This is on top of your free profile, which companies can already find, including roles
+          that aren&rsquo;t posted publicly anywhere yet.
+        </p>
+        <p>Available once your profile is at least 70% complete, so we have enough to actually match you well.</p>
       </div>
 
       {pending && (
