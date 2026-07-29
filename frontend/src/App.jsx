@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, NavLink, Link } from 'react-router-dom'
 import { IconStar } from '@tabler/icons-react'
 import CandidateDashboardPage from './pages/CandidateDashboardPage'
-import CandidateSurveyPage from './pages/CandidateSurveyPage'
+import CategorySurveyPage from './pages/CategorySurveyPage'
 import PremiumPage from './pages/PremiumPage'
 import VacancyWorkshopPage from './pages/VacancyWorkshopPage'
 import MatchPage from './pages/MatchPage'
@@ -37,10 +37,11 @@ function TopNav() {
   const identity = auth.role === 'candidate' ? auth.profile?.full_name
     : auth.role === 'company' ? auth.profile?.display_name
     : 'Admin'
-  // No standalone "Survey" nav link -- /candidate/survey is still a real route
-  // (the dashboard's category cards and "Continue" button both navigate there),
-  // but "Your profile" is the only real entry point now: it's what shows
-  // progress/framing/urgency before a candidate starts filling anything in.
+  // No standalone "Survey" nav link -- each category now has its own dedicated
+  // route (/candidate/survey/:categorySlug), reached only via the dashboard's
+  // cards/Continue button. "Your profile" is the only real entry point: it's
+  // what shows progress/framing/urgency before a candidate starts filling
+  // anything in.
   const links = auth.role === 'candidate' ? [['/candidate', 'Your profile']]
     : auth.role === 'company' ? [['/vacancy', 'Vacancy workshop'], ['/match', 'Run match']]
     : [['/admin/dashboard', 'Dashboard'], ['/admin', 'Subscription tool']]
@@ -79,7 +80,7 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
       <Route path="/candidate" element={<RequireRole role="candidate"><AuthedLayout><CandidateDashboardPage /></AuthedLayout></RequireRole>} />
-      <Route path="/candidate/survey" element={<RequireRole role="candidate"><AuthedLayout><CandidateSurveyPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey/:categorySlug" element={<RequireRole role="candidate"><AuthedLayout><CategorySurveyPage /></AuthedLayout></RequireRole>} />
       <Route path="/candidate/premium" element={<RequireRole role="candidate"><AuthedLayout><PremiumPage /></AuthedLayout></RequireRole>} />
       <Route path="/vacancy" element={<RequireRole role="company"><AuthedLayout><VacancyWorkshopPage /></AuthedLayout></RequireRole>} />
       <Route path="/match" element={<RequireRole role="company"><AuthedLayout><MatchPage /></AuthedLayout></RequireRole>} />

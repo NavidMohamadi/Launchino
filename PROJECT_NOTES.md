@@ -13,6 +13,56 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-29 — Survey split into 5 per-category pages; found and fixed a real MOT-rendering bug and a real CV-extraction reachability regression along the way
+
+Replaced the single long-scrolling `CandidateSurveyPage.jsx` (one page, all 5
+categories, reached via `?focus=CATEGORY` + scroll-to-anchor) with
+`CategorySurveyPage.jsx`, one per category at `/candidate/survey/:categorySlug`
+(slugs centralised in `frontend/src/categorySlugs.js` so the dashboard's links,
+`App.jsx`'s route, and the page's own parsing can't drift apart). Submission
+logic, endpoints, tri-state/ordinal controls, and the resume-with-existing-
+answers fix are all unchanged -- only page structure and navigation changed.
+
+**Real bug caught before shipping, not after**: the new page's category-filter
+logic (`elements.filter(e => e.category === category && (e.active ||
+answers[e.element_id]))`) applied the same "must be active" condition to MOT
+as to the other 4 categories. MOT elements are `CANDIDATE_SELECTED` --
+checking the element's own checkbox is *what makes it active* -- so filtering
+on `e.active` before anything was ever checked meant zero MOT elements could
+ever render. Caught via real browser verification (a fresh candidate's "What
+drives you" page showed 0 checkboxes), not assumed correct from the diff.
+Fixed by keeping MOT unfiltered (matching the original single-page version's
+own `motElements = elements.filter(e => e.category === 'MOT')`, no active
+check) and only applying the active-filter to the other 4 categories.
+
+**Real, separate finding, not introduced by this task but caught while
+touching this exact code**: the previous task ("remove the standalone Survey
+nav link") left `skipToManual()` firing unconditionally whenever a `focus`
+query param was present. Since every remaining path into the survey (5
+dashboard cards + the Continue button) always carried that param, the
+CV-paste/extraction step had already become 100% unreachable through the live
+UI -- a real, if narrow, regression from that task. Fixed as part of this
+restructure: each category page now checks whether *that specific category*
+already has a saved answer (via the same survey-values fetch used for the
+resume fix) and only then skips straight to review; a genuinely untouched
+category still gets the CV-paste/skip-to-manual choice. Verified for real: a
+candidate with existing PRACT answers landed straight on PRACT's review step
+(pre-filled), while the same candidate's untouched TEAM and MOT pages
+correctly showed the CV-paste step first.
+
+**Verified end-to-end with a real candidate**: clicked into an untouched TEAM
+page, skipped to manual, actually moved the ordinal-range sliders (not just
+checked their default rendered values -- an unmoved slider never entered
+`answers` and correctly submitted nothing), submitted, landed back on
+`/candidate`, and saw TEAM flip to "Complete" and overall completion move
+from 13% to 17%. Repeated for MOT (checked 2 of 12, answered their detail
+questions, submitted) -- MOT flipped to "Complete", overall moved to 24%
+(6 of 25 active elements, MOT's 2 selected items now counting toward the
+active total). Full test suite (123) passes, unchanged -- this was a
+frontend-only restructure with zero backend changes.
+
+---
+
 ## 2026-07-29 — Premium nudge on the dashboard now gated by the real match-lane coverage threshold, not an arbitrary percentage
 
 **The real, live number, confirmed by reading it, not assuming it**: `src/match_engine.py:87`'s

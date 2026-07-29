@@ -6,6 +6,7 @@ import {
 } from '@tabler/icons-react'
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
+import { surveyPathFor } from '../categorySlugs'
 
 const CATEGORY_ICONS = {
   PRACT: IconMapPin,
@@ -54,7 +55,7 @@ export default function CandidateDashboardPage() {
       <div className="ll-dash-grid">
         {completion.categories.map((cat) => {
           const Icon = CATEGORY_ICONS[cat.category]
-          const goToCategory = () => navigate(`/candidate/survey?focus=${cat.category}`)
+          const goToCategory = () => navigate(surveyPathFor(cat.category))
           return (
             <div
               key={cat.category} className="ll-dash-card clickable"
@@ -112,7 +113,7 @@ export default function CandidateDashboardPage() {
       {nextIncomplete ? (
         <button
           type="button" className="ll-dash-cta"
-          onClick={() => navigate(`/candidate/survey?focus=${nextIncomplete.category}`)}
+          onClick={() => navigate(surveyPathFor(nextIncomplete.category))}
         >
           Continue: {nextIncomplete.label}
         </button>
