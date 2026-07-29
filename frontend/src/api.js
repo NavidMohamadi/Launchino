@@ -70,6 +70,15 @@ export const extractCv = (talentId, cvText) =>
 export const submitCandidateSurvey = (talentId, values) =>
   request(`/candidates/${talentId}/survey`, { method: 'POST', body: JSON.stringify({ values }) })
 
+export const getCandidateCompletion = (talentId) => request(`/candidates/${talentId}/completion`)
+
+export const getCandidateSurveyValues = (talentId) => request(`/candidates/${talentId}/survey-values`)
+
+export const getPremiumRequest = (talentId) => request(`/candidates/${talentId}/premium-request`)
+
+export const createPremiumRequest = (talentId, plan) =>
+  request(`/candidates/${talentId}/premium-request`, { method: 'POST', body: JSON.stringify({ plan }) })
+
 export const createVacancy = (payload) =>
   request('/vacancies', { method: 'POST', body: JSON.stringify(payload) })
 
@@ -117,5 +126,10 @@ export const resolveSponsorReview = (vacancyId, decision, note) =>
   request(`/admin/sponsor-review/${vacancyId}/resolve`, { method: 'POST', body: JSON.stringify({ decision, note }) })
 
 export const getExtractionReview = (limit = 50) => request(`/admin/extraction-review?limit=${limit}`)
+
+export const getPremiumRequestQueue = () => request('/admin/premium-requests')
+
+export const resolvePremiumRequest = (requestId, decision) =>
+  request(`/admin/premium-requests/${requestId}/resolve`, { method: 'POST', body: JSON.stringify({ decision }) })
 
 export { ApiError, BASE_URL }

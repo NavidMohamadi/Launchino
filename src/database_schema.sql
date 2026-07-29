@@ -71,7 +71,7 @@ create table talent (
     job_discovery_campaign_opt_in boolean not null default false,
     subscription_updated_at timestamptz,
     subscription_source text
-        check (subscription_source is null or subscription_source in ('manual','stripe','trial','university','company_sponsored','promotion')),
+        check (subscription_source is null or subscription_source in ('manual','stripe','trial','university','company_sponsored','promotion','premium_request_approved')),
     -- GDPR: explicit consent record at registration (checkbox + timestamp,
     -- not a full legal document -- see PROJECT_NOTES.md). consent_version
     -- identifies which privacy-policy version was in effect when consent
@@ -472,4 +472,20 @@ create table ai_usage_log (
 );
 create index ai_usage_log_talent_idx on ai_usage_log(talent_id) where talent_id is not null;
 create index ai_usage_log_vacancy_idx on ai_usage_log(vacancy_id) where vacancy_id is not null;
+
+-- Candidate Premium access requests: request-and-manually-approve only, no
+-- real payment integration (see PROJECT_NOTES.md / the profile-dashboard task
+-- this was built under). Approval writes to talent.job_discovery_subscription
+-- via the same function the admin manual-toggle endpoint uses
+-- (api/candidate_service.py's set_candidate_subscription), not a separate path.
+create table premium_access_request (
+    request_id uuid primary key default gen_random_uuid(),
+    talent_id uuid not null references talent(talent_id),
+    plan text not null check (plan in ('one_month','three_month')),
+    status text not null default 'pending' check (status in ('pending','approved','denied')),
+    requested_at timestamptz not null default now(),
+    reviewed_at timestamptz,
+    reviewed_by text
+);
+create index premium_access_request_pending_idx on premium_access_request(talent_id, status);
 create index ai_usage_log_occurred_idx on ai_usage_log(occurred_at);

@@ -26,10 +26,7 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from activation import is_activated
-from schemas import Category
-
-from api.matching_service import load_dictionary
+from api.candidate_service import resolve_candidate_element_activation
 
 # Default "recent" window for the active/dormant candidate split. Named
 # constant, not hardcoded inline, per the task -- callers may override via
@@ -135,35 +132,13 @@ def subscription_breakdown(conn: Connection) -> Dict[str, Any]:
 
 
 def _candidate_coverage(conn: Connection, talent_id: UUID) -> Dict[str, Any]:
-    dictionary = load_dictionary(conn)
-
-    latest_values = conn.execute(
-        text(
-            """
-            select distinct on (element_id) element_id, value_status
-            from talent_element_value
-            where talent_id = :talent_id
-            order by element_id, record_version desc
-            """
-        ),
-        {"talent_id": str(talent_id)},
-    ).all()
-    value_status_by_element = {r.element_id: r.value_status for r in latest_values}
-
-    selected_mot_ids = {
-        element_id for element_id, status in value_status_by_element.items()
-        if status == "answered" and dictionary.get(element_id) and dictionary[element_id].category == Category.MOT
-    }
-
-    total_active = 0
-    answered_active = 0
-    for element in dictionary.values():
-        active = is_activated(element, candidate_selected=element.element_id in selected_mot_ids, vacancy_activated=False)
-        if not active:
-            continue
-        total_active += 1
-        if value_status_by_element.get(element.element_id) == "answered":
-            answered_active += 1
+    # The per-element "what's active and answered" rule now lives only in
+    # api/candidate_service.py's resolve_candidate_element_activation (also
+    # used by the candidate dashboard's per-category completion endpoint) --
+    # this just collapses that same result to one overall figure.
+    activation = resolve_candidate_element_activation(conn, talent_id)
+    total_active = sum(1 for v in activation.values() if v["active"])
+    answered_active = sum(1 for v in activation.values() if v["active"] and v["answered"])
 
     coverage_percent = (answered_active / total_active * 100) if total_active else 0.0
     return {

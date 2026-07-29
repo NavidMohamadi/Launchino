@@ -1,5 +1,8 @@
-import { BrowserRouter, Routes, Route, Navigate, NavLink } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, NavLink, Link } from 'react-router-dom'
+import { IconStar } from '@tabler/icons-react'
+import CandidateDashboardPage from './pages/CandidateDashboardPage'
 import CandidateSurveyPage from './pages/CandidateSurveyPage'
+import PremiumPage from './pages/PremiumPage'
 import VacancyWorkshopPage from './pages/VacancyWorkshopPage'
 import MatchPage from './pages/MatchPage'
 import LoginPage from './pages/LoginPage'
@@ -34,7 +37,7 @@ function TopNav() {
   const identity = auth.role === 'candidate' ? auth.profile?.full_name
     : auth.role === 'company' ? auth.profile?.display_name
     : 'Admin'
-  const links = auth.role === 'candidate' ? [['/candidate', 'Candidate survey']]
+  const links = auth.role === 'candidate' ? [['/candidate', 'Your profile'], ['/candidate/survey', 'Survey']]
     : auth.role === 'company' ? [['/vacancy', 'Vacancy workshop'], ['/match', 'Run match']]
     : [['/admin/dashboard', 'Dashboard'], ['/admin', 'Subscription tool']]
 
@@ -42,8 +45,11 @@ function TopNav() {
     <nav className="top-nav">
       <span className="brand"><img src={logoIcon} alt="" /><span>Launchino</span></span>
       {links.map(([to, label]) => (
-        <NavLink key={to} to={to} className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
+        <NavLink key={to} to={to} end className={({ isActive }) => (isActive ? 'active' : '')}>{label}</NavLink>
       ))}
+      {auth.role === 'candidate' && (
+        <Link to="/candidate/premium" className="ll-premium-pill"><IconStar size={14} />Premium</Link>
+      )}
       <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 12 }}>
         <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.72)' }}>{identity} ({auth.role})</span>
         <a href="#" onClick={(e) => { e.preventDefault(); logout() }} style={{ color: '#fff' }}>Log out</a>
@@ -68,7 +74,9 @@ function AppRoutes() {
       <Route path="/login" element={auth ? <Navigate to={DEFAULT_PATH_BY_ROLE[auth.role] || '/login'} replace /> : <LoginPage />} />
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
-      <Route path="/candidate" element={<RequireRole role="candidate"><AuthedLayout><CandidateSurveyPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate" element={<RequireRole role="candidate"><AuthedLayout><CandidateDashboardPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey" element={<RequireRole role="candidate"><AuthedLayout><CandidateSurveyPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/premium" element={<RequireRole role="candidate"><AuthedLayout><PremiumPage /></AuthedLayout></RequireRole>} />
       <Route path="/vacancy" element={<RequireRole role="company"><AuthedLayout><VacancyWorkshopPage /></AuthedLayout></RequireRole>} />
       <Route path="/match" element={<RequireRole role="company"><AuthedLayout><MatchPage /></AuthedLayout></RequireRole>} />
       <Route path="/admin" element={<RequireRole role="admin"><AuthedLayout><AdminPage /></AuthedLayout></RequireRole>} />

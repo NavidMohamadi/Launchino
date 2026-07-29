@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import * as api from '../api'
 import ElementQuestion from '../components/ElementQuestion'
 import { useFitDictionary } from '../hooks/useFitDictionary'
@@ -16,6 +17,12 @@ export default function CandidateSurveyPage() {
   const { auth } = useAuth()
   const talentId = auth.profile.talent_id
   const [step, setStep] = useState('input') // input -> review -> done
+  const [searchParams] = useSearchParams()
+  // Deep link from the "Your profile" dashboard's "Continue: [category]" CTA
+  // (?focus=PRACT etc.) -- skips straight to the manual review step (bypassing
+  // the CV-paste step) and scrolls to that category's own section, since the
+  // candidate is coming back to finish one specific area, not start over.
+  const focusCategory = searchParams.get('focus')
 
   const [cvText, setCvText] = useState('')
   const [extracting, setExtracting] = useState(false)
@@ -25,6 +32,7 @@ export default function CandidateSurveyPage() {
 
   const [answers, setAnswers] = useState({}) // element_id -> answer
   const [motChecked, setMotChecked] = useState([]) // element_ids explicitly checked in this session
+  const [prefillLoaded, setPrefillLoaded] = useState(false)
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
@@ -71,6 +79,38 @@ export default function CandidateSurveyPage() {
     setStep('review')
   }
 
+  useEffect(() => {
+    if (focusCategory) skipToManual()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Pre-fills already-saved answers (same shape as handleExtract's own
+  // pre-fill of AI-extracted answers, just sourced from previously-submitted
+  // values instead of a fresh CV) so returning to a category that's already
+  // in progress shows what was saved, not a blank form. Merge order (existing
+  // spread first, then prev) means a fresher local edit or CV extraction
+  // already in `answers` by the time this resolves always wins -- this never
+  // clobbers work already in progress in this session.
+  useEffect(() => {
+    api.getCandidateSurveyValues(talentId)
+      .then((existing) => {
+        setAnswers((prev) => ({ ...existing, ...prev }))
+        const existingMotIds = Object.keys(existing).filter((id) => id.startsWith('MOT-'))
+        if (existingMotIds.length) setMotChecked((prev) => [...new Set([...existingMotIds, ...prev])])
+      })
+      .catch(() => {}) // best-effort pre-fill: a failure here shouldn't block starting the survey
+      .finally(() => setPrefillLoaded(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [talentId])
+
+  useEffect(() => {
+    if (!focusCategory || step !== 'review' || !elements) return
+    const timer = setTimeout(() => {
+      document.getElementById(`category-${focusCategory}`)?.scrollIntoView({ behavior: 'instant', block: 'start' })
+    }, 50)
+    return () => clearTimeout(timer)
+  }, [focusCategory, step, elements])
+
   function toggleMot(elementId) {
     setMotChecked((prev) => {
       if (prev.includes(elementId)) {
@@ -103,7 +143,7 @@ export default function CandidateSurveyPage() {
   }
 
   if (dictError) return <p className="hint-error">Could not load the Fit Dictionary: {dictError}</p>
-  if (!elements) return <p>Loading questions...</p>
+  if (!elements || !prefillLoaded) return <p>Loading questions...</p>
 
   const motElements = (elements || []).filter((e) => e.category === 'MOT')
   const otherElements = (elements || []).filter((e) => e.category !== 'MOT' && (e.active || answers[e.element_id]))
@@ -153,7 +193,7 @@ export default function CandidateSurveyPage() {
             </div>
           )}
 
-          <h3 className="category-heading">Motivation — pick your top {MOT_MAX_SELECTIONS}</h3>
+          <h3 id="category-MOT" className="category-heading">Motivation — pick your top {MOT_MAX_SELECTIONS}</h3>
           <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)' }}>Selected: {motChecked.length}/{MOT_MAX_SELECTIONS}</p>
           {motElements.map((el) => (
             <div key={el.element_id} className="element-question">
@@ -177,7 +217,7 @@ export default function CandidateSurveyPage() {
             if (!inCategory.length) return null
             return (
               <div key={category}>
-                <h3 className="category-heading">{category}</h3>
+                <h3 id={`category-${category}`} className="category-heading">{category}</h3>
                 {inCategory.map((el) => (
                   <ElementQuestion key={el.element_id} element={el} side="candidate"
                     answer={answers[el.element_id] || blankAnswer(el.element_id, 'self_report')}

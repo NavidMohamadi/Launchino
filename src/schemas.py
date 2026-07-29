@@ -57,6 +57,7 @@ class SubscriptionSource(str, Enum):
     UNIVERSITY = "university"
     COMPANY_SPONSORED = "company_sponsored"
     PROMOTION = "promotion"
+    PREMIUM_REQUEST_APPROVED = "premium_request_approved"
 
 
 class SourceType(str, Enum):

@@ -255,3 +255,34 @@ class DedupReviewResolution(BaseModel):
 class SponsorReviewResolution(BaseModel):
     decision: str = Field(description="'confirm' or 'reject'")
     note: Optional[str] = None
+
+
+class CategoryCompletionOut(BaseModel):
+    category: Category
+    label: str
+    status: str = Field(description="'complete' / 'in_progress' / 'not_started'")
+    percent_complete: float
+    active_item_count: int
+    answered_item_count: int
+
+
+class CandidateCompletionOut(BaseModel):
+    talent_id: UUID
+    categories: List[CategoryCompletionOut]
+    overall_percent_complete: float
+
+
+class PremiumRequestCreate(BaseModel):
+    plan: str = Field(description="'one_month' or 'three_month'")
+
+
+class PremiumRequestOut(BaseModel):
+    request_id: UUID
+    talent_id: UUID
+    plan: str
+    status: str
+    requested_at: datetime
+
+
+class PremiumRequestResolution(BaseModel):
+    decision: str = Field(description="'approve' or 'deny'")

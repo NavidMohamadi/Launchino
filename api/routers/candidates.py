@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import uuid
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -14,13 +15,16 @@ from api.auth import (
     CANDIDATE_TOKEN_EXPIRY, create_access_token, hash_password, require_candidate_self_or_admin, require_role,
     verify_password,
 )
+from api.candidate_service import compute_candidate_completion, set_candidate_subscription
 from api.database import get_connection
 from api.extraction_service import run_cv_extraction
-from api.matching_service import load_dictionary
+from api.matching_service import load_dictionary, load_talent_values
 from api.models_api import (
-    CONSENT_POLICY_VERSION, CandidateAuthResponse, CandidateLoginRequest, CandidateSurveySubmission,
-    CVExtractionRequest, SubscriptionUpdateRequest, TalentCreate, TalentOut,
+    CONSENT_POLICY_VERSION, CandidateAuthResponse, CandidateCompletionOut, CandidateLoginRequest,
+    CandidateSurveySubmission, CVExtractionRequest, PremiumRequestCreate, PremiumRequestOut,
+    SubscriptionUpdateRequest, TalentCreate, TalentOut,
 )
+from api.premium_requests import PremiumRequestError, create_premium_request, get_pending_request_for_candidate
 from api.rate_limit import limiter
 from candidate_extraction import CandidateExtractionResult
 from schemas import Talent, TalentElementValue
@@ -141,37 +145,88 @@ def update_candidate_subscription(
         raise HTTPException(status_code=404, detail="Candidate not found")
 
     try:
-        Talent(
-            talent_id=str(talent_id), full_name="placeholder", email="placeholder@example.com",
+        updated = set_candidate_subscription(
+            conn, talent_id,
             job_discovery_subscription=payload.job_discovery_subscription,
             subscription_expires_at=payload.subscription_expires_at,
             subscription_source=payload.subscription_source,
         )
     except ValidationError as exc:
         raise HTTPException(status_code=422, detail=exc.errors()) from exc
+    return TalentOut(**updated)
 
-    conn.execute(
-        text(
-            """
-            update talent set
-                job_discovery_subscription = :job_discovery_subscription,
-                subscription_expires_at = :subscription_expires_at,
-                subscription_source = :subscription_source,
-                subscription_updated_at = now()
-            where talent_id = :talent_id
-            """
-        ),
-        {
-            "talent_id": str(talent_id),
-            "job_discovery_subscription": payload.job_discovery_subscription.value,
-            "subscription_expires_at": payload.subscription_expires_at,
-            "subscription_source": payload.subscription_source.value if payload.subscription_source else None,
-        },
-    )
-    updated = conn.execute(
-        text("select * from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
-    ).mappings().first()
-    return TalentOut(**dict(updated))
+
+@router.get("/{talent_id}/completion", response_model=CandidateCompletionOut)
+def get_candidate_completion(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> CandidateCompletionOut:
+    row = conn.execute(
+        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    result = compute_candidate_completion(conn, talent_id)
+    return CandidateCompletionOut(talent_id=talent_id, **result)
+
+
+@router.get("/{talent_id}/survey-values")
+def get_candidate_survey_values(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> dict:
+    """Existing saved answers, latest version per element -- lets the survey
+    page pre-fill a category the candidate already answered (e.g. via the
+    dashboard's "Continue: [category]" link) instead of showing a blank form
+    for elements that already have a real value. Reuses matching_service's
+    own load_talent_values (the exact "latest version per element" query
+    already run at match time), not a second implementation of that dedup."""
+    row = conn.execute(
+        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    values = load_talent_values(conn, talent_id)
+    return {
+        element_id: {
+            "element_id": v["element_id"], "value": v["value"], "value_status": v["value_status"],
+            "unknown_reason": v["unknown_reason"], "not_scored_reason": v["not_scored_reason"],
+            "source_type": v["source_type"], "shareable_with_employer": v["shareable_with_employer"],
+        }
+        for element_id, v in values.items()
+    }
+
+
+@router.post("/{talent_id}/premium-request", response_model=PremiumRequestOut, status_code=201)
+def submit_premium_request(
+    talent_id: UUID, payload: PremiumRequestCreate, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> PremiumRequestOut:
+    row = conn.execute(
+        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    try:
+        result = create_premium_request(conn, talent_id, plan=payload.plan)
+    except PremiumRequestError as exc:
+        detail = str(exc)
+        if detail == "pending_exists":
+            raise HTTPException(status_code=409, detail="You already have a pending Premium request") from exc
+        raise HTTPException(status_code=422, detail=detail) from exc
+    return PremiumRequestOut(**result)
+
+
+@router.get("/{talent_id}/premium-request", response_model=Optional[PremiumRequestOut])
+def get_premium_request(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> Optional[PremiumRequestOut]:
+    """Current pending Premium request for this candidate, if any -- the
+    Premium page checks this on load so it can hide/disable the request
+    buttons before the candidate tries to submit a second one, not just after."""
+    result = get_pending_request_for_candidate(conn, talent_id)
+    return PremiumRequestOut(**result) if result else None
 
 
 @router.post("/{talent_id}/survey", status_code=201)

@@ -13,11 +13,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.engine import Connection
 
-from api import admin_review
+from api import admin_review, premium_requests
 from api.auth import require_role
 from api.config import ADMIN_EMAIL
 from api.database import get_connection
-from api.models_api import DedupReviewResolution, SponsorReviewResolution
+from api.models_api import DedupReviewResolution, PremiumRequestResolution, SponsorReviewResolution
 
 router = APIRouter(prefix="/admin", tags=["admin-review"], dependencies=[Depends(require_role("admin"))])
 
@@ -61,3 +61,22 @@ def resolve_sponsor_review(
 @router.get("/extraction-review")
 def get_extraction_review(limit: int = 50, conn: Connection = Depends(get_connection)) -> dict:
     return admin_review.list_extraction_review(conn, limit=limit)
+
+
+@router.get("/premium-requests")
+def get_pending_premium_requests(conn: Connection = Depends(get_connection)) -> list:
+    return premium_requests.list_pending_requests(conn)
+
+
+@router.post("/premium-requests/{request_id}/resolve")
+def resolve_premium_request(
+    request_id: UUID, payload: PremiumRequestResolution, conn: Connection = Depends(get_connection),
+) -> dict:
+    try:
+        return premium_requests.resolve_premium_request(
+            conn, request_id, decision=payload.decision, reviewed_by=ADMIN_EMAIL,
+        )
+    except premium_requests.PremiumRequestError as exc:
+        detail = str(exc)
+        status_code = 404 if detail == "not_found" else 409 if detail.startswith("already resolved") else 422
+        raise HTTPException(status_code=status_code, detail=detail) from exc

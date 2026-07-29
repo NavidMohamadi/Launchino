@@ -13,6 +13,52 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-29 — Candidate dashboard's "Continue" deep link exposed a real gap: the survey page never resumed previous answers — RESOLVED same day
+
+Built the "Your profile" dashboard (per-category completion, `GET /candidates/{id}/completion`)
+and the Premium request-and-manually-approve flow (`premium_access_request`, admin
+approve/deny, reuses the existing subscription-toggle write via the new
+`api/candidate_service.set_candidate_subscription` rather than a second copy of it).
+
+**Real, pre-existing gap this surfaced, not introduced**: `CandidateSurveyPage.jsx` never
+fetched a candidate's existing `talent_element_value` rows on load -- `answers` state always
+started at `{}`, populated only via a fresh CV extraction or manual entry in the current
+session. The dashboard's "Continue: [next incomplete category]" CTA (`?focus=CATEGORY` deep
+link) skips straight to the review step and scrolls to that category's section; writing was
+always safe (`POST /survey` is a per-element versioned insert -- submitting only PRACT
+answers never touched TEAM/CAREER/MOT/ENV rows already stored), but every *other*
+already-answered element rendered blank on return -- confirmed for real before fixing:
+created a test candidate, saved 3 of PRACT's 6 elements via the real API, reloaded via the
+dashboard's Continue link, and all 3 rendered as empty/unselected form controls despite the
+DB rows being intact. Not cosmetic -- indistinguishable from data loss to the candidate.
+
+**Fix**: added `GET /candidates/{id}/survey-values`, a thin wrapper around
+`api/matching_service.py`'s existing `load_talent_values` (the same latest-per-element-version
+query already used at match time -- no new dedup logic). `CandidateSurveyPage.jsx` fetches it
+on mount and merges it into `answers` using the same "fetch into the answers-shaped state,
+then render via `answers[element_id] || blankAnswer(...)`" pattern `handleExtract` already
+used for AI-extracted answers -- reused, not reinvented. Merge order (`{...existing, ...prev}`)
+means a fresher local edit or CV extraction already in state always wins, so the pre-fill can
+never clobber in-session work regardless of fetch timing. A `prefillLoaded` gate (mirroring
+the pre-existing `!elements` dictionary-loading gate) avoids a blank-then-filled flash.
+
+**Verified for real, same repro as the bug report**: same test candidate/answers, reloaded via
+the dashboard's Continue link post-fix -- `PRACT-SPONSOR` showed `not_required` selected,
+the date field showed `2026-09-01`, and the `hybrid` checkbox showed checked. Unanswered
+PRACT fields (country, language) correctly stayed blank -- confirms this pre-fills real saved
+answers, not a static/stale snapshot. Full test suite (121) passes; a new real-DB test
+(`test_survey_values_returns_latest_saved_answers_for_prefill`) also confirms the endpoint
+returns the *latest* version after a re-submit, not the original.
+
+**Also noted**: `api/tests/conftest.py` now disables `slowapi` rate limiting for the whole
+test session -- the limiter's in-memory storage is shared across every test file in one
+`pytest` process, and enough files call `POST /candidates` that the real 5/hour registration
+cap (correct for production) started failing later tests with unrelated 429s once this
+task's new tests added a few more registrations. No test exercises rate-limiting behavior
+itself, so nothing is silently uncovered by this.
+
+---
+
 ## 2026-07-27 — Follow-up: single-source the default category weights next time this area is touched
 
 Not urgent, not a bug today -- a forward-looking note for whoever next touches vacancy default

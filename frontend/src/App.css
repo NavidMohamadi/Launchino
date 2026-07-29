@@ -14,6 +14,10 @@
   --ll-neutral-200: #E4E6EE;
   --ll-neutral-400: #9BA0B4;
   --ll-neutral-600: #5C6178;
+  --ll-success: #157A4A;
+  --ll-success-bg: #E1F6EC;
+  --ll-warning: #8C6A16;
+  --ll-warning-bg: #FBF1DC;
   --ll-font-heading: 'Sora', 'Helvetica Neue', Helvetica, sans-serif;
   --ll-font-body: 'Inter', 'Helvetica Neue', Helvetica, sans-serif;
   --ll-radius-sm: 8px;
@@ -48,6 +52,18 @@ nav.top-nav .brand span { font-family: var(--ll-font-heading); font-weight: 600;
 nav.top-nav a { text-decoration: none; color: rgba(255,255,255,0.72); font-weight: 500; font-size: 14px; padding: 8px 12px; border-radius: var(--ll-radius-sm); }
 nav.top-nav a.active { background: rgba(255,255,255,0.12); color: #fff; font-weight: 600; }
 nav.top-nav a:hover { color: #fff; }
+
+/* --- Premium pill: persistent on every candidate page, not just the dashboard.
+   Selector prefixed with nav.top-nav (matching a.active's own pattern above)
+   so it beats nav.top-nav a's 72%-opacity white, not just tie with it. --- */
+nav.top-nav a.ll-premium-pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--ll-purple); color: #fff;
+  padding: 6px 12px; border-radius: 999px;
+  font-size: 13px; font-weight: 600; text-decoration: none; white-space: nowrap;
+}
+nav.top-nav a.ll-premium-pill:hover { filter: brightness(1.1); color: #fff; }
+.ll-premium-pill svg { width: 15px; height: 15px; }
 
 .card { background: #fff; border: 1px solid var(--ll-neutral-200); border-radius: var(--ll-radius-lg); box-shadow: var(--ll-shadow-sm); padding: 24px; margin-bottom: 16px; }
 
@@ -86,9 +102,9 @@ button:hover:not(:disabled) { filter: brightness(0.95); }
 
 .language-row { display: flex; gap: 8px; align-items: center; margin-bottom: 4px; }
 
-.hint-warning { color: #8C6A16; font-size: 12px; background: #FBF1DC; padding: 8px 10px; border-radius: var(--ll-radius-sm); }
+.hint-warning { color: var(--ll-warning); font-size: 12px; background: var(--ll-warning-bg); padding: 8px 10px; border-radius: var(--ll-radius-sm); }
 .hint-error { color: #B01818; font-size: 13px; background: #FDE8E8; padding: 10px 12px; border-radius: var(--ll-radius-sm); }
-.hint-success { color: #157A4A; font-size: 13px; background: #E1F6EC; padding: 10px 12px; border-radius: var(--ll-radius-sm); }
+.hint-success { color: var(--ll-success); font-size: 13px; background: var(--ll-success-bg); padding: 10px 12px; border-radius: var(--ll-radius-sm); }
 
 .unmapped-terms { background: #FBF1DC; border-radius: var(--ll-radius-md); padding: 12px 16px; margin-bottom: 16px; }
 .unmapped-terms ul { margin: 6px 0 0; padding-left: 20px; }
@@ -143,3 +159,55 @@ table.report-table th { color: var(--ll-neutral-600); font-weight: 600; text-tra
 .ll-step-progress .ll-step { flex: 1; height: 4px; border-radius: 2px; background: var(--ll-neutral-200); }
 .ll-step-progress .ll-step.done { background: var(--ll-turquoise-dark); }
 .ll-step-progress .ll-step.active { background: var(--ll-purple); }
+
+/* --- candidate dashboard ("Your profile") -- flat surfaces, no gradients or
+   shadows in this in-product UI (gradients/shadows are reserved for
+   marketing/hero moments like LoginPage.css, not here). --- */
+.ll-dash-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; margin-bottom: 28px; flex-wrap: wrap; }
+.ll-dash-header h1 { margin: 0 0 6px; }
+.ll-dash-subhead { margin: 0; color: var(--ll-neutral-600); font-size: 15px; }
+.ll-dash-overall { text-align: right; }
+.ll-dash-overall-value { font-family: var(--ll-font-heading); font-size: 40px; font-weight: 700; color: var(--ll-navy); line-height: 1; }
+.ll-dash-overall-label { font-size: 12.5px; color: var(--ll-neutral-600); text-transform: uppercase; letter-spacing: 0.04em; }
+
+.ll-dash-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.ll-dash-card { position: relative; background: var(--ll-neutral-50); border-radius: var(--ll-radius-md); padding: 18px; }
+.ll-dash-card-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: var(--ll-turquoise-tint); color: var(--ll-turquoise-dark); margin-bottom: 12px; }
+.ll-dash-card-label { font-weight: 600; color: var(--ll-navy); margin-bottom: 4px; font-size: 14.5px; }
+.ll-dash-card-status { font-size: 13px; font-weight: 600; }
+.ll-dash-card-status.complete { color: var(--ll-success); }
+.ll-dash-card-status.in_progress { color: var(--ll-purple); }
+.ll-dash-card-status.not_started { color: var(--ll-neutral-400); font-weight: 500; }
+.ll-dash-card-badge { position: absolute; top: 14px; right: 14px; display: flex; align-items: center; justify-content: center; }
+.ll-dash-card-badge.complete { color: var(--ll-success); }
+.ll-dash-card-badge.in_progress { background: var(--ll-purple); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 999px; }
+
+.ll-dash-urgency { display: flex; align-items: center; gap: 10px; background: var(--ll-warning-bg); color: var(--ll-warning); padding: 12px 16px; border-radius: var(--ll-radius-md); font-size: 13.5px; font-weight: 500; margin-bottom: 24px; }
+.ll-dash-urgency svg { flex-shrink: 0; }
+
+.ll-dash-divider { border: none; border-top: 1px solid var(--ll-neutral-200); margin: 24px 0; }
+
+.ll-dash-valueprops { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.ll-dash-valueprop { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--ll-navy); }
+.ll-dash-valueprop svg { flex-shrink: 0; }
+.ll-dash-valueprop a { color: var(--ll-purple); font-weight: 600; text-decoration: none; }
+.ll-dash-valueprop a:hover { text-decoration: underline; }
+
+.ll-dash-cta { display: block; width: 100%; text-align: center; padding: 15px; font-size: 15px; }
+
+/* --- Premium page --- */
+.ll-premium-header { margin-bottom: 28px; }
+.ll-premium-header h1 { margin: 0 0 6px; }
+.ll-premium-header p { margin: 0; color: var(--ll-neutral-600); font-size: 15px; }
+
+.ll-premium-plans { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 24px; }
+.ll-premium-plan { flex: 1; min-width: 220px; background: var(--ll-neutral-50); border: 1px solid var(--ll-neutral-200); border-radius: var(--ll-radius-lg); padding: 24px; position: relative; }
+.ll-premium-plan.featured { border: 2px solid var(--ll-purple); background: #fff; }
+.ll-premium-plan-badge { position: absolute; top: -11px; right: 20px; background: var(--ll-purple); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.ll-premium-plan h3 { margin: 0 0 4px; font-family: var(--ll-font-heading); font-size: 17px; color: var(--ll-navy); }
+.ll-premium-price { font-family: var(--ll-font-heading); font-size: 28px; font-weight: 700; color: var(--ll-navy); margin: 8px 0 16px; }
+.ll-premium-price span { font-size: 14px; font-weight: 500; color: var(--ll-neutral-600); }
+.ll-premium-plan button { width: 100%; }
+.ll-premium-plan button.bg-pro { background: var(--ll-purple); }
+
+.ll-premium-pending { background: var(--ll-success-bg); color: var(--ll-success); padding: 12px 16px; border-radius: var(--ll-radius-md); font-size: 14px; margin-bottom: 20px; }

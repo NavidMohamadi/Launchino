@@ -1,0 +1,164 @@
+"""Candidate-scoped logic shared across routers.
+
+Two things live here:
+  - resolve_candidate_element_activation / compute_candidate_completion: the
+    per-category completion breakdown for the "Your profile" dashboard
+    (Phase 1). Built on activation.is_activated (unmodified) using the exact
+    same "what's active and answered for this candidate, no vacancy in
+    scope" convention api/admin_reports.py's _candidate_coverage already
+    established -- that function now calls resolve_candidate_element_activation
+    too, so there's one real implementation of this rule, not two.
+  - set_candidate_subscription: extracted from api/routers/candidates.py's
+    PATCH .../subscription (the only prior caller) so the Premium-request
+    approval flow (api/premium_requests.py) reuses the same write instead of
+    reimplementing it.
+"""
+
+from __future__ import annotations
+
+from typing import Any, Dict, List, Optional
+from uuid import UUID
+
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
+
+from activation import is_activated
+from schemas import Category, JobDiscoverySubscription, SubscriptionSource, Talent
+
+from api.matching_service import load_dictionary
+
+CATEGORY_LABELS: Dict[Category, str] = {
+    Category.PRACT: "Practical fit",
+    Category.TEAM: "How you work",
+    Category.CAREER: "Where you're headed",
+    Category.MOT: "What drives you",
+    Category.ENV: "Your ideal environment",
+}
+
+# The 5 categories with real seeded elements today, in the fixed order the
+# candidate dashboard's "Continue: ..." CTA walks through (see
+# frontend/src/pages/CandidateDashboardPage.jsx). CAP/TASK are excluded --
+# zero seeded elements, not candidate-facing categories (see PROJECT_NOTES.md).
+CANDIDATE_DASHBOARD_CATEGORY_ORDER: List[Category] = [
+    Category.PRACT, Category.TEAM, Category.CAREER, Category.MOT, Category.ENV,
+]
+
+
+def resolve_candidate_element_activation(conn: Connection, talent_id: UUID) -> Dict[str, Dict[str, Any]]:
+    """element_id -> {"category": Category, "active": bool, "answered": bool}.
+
+    No vacancy in scope, so VACANCY_ACTIVATED elements never resolve active
+    (same as the coverage report before this refactor) and a MOT element
+    counts as candidate-selected once it has an answered value -- matching
+    the admin per-candidate coverage report's existing convention exactly,
+    not build_item_results' match-time one (which additionally checks
+    value["selected"] against a live vacancy_activated/candidate_selected
+    exchange that doesn't exist outside a real match).
+    """
+    dictionary = load_dictionary(conn)
+    latest_values = conn.execute(
+        text(
+            """
+            select distinct on (element_id) element_id, value_status
+            from talent_element_value
+            where talent_id = :talent_id
+            order by element_id, record_version desc
+            """
+        ),
+        {"talent_id": str(talent_id)},
+    ).all()
+    value_status_by_element = {r.element_id: r.value_status for r in latest_values}
+
+    selected_mot_ids = {
+        element_id for element_id, status in value_status_by_element.items()
+        if status == "answered" and dictionary.get(element_id) and dictionary[element_id].category == Category.MOT
+    }
+
+    activation: Dict[str, Dict[str, Any]] = {}
+    for element in dictionary.values():
+        active = is_activated(
+            element, candidate_selected=element.element_id in selected_mot_ids, vacancy_activated=False,
+        )
+        activation[element.element_id] = {
+            "category": element.category,
+            "active": active,
+            "answered": value_status_by_element.get(element.element_id) == "answered",
+        }
+    return activation
+
+
+def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str, Any]:
+    activation = resolve_candidate_element_activation(conn, talent_id)
+
+    categories = []
+    total_active = 0
+    total_answered = 0
+    for category in CANDIDATE_DASHBOARD_CATEGORY_ORDER:
+        in_category = [v for v in activation.values() if v["category"] == category]
+        active_count = sum(1 for v in in_category if v["active"])
+        answered_count = sum(1 for v in in_category if v["active"] and v["answered"])
+        total_active += active_count
+        total_answered += answered_count
+
+        if active_count == 0 or answered_count == 0:
+            status, percent = "not_started", 0.0
+        elif answered_count == active_count:
+            status, percent = "complete", 100.0
+        else:
+            status, percent = "in_progress", round(answered_count / active_count * 100, 1)
+
+        categories.append({
+            "category": category,
+            "label": CATEGORY_LABELS[category],
+            "status": status,
+            "percent_complete": percent,
+            "active_item_count": active_count,
+            "answered_item_count": answered_count,
+        })
+
+    overall_percent = round(total_answered / total_active * 100, 1) if total_active else 0.0
+    return {"categories": categories, "overall_percent_complete": overall_percent}
+
+
+def set_candidate_subscription(
+    conn: Connection,
+    talent_id: UUID,
+    *,
+    job_discovery_subscription: JobDiscoverySubscription,
+    subscription_expires_at,
+    subscription_source: Optional[SubscriptionSource],
+) -> Dict[str, Any]:
+    """The one real write to talent.job_discovery_subscription et al. Reuses
+    schemas.py's own Talent model for validation (unmodified), same as the
+    original inline version of this code did. Raises pydantic.ValidationError
+    on invalid input -- callers translate that to their own HTTP error shape.
+    """
+    Talent(
+        talent_id=str(talent_id), full_name="placeholder", email="placeholder@example.com",
+        job_discovery_subscription=job_discovery_subscription,
+        subscription_expires_at=subscription_expires_at,
+        subscription_source=subscription_source,
+    )
+
+    conn.execute(
+        text(
+            """
+            update talent set
+                job_discovery_subscription = :job_discovery_subscription,
+                subscription_expires_at = :subscription_expires_at,
+                subscription_source = :subscription_source,
+                subscription_updated_at = now()
+            where talent_id = :talent_id
+            """
+        ),
+        {
+            "talent_id": str(talent_id),
+            "job_discovery_subscription": job_discovery_subscription.value,
+            "subscription_expires_at": subscription_expires_at,
+            "subscription_source": subscription_source.value if subscription_source else None,
+        },
+    )
+    updated = conn.execute(
+        text("select * from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).mappings().first()
+    return dict(updated)
