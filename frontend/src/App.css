@@ -182,6 +182,21 @@ table.report-table th { color: var(--ll-neutral-600); font-weight: 600; text-tra
 .ll-dash-card-badge.complete { color: var(--ll-success); }
 .ll-dash-card-badge.in_progress { background: var(--ll-purple); color: #fff; font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 999px; }
 
+/* --- 6th, static "coming soon" card -- purely visual, not a disabled
+   version of the other 5 (no complete/in_progress/not_started vocabulary,
+   no click target). --text-muted isn't a token in this design system;
+   --ll-neutral-400 already serves that exact "muted gray" role (it's what
+   .ll-dash-card-status.not_started already uses), reused rather than adding
+   a second gray with a different name. */
+.ll-dash-card.inert { opacity: 0.5; }
+.ll-dash-card-icon.muted { background: var(--ll-neutral-100); color: var(--ll-neutral-400); }
+.ll-dash-card-description { font-size: 13px; color: var(--ll-neutral-600); }
+.ll-dash-card-badge.coming-soon {
+  background: var(--ll-neutral-200); color: var(--ll-neutral-600);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 999px;
+}
+
 .ll-dash-urgency { display: flex; align-items: center; gap: 10px; background: var(--ll-warning-bg); color: var(--ll-warning); padding: 12px 16px; border-radius: var(--ll-radius-md); font-size: 13.5px; font-weight: 500; margin-bottom: 24px; }
 .ll-dash-urgency svg { flex-shrink: 0; }
 

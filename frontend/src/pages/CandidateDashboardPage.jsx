@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  IconBolt, IconBuilding, IconChartBar, IconCheck, IconClock, IconEye, IconFlag, IconMapPin, IconStar, IconUsers,
+  IconBolt, IconBuilding, IconChartBar, IconCheck, IconClock, IconEye, IconFlag, IconMapPin, IconQuote, IconStar,
+  IconUsers,
 } from '@tabler/icons-react'
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
@@ -67,6 +68,17 @@ export default function CandidateDashboardPage() {
             </div>
           )
         })}
+
+        {/* Static preview of the future third-party feedback feature -- purely
+            visual, no route/click behavior, and deliberately excluded from
+            overall_percent_complete (that figure comes only from
+            completion.categories above, untouched by this card). */}
+        <div className="ll-dash-card inert">
+          <span className="ll-dash-card-badge coming-soon">Coming soon</span>
+          <div className="ll-dash-card-icon muted"><IconQuote size={20} /></div>
+          <div className="ll-dash-card-label">How others see you</div>
+          <div className="ll-dash-card-description">From family, friends &amp; colleagues</div>
+        </div>
       </div>
 
       <hr className="ll-dash-divider" />
