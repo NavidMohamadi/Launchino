@@ -23,7 +23,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from activation import is_activated
-from schemas import Category, JobDiscoverySubscription, SubscriptionSource, Talent
+from schemas import Category, JobDiscoverySubscription, MatchConfiguration, SubscriptionSource, Talent
 
 from api.matching_service import load_dictionary
 
@@ -87,6 +87,19 @@ def resolve_candidate_element_activation(conn: Connection, talent_id: UUID) -> D
     return activation
 
 
+def get_premium_readiness_threshold_percent() -> float:
+    """The real overall-coverage threshold match_engine.py's _assign_lane forces
+    CLARIFICATION_REQUIRED below, regardless of score (src/match_engine.py:87 --
+    `overall_coverage < config.minimum_overall_coverage * 100`). Read directly
+    from MatchConfiguration's own field default (src/schemas.py) -- not a
+    second hardcoded copy of the number. This is also the value the live Job
+    Discovery pipeline actually uses unoverridden today
+    (api/job_discovery_runner.py's make_deterministic_matcher constructs
+    MatchConfiguration without passing minimum_overall_coverage at all).
+    """
+    return MatchConfiguration.model_fields["minimum_overall_coverage"].default * 100
+
+
 def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str, Any]:
     activation = resolve_candidate_element_activation(conn, talent_id)
 
@@ -117,7 +130,22 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
         })
 
     overall_percent = round(total_answered / total_active * 100, 1) if total_active else 0.0
-    return {"categories": categories, "overall_percent_complete": overall_percent}
+
+    # match_engine.py's real overall_coverage_percent is an item_importance-
+    # weighted answered/active ratio (src/match_engine.py:114-117, 144) --
+    # item_importance defaults to 3 uniformly (src/schemas.py) and there's no
+    # vacancy in scope here to specify anything else, so that weighted ratio
+    # collapses to exactly this plain answered/active count ratio. This is the
+    # same quantity match_engine.py computes, not a second, different one --
+    # revisit this equivalence if item_importance ever becomes candidate-
+    # visible/configurable outside a specific vacancy.
+    threshold_percent = get_premium_readiness_threshold_percent()
+    return {
+        "categories": categories,
+        "overall_percent_complete": overall_percent,
+        "premium_readiness_threshold_percent": threshold_percent,
+        "premium_ready": overall_percent >= threshold_percent,
+    }
 
 
 def set_candidate_subscription(

@@ -13,6 +13,48 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-29 — Premium nudge on the dashboard now gated by the real match-lane coverage threshold, not an arbitrary percentage
+
+**The real, live number, confirmed by reading it, not assuming it**: `src/match_engine.py:87`'s
+`_assign_lane` forces `CLARIFICATION_REQUIRED` (a provisional, not-confidently-scored result)
+whenever `overall_coverage < config.minimum_overall_coverage * 100`. That field's default in
+`src/schemas.py`'s `MatchConfiguration` is **0.70 (70%)**, confirmed via
+`MatchConfiguration.model_fields["minimum_overall_coverage"].default`. It's not just a schema
+default nobody uses -- `api/job_discovery_runner.py`'s `make_deterministic_matcher` (the real,
+live Job Discovery pipeline) constructs `MatchConfiguration` without ever overriding this field,
+so 70% is the actual number governing whether a real candidate's real matches land confidently
+or get flagged as provisional today.
+
+**Reused, not re-hardcoded**: `api/candidate_service.get_premium_readiness_threshold_percent()`
+reads `MatchConfiguration.model_fields["minimum_overall_coverage"].default` directly -- if that
+default ever changes in `src/schemas.py`, this follows automatically with no second edit needed.
+`GET /candidates/{id}/completion` now also returns `premium_readiness_threshold_percent` and
+`premium_ready` (`overall_percent_complete >= premium_readiness_threshold_percent`). The
+candidate dashboard's "Want proactive job matching? That's Premium" value-prop line is now
+gated on `premium_ready` -- hidden below the real threshold, shown at or above it. This
+replaces what would otherwise have been a second, disconnected magic number.
+
+**One real approximation, made explicit rather than silent**: match_engine.py's real
+`overall_coverage_percent` is an `item_importance`-weighted answered/active ratio
+(`src/match_engine.py:114-117,144`), not a plain count ratio -- but `item_importance` defaults
+to `3` uniformly (`src/schemas.py`) and there is no vacancy in scope on the candidate dashboard
+to specify anything else. Under uniform weighting the weighted ratio is mathematically
+identical to a plain count ratio, so `compute_candidate_completion`'s existing
+`overall_percent_complete` (already used for the per-category cards) *is* the same quantity,
+not a second one -- this holds only because `item_importance` isn't candidate-configurable
+outside a specific vacancy today. **Revisit if** `item_importance` ever becomes candidate-
+visible/configurable independent of a vacancy -- at that point this equivalence would need
+re-deriving, not assumed to still hold.
+
+**Verified for real**: a fresh candidate at 0% showed 2 value-prop lines (Premium line
+correctly hidden); after answering all 23 real ALWAYS-activated elements (PRACT+TEAM+CAREER+ENV)
+to reach a genuine 100%, reloading showed the Premium line. New tests
+(`test_premium_readiness_threshold_is_read_from_match_configuration_default`,
+`test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold`) confirm both the
+no-second-copy property and the flip itself against the real API. Full suite (123) passes.
+
+---
+
 ## 2026-07-29 — Candidate dashboard's "Continue" deep link exposed a real gap: the survey page never resumed previous answers — RESOLVED same day
 
 Built the "Your profile" dashboard (per-category completion, `GET /candidates/{id}/completion`)

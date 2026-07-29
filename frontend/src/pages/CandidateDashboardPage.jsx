@@ -41,7 +41,11 @@ export default function CandidateDashboardPage() {
           <p className="ll-dash-subhead">Get to know yourself better, one area at a time.</p>
         </div>
         <div className="ll-dash-overall">
-          <div className="ll-dash-overall-value">{Math.round(completion.overall_percent_complete)}%</div>
+          {/* floor, not round -- must never display more progress than actually
+              exists (e.g. a real 69.6% rounding up to a displayed "70%" right
+              at the Premium-nudge threshold looked inconsistent with the
+              nudge correctly staying hidden at that real value) */}
+          <div className="ll-dash-overall-value">{Math.floor(completion.overall_percent_complete)}%</div>
           <div className="ll-dash-overall-label">complete</div>
         </div>
       </div>
@@ -81,10 +85,12 @@ export default function CandidateDashboardPage() {
           <IconChartBar size={18} color="var(--ll-turquoise-dark)" />
           <span>Complete profiles get noticed first</span>
         </div>
-        <div className="ll-dash-valueprop">
-          <IconStar size={18} color="var(--ll-purple)" />
-          <span>Want proactive job matching? That&rsquo;s <Link to="/candidate/premium">Premium</Link></span>
-        </div>
+        {completion.premium_ready && (
+          <div className="ll-dash-valueprop">
+            <IconStar size={18} color="var(--ll-purple)" />
+            <span>Want proactive job matching? That&rsquo;s <Link to="/candidate/premium">Premium</Link></span>
+          </div>
+        )}
       </div>
 
       {nextIncomplete ? (

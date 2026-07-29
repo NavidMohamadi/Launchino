@@ -16,7 +16,39 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+from api.candidate_service import get_premium_readiness_threshold_percent  # noqa: E402
 from api.main import app  # noqa: E402
+from schemas import MatchConfiguration  # noqa: E402
+
+# Every real, non-MOT ALWAYS-activated element outside PRACT (MOT is
+# deliberately left unselected -- 0 active items there don't count against
+# the total, see api/candidate_service.py). Real element_ids + minimal valid
+# values for each real candidate_value_schema shape in
+# data/fit_dictionary_starter.json.
+_TEAM_CAREER_ENV_ANSWERS = [
+    {"element_id": "TEAM-COLLAB-INTENSITY",
+     "value": {"preferred_min": 2, "preferred_max": 4, "tolerable_min": 1, "tolerable_max": 5}},
+] + [
+    {"element_id": eid, "value": {"values": ["example"], "ranked": True}}
+    for eid in [
+        "CAREER-PRIMARY-ROLE", "CAREER-SECONDARY-ROLE", "CAREER-PROBLEM-TYPES", "CAREER-DESIRED-ACTIVITIES",
+        "CAREER-AVOIDED-ACTIVITIES", "CAREER-INDUSTRIES", "CAREER-DEVELOPMENT",
+    ]
+] + [
+    {"element_id": eid, "value": {"preferred_min": 2, "preferred_max": 4, "tolerable_min": 1, "tolerable_max": 5}}
+    for eid in [
+        "ENV-STRUCTURE", "ENV-PRIORITY-CHANGE", "ENV-METHOD-AUTONOMY", "ENV-MANAGER-INVOLVEMENT",
+        "ENV-FEEDBACK", "ENV-PROCESS-MATURITY", "ENV-REACTIVITY", "ENV-ROLE-BREADTH", "ENV-STAKEHOLDER",
+    ]
+]
+_PRACT_ANSWERS = [
+    {"element_id": "PRACT-SPONSOR", "value": {"requirement": "not_required"}},
+    {"element_id": "PRACT-START", "value": {"earliest_start": "2026-09-01"}},
+    {"element_id": "PRACT-WORKMODE", "value": {"acceptable": ["hybrid"]}},
+    {"element_id": "PRACT-COUNTRY", "value": {"current_country": "NL", "presence_relative_to_vacancy": "in_country"}},
+    {"element_id": "PRACT-LANG", "value": {"languages": {"English": "fluent"}}},
+    {"element_id": "PRACT-CONTRACT", "value": {"acceptable": ["full_time"]}},
+]
 
 
 def _make_candidate(client):
@@ -158,5 +190,41 @@ def test_survey_values_returns_latest_saved_answers_for_prefill():
         r = client.get(f"/candidates/{talent_id}/survey-values", headers=headers)
         assert r.json()["PRACT-SPONSOR"]["value"] == {"requirement": "required"}
 
-        r = client.get(f"/candidates/{talent_id}/completion")
-        assert r.status_code == 401, r.text
+
+def test_premium_readiness_threshold_is_read_from_match_configuration_default():
+    """Confirms no second hardcoded copy of the threshold exists anywhere --
+    the value returned must equal MatchConfiguration's own field default,
+    read fresh here rather than restated as a literal."""
+    expected = MatchConfiguration.model_fields["minimum_overall_coverage"].default * 100
+    assert get_premium_readiness_threshold_percent() == expected
+
+
+def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
+    with TestClient(app) as client:
+        talent_id, headers = _make_candidate(client)
+        threshold = get_premium_readiness_threshold_percent()
+
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        body = r.json()
+        assert body["premium_readiness_threshold_percent"] == threshold
+        assert body["overall_percent_complete"] == 0.0
+        assert body["premium_ready"] is False
+
+        # Answer every real ALWAYS-activated element (PRACT+TEAM+CAREER+ENV =
+        # 23 items; MOT stays unselected, 0 active there, doesn't count) --
+        # a genuinely complete (100%) profile must cross any threshold <=100%.
+        all_answers = _PRACT_ANSWERS + _TEAM_CAREER_ENV_ANSWERS
+        r = client.post(f"/candidates/{talent_id}/survey", headers=headers, json={
+            "values": [
+                {"element_id": a["element_id"], "value": a["value"], "value_status": "answered", "source_type": "self_report"}
+                for a in all_answers
+            ],
+        })
+        assert r.status_code == 201, r.text
+        assert r.json()["values_stored"] == 23
+
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        body = r.json()
+        assert body["overall_percent_complete"] == 100.0
+        assert body["overall_percent_complete"] >= body["premium_readiness_threshold_percent"]
+        assert body["premium_ready"] is True

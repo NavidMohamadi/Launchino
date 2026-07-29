@@ -270,6 +270,8 @@ class CandidateCompletionOut(BaseModel):
     talent_id: UUID
     categories: List[CategoryCompletionOut]
     overall_percent_complete: float
+    premium_readiness_threshold_percent: float
+    premium_ready: bool
 
 
 class PremiumRequestCreate(BaseModel):
