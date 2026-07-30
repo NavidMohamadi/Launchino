@@ -7,20 +7,15 @@ INPUTS
 - fit_dictionary: {{FIT_DICTIONARY_JSON}}
 - approved_mapping_memory: {{MAPPING_MEMORY_JSON}}
 
-TASK
-1. Extract education, employment, projects, tools, skills, tasks, results and dates.
-2. Search approved mapping memory, then the Fit Dictionary.
-3. Preserve original wording and a short supporting quote.
-4. Do not create a new canonical element ID. Return unmapped terms for P03/P13 and human review.
-5. Return valid JSON only.
+SCOPE (deliberately narrow -- see PROJECT_NOTES.md's Phase 3 entry)
+This extraction covers three things only:
+1. Basic Info -- phone and linkedin_url, only if explicitly stated (see the BASIC INFO rule appended below for the exact output shape).
+2. Education -- fit_dictionary above will only ever contain EDU-category elements alongside Practical fit (never CAP/TASK/CAREER/MOT/ENV/TEAM), so map education history there using its value_schema.
+3. Practical fit (PRACT) -- the other category fit_dictionary above may contain.
+Skills and work experience (CAP/TASK) are NEVER extracted here, even if the CV clearly lists them -- they are always manual candidate entry, each backed by their own AI-to-ESCO mapping through a separate, purpose-built path. Do not attempt to fill this gap by inventing or repurposing other fields.
 
-OUTPUT JSON
-{
-  "candidate_id":"string",
-  "education":[{"qualification":"string","field":"string","institution":"string","start":"YYYY-MM|unknown","end":"YYYY-MM|unknown","evidence_quote":"string"}],
-  "experiences":[{"organisation":"string","title":"string","start":"YYYY-MM|unknown","end":"YYYY-MM|present|unknown","tasks":["string"],"results":["string"],"tools":["string"],"evidence_quote":"string"}],
-  "mapped_elements":[{"element_id":"string|unmapped","category":"CAP|TASK","label":"string","support":"explicit|indirect","evidence_quote":"string","confidence":0.0,"human_review_required":true}],
-  "unmapped_terms":["string"],
-  "clarification_questions":["string"],
-  "warnings":["string"]
-}
+TASK
+1. Extract only what SCOPE above covers, from explicit CV content, with a short supporting quote per item.
+2. Search approved mapping memory, then the Fit Dictionary, for each element_id -- exact copy only, never invented (see the ELEMENT ID rule appended below).
+3. Use each element's own value_schema for the value object's keys (see the VALUE SCHEMA rule appended below).
+4. Return your answer only via the tool call described at the end of this prompt -- there is no other output format.

@@ -55,6 +55,28 @@ export const getCandidate = (talentId) => request(`/candidates/${talentId}`)
 export const updateCandidateSubscription = (talentId, payload) =>
   request(`/candidates/${talentId}/subscription`, { method: 'PATCH', body: JSON.stringify(payload) })
 
+export const updateBasicInfo = (talentId, payload) =>
+  request(`/candidates/${talentId}/basic-info`, { method: 'PATCH', body: JSON.stringify(payload) })
+
+export const mapSkill = (talentId, term) =>
+  request(`/candidates/${talentId}/map-skill`, { method: 'POST', body: JSON.stringify({ term }) })
+
+export const mapOccupation = (talentId, term) =>
+  request(`/candidates/${talentId}/map-occupation`, { method: 'POST', body: JSON.stringify({ term }) })
+
+export const mapProgram = (talentId, term) =>
+  request(`/candidates/${talentId}/map-program`, { method: 'POST', body: JSON.stringify({ term }) })
+
+export const searchInstitutions = (q) => request(`/reference/institutions?q=${encodeURIComponent(q)}`)
+
+export const searchPrograms = (q) => request(`/reference/programs?q=${encodeURIComponent(q)}`)
+
+export const searchSkills = (q) => request(`/reference/skills?q=${encodeURIComponent(q)}`)
+
+export const searchOccupations = (q) => request(`/reference/occupations?q=${encodeURIComponent(q)}`)
+
+export const getIscedFields = () => request('/reference/isced-fields')
+
 export const createCompany = (payload) =>
   request('/companies', { method: 'POST', body: JSON.stringify(payload) })
 
@@ -112,6 +134,15 @@ export const getCandidateReport = (talentId) => request(`/admin/candidates/${tal
 export const getCompanyReport = (companyId) => request(`/admin/companies/${companyId}/report`)
 
 export const getIngestionHealth = () => request('/admin/reports/ingestion-health')
+
+// --- Admin: manual/recurring process "Run now" tasks ---
+
+export const getTaskStatus = () => request('/admin/tasks/status')
+
+export const runTask = (taskName) => request(`/admin/tasks/${taskName}/run`, { method: 'POST' })
+
+export const runAllReferenceRefresh = () =>
+  request('/admin/tasks/reference-refresh/run-all', { method: 'POST' })
 
 // --- Admin: Phase 2 review-queue endpoints ---
 

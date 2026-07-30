@@ -93,3 +93,42 @@ def test_archived_possible_duplicate_requires_review_not_merge():
     profile.lifecycle_status = VacancyLifecycleStatus.ARCHIVED
     decision = compare_raw_to_profile(raw(), profile)
     assert decision.outcome == DuplicateOutcome.REVIEW_REQUIRED
+
+
+def test_merge_never_touches_edu_cap_task_requirement_fields():
+    """A scraped update can never collide with a company's own EDU/CAP/TASK
+    workshop submission (required_education/required_skills/
+    required_occupations), because those live in a completely separate
+    table (vacancy_element_value, written only by POST /vacancies/{id}/
+    workshop) that CanonicalVacancyProfile/merge_profile_fields never touch
+    at all -- confirmed here, not assumed. merge_profile_fields' own
+    supported_fields allowlist doesn't name them, so even a hypothetical
+    incoming_fields payload containing them is silently ignored, not merged
+    or used to overwrite anything."""
+    profile = canonicalise_raw_vacancy(raw())
+    assert not hasattr(profile, "required_education")
+    assert not hasattr(profile, "required_skills")
+    assert not hasattr(profile, "required_occupations")
+
+    merged = merge_profile_fields(
+        profile,
+        incoming_fields={
+            "title": "Updated Title",
+            "required_education": [{"isced_code": "061", "level": "bachelor"}],
+            "required_skills": [{"skill": "SQL"}],
+            "required_occupations": [{"occupation": "software developer"}],
+        },
+        incoming_snapshot_id="scrape-2",
+        incoming_trust=SourceTrustLevel.COMPANY_CONFIRMED,
+        incoming_verification=VerificationStatus.SOURCE_VERIFIED,
+    )
+    assert merged.title == "Updated Title"
+    assert not hasattr(merged, "required_education")
+    assert not hasattr(merged, "required_skills")
+    assert not hasattr(merged, "required_occupations")
+    # Only the one supported field (title) produced a conflict -- the three
+    # unsupported EDU/CAP/TASK-style keys were silently skipped, not merged
+    # or recorded as a conflict at all.
+    assert len(merged.source_conflicts) == 1
+    assert merged.source_conflicts[0].field_path == "title"
+    assert merged.version == profile.version + 1

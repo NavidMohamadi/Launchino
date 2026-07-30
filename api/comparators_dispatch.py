@@ -18,8 +18,8 @@ from typing import Any, Dict, Optional, Tuple
 from match_engine import score_ordinal_requirement
 from ordinal_comparators import score_ordinal_range
 from practical_comparators import (
-    score_availability, score_contract_type, score_country_presence,
-    score_language, score_sponsorship, score_work_mode,
+    EDUCATION_LEVEL, SKILL_PROFICIENCY_LEVEL, score_availability, score_contract_type, score_country_presence,
+    score_language, score_sponsorship, score_tagged_list_overlap, score_work_mode, score_work_type,
 )
 from schemas import Alignment, FitElement, OrdinalRange
 
@@ -38,6 +38,27 @@ def _extract_offered(description: Any) -> Any:
     if isinstance(description, dict):
         return description.get("offered")
     return description
+
+
+def _tags_from_entries(entries: Any, *, code_field: str, text_field: str, level_field: Optional[str] = None) -> list:
+    """Maps a list of repeatable CAP/TASK/EDU entries into the plain
+    {"tag": ..., "level": ...} shape score_tagged_list_overlap expects. The
+    mapped standard code (ESCO/ISCED) is the stable join key when present;
+    an entry with no mapping yet (or a mapping the candidate hasn't
+    confirmed) falls back to its own raw free-text field, so an unmapped
+    entry still gets literal-text comparability rather than being silently
+    excluded from matching entirely."""
+    if not isinstance(entries, list):
+        return []
+    result = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        tag = entry.get(code_field) or entry.get(text_field)
+        if not tag:
+            continue
+        result.append({"tag": tag, "level": entry.get(level_field) if level_field else None})
+    return result
 
 
 def score_semantic_overlap(candidate_values: Any, vacancy_values: Any) -> Tuple[Alignment, str, bool]:
@@ -128,7 +149,66 @@ def compare_answered_values(
         )
         return alignment, reason, alignment == Alignment.UNKNOWN
 
+    if key == "work_type_set":
+        alignment, reason = score_work_type(
+            candidate_value.get("acceptable"), _extract_offered(vacancy_value.get("description"))
+        )
+        return alignment, reason, alignment == Alignment.UNKNOWN
+
     if key == "semantic_overlap":
         return score_semantic_overlap(candidate_value.get("values"), vacancy_value.get("values"))
+
+    if key == "tagged_list_overlap_skills":
+        # CAP-SKILLS: repeatable {skill, level, esco_uri, confidence} entries,
+        # leveled by proficiency. Phase 5 (vacancy-side required skills) has
+        # not shipped yet, so vacancy_value["required_skills"] is always
+        # empty today -- correctly resolves UNKNOWN, not a guessed match.
+        candidate_entries = _tags_from_entries(
+            candidate_value.get("skills"), code_field="esco_uri", text_field="skill", level_field="level",
+        )
+        required_entries = _tags_from_entries(
+            vacancy_value.get("required_skills"), code_field="esco_uri", text_field="skill", level_field="level",
+        )
+        alignment, reason = score_tagged_list_overlap(
+            candidate_entries, required_entries, level_order=SKILL_PROFICIENCY_LEVEL, label="skills",
+        )
+        return alignment, reason, alignment == Alignment.UNKNOWN
+
+    if key == "tagged_list_overlap_occupation":
+        # TASK-EXPERIENCE: repeatable {job_title, esco_uri, confidence,
+        # start_date, end_date} entries, unleveled (occupation-domain
+        # presence/overlap only -- years of experience is TASK-YEARS'
+        # separate ordinal_requirement element, not this one).
+        candidate_entries = _tags_from_entries(
+            candidate_value.get("jobs"), code_field="esco_uri", text_field="job_title",
+        )
+        required_entries = _tags_from_entries(
+            vacancy_value.get("required_occupations"), code_field="esco_uri", text_field="occupation",
+        )
+        alignment, reason = score_tagged_list_overlap(
+            candidate_entries, required_entries, level_order=None, label="occupation experience",
+        )
+        return alignment, reason, alignment == Alignment.UNKNOWN
+
+    if key == "tagged_list_overlap_education":
+        # EDU-HISTORY: repeatable {level, institution, program, field:
+        # {isced_code, confidence}, start_date, end_date, status} entries.
+        # "tag" is the mapped ISCED-F field code (falling back to the raw
+        # program text if unmapped); "level" is the education level
+        # (secondary/vocational/bachelor/master/phd).
+        candidate_entries = [
+            {"tag": (e.get("field") or {}).get("isced_code") or e.get("program"), "level": e.get("level")}
+            for e in (candidate_value.get("entries") or []) if isinstance(e, dict)
+            and ((e.get("field") or {}).get("isced_code") or e.get("program"))
+        ]
+        required_entries = [
+            {"tag": r.get("isced_code") or r.get("field"), "level": r.get("level")}
+            for r in (vacancy_value.get("required_education") or []) if isinstance(r, dict)
+            and (r.get("isced_code") or r.get("field"))
+        ]
+        alignment, reason = score_tagged_list_overlap(
+            candidate_entries, required_entries, level_order=EDUCATION_LEVEL, label="education",
+        )
+        return alignment, reason, alignment == Alignment.UNKNOWN
 
     raise ValueError(f"Unsupported comparator_key: {key}")

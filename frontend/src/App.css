@@ -95,6 +95,20 @@ button:hover:not(:disabled) { filter: brightness(0.95); }
 .field-group { display: flex; flex-direction: column; gap: 6px; }
 .checkbox { display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; font-weight: normal; color: var(--ll-navy); }
 
+/* Phase 4: repeatable-entry pages (Education/Capabilities/Task History) */
+.autocomplete-list {
+  position: absolute; z-index: 20; top: 100%; left: 0; max-width: 320px; width: 100%;
+  background: #fff; border: 1px solid var(--ll-neutral-200); border-radius: var(--ll-radius-sm);
+  box-shadow: var(--ll-shadow-sm); max-height: 220px; overflow-y: auto; margin: 2px 0 0; padding: 0; list-style: none;
+}
+.autocomplete-list li { padding: 8px 10px; font-size: 13px; color: var(--ll-navy); cursor: pointer; }
+.autocomplete-list li:hover { background: var(--ll-neutral-100, #f5f5f5); }
+
+.entry-card { border: 1px solid var(--ll-neutral-200); border-radius: var(--ll-radius-sm); padding: 16px; margin-bottom: 12px; position: relative; }
+.entry-card-remove { position: absolute; top: 10px; right: 10px; background: none; color: var(--ll-neutral-600); padding: 4px 8px; font-size: 12px; }
+.entry-card-remove:hover { color: var(--ll-error, #c0392b); }
+.confidence-flag { font-size: 12px; color: var(--ll-warning); margin-top: 4px; }
+
 .stepper { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; color: var(--ll-neutral-600); }
 .stepper input[type="range"] { width: 160px; accent-color: var(--ll-turquoise-dark); }
 .stepper-value { font-weight: 700; width: 16px; text-align: center; color: var(--ll-navy); }

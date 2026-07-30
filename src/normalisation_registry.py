@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, Optional
 
-from schemas import ActivationPolicy, Category, FitElement, FitElementAlias, MappingRelationship, SharingStatus
+from schemas import Category, FitElement, FitElementAlias, MappingRelationship, SharingStatus, expected_activation_policy
 
 
 SLUG_RE = re.compile(r"[^A-Z0-9]+")
@@ -77,7 +77,13 @@ def build_approved_dynamic_element(
     vacancy_question: str,
     evidence_rule: str,
 ) -> FitElement:
-    """Create a reviewed CAP/TASK element; activation is system-derived, never reviewer-selected."""
+    """Create a reviewed CAP/TASK element; activation is system-derived, never reviewer-selected.
+
+    Calls expected_activation_policy() (schemas.py) rather than hardcoding a
+    literal here -- this is exactly the "system-derived" the docstring
+    already promised, and avoids a second copy of the same CAP/TASK rule
+    silently drifting out of sync with FitElement's own validator (which
+    already happened once -- see PROJECT_NOTES.md)."""
     if category not in {Category.CAP, Category.TASK}:
         raise ValueError("Dynamic elements may only be created for CAP or TASK")
     return FitElement(
@@ -85,7 +91,7 @@ def build_approved_dynamic_element(
         category=category,
         label=label,
         definition=definition,
-        activation_policy=ActivationPolicy.VACANCY_ACTIVATED,
+        activation_policy=expected_activation_policy(category, element_id),
         candidate_question=candidate_question,
         vacancy_question=vacancy_question,
         candidate_value_schema={"level":"integer 0..4", "evidence":"string|null"},

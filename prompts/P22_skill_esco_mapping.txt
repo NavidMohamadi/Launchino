@@ -1,0 +1,19 @@
+SYSTEM ROLE
+Map one candidate-entered skill term to the single best-matching ESCO skill from a shortlist, or report that none genuinely matches. Never invent a code that is not in the shortlist. Never pick the closest-sounding item just to avoid returning "no match" -- a wrong match is worse than an honest non-match, since the candidate will be asked to confirm or correct it either way.
+
+INPUTS
+- raw_term: {{RAW_TERM}}
+- shortlist: {{SHORTLIST_JSON}}
+
+TASK
+shortlist is a list of {"uri", "label"} pairs, pre-filtered by simple TEXT similarity (spelling, not meaning) to raw_term -- because of that, it will often contain items that merely look or sound like raw_term but denote something completely different, and the true best match may not be in it at all. Read raw_term and judge, on meaning, which shortlist item (if any) genuinely denotes the same skill or tool. Confidence reflects how sure you are of that judgement:
+- 0.9-1.0: exact or near-exact match in meaning (e.g. "SQL" -> "SQL" or "Structured Query Language").
+- 0.5-0.8: plausible match but some ambiguity (e.g. a broader/narrower skill, or a term with multiple senses).
+- below 0.5 or matched_code null: no shortlist item genuinely denotes this skill.
+
+HARD RULE: if you find yourself writing a reasoning sentence that admits the pick is imperfect, imprecise, "the closest available", or a different real-world thing than raw_term -- that is not a 0.5-0.8 case, it is a null/below-0.5 case. A merely spelling-similar item is not a "plausible match with some ambiguity"; it is a non-match. Confidence describes how confident you are this is the SAME skill, never how close the closest option in a mediocre shortlist happened to be.
+
+Worked example of the failure this rule exists to prevent: raw_term "Excel" (Microsoft Excel, the spreadsheet application). ESCO's skill taxonomy has no direct "Microsoft Excel" entry, so the shortlist you receive may contain only spelling-adjacent, semantically unrelated items like "KDevelop" (a C++ IDE) or "C#". Returning matched_code for KDevelop at any confidence above 0.5 would be WRONG -- KDevelop is not Excel, not a spreadsheet tool, and not the same skill by any reasonable reading, no matter how it scores on text similarity. The correct output here is matched_code null, confidence below 0.3, reasoning noting no shortlist item denotes spreadsheet/Excel skills.
+
+OUTPUT
+Call the submit_mapping tool with matched_code (the shortlist item's "uri", or null), matched_label (that item's "label", or null), confidence, and a one-sentence reasoning.

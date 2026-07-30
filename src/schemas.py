@@ -15,6 +15,7 @@ class Category(str, Enum):
     CAREER = "CAREER"
     MOT = "MOT"
     ENV = "ENV"
+    EDU = "EDU"
 
 
 class ActivationPolicy(str, Enum):
@@ -58,6 +59,18 @@ class SubscriptionSource(str, Enum):
     COMPANY_SPONSORED = "company_sponsored"
     PROMOTION = "promotion"
     PREMIUM_REQUEST_APPROVED = "premium_request_approved"
+
+
+class ContactPreference(str, Enum):
+    """Mirrors the talent.contact_preference DB check constraint
+    (migrations/006_v2_2_0_to_v2_3_0.sql) -- plain account contact info, not
+    a Fit Dictionary category, never compared against a vacancy (see
+    PROJECT_NOTES.md's Phase 1 entry)."""
+
+    EMAIL = "email"
+    PHONE = "phone"
+    EITHER = "either"
+    IN_APP_ONLY = "in_app_only"
 
 
 class SourceType(str, Enum):
@@ -161,6 +174,9 @@ class Talent(BaseModel):
     job_discovery_campaign_opt_in: bool = False
     subscription_updated_at: Optional[datetime] = None
     subscription_source: Optional[SubscriptionSource] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    contact_preference: ContactPreference = ContactPreference.EMAIL
 
     @field_validator("subscription_expires_at", "subscription_updated_at")
     @classmethod
@@ -188,8 +204,12 @@ class OrdinalRange(BaseModel):
 
 
 def expected_activation_policy(category: Category, element_id: str) -> ActivationPolicy:
+    # CAP/TASK: candidate-side profile content (skills, work history), always
+    # answerable independent of any vacancy -- like PRACT/CAREER/ENV, not
+    # vacancy-gated as originally designed pre-Phase-1 (see PROJECT_NOTES.md
+    # and migrations/006_v2_2_0_to_v2_3_0.sql's matching DB constraint swap).
     if category in {Category.CAP, Category.TASK}:
-        return ActivationPolicy.VACANCY_ACTIVATED
+        return ActivationPolicy.ALWAYS
     if category == Category.MOT:
         return ActivationPolicy.CANDIDATE_SELECTED
     if category == Category.TEAM:

@@ -5,7 +5,7 @@ create extension if not exists pgcrypto;
 
 create table fit_element (
     element_id text primary key,
-    category text not null check (category in ('PRACT','CAP','TASK','TEAM','CAREER','MOT','ENV')),
+    category text not null check (category in ('PRACT','CAP','TASK','TEAM','CAREER','MOT','ENV','EDU')),
     label text not null,
     definition text not null,
     activation_policy text not null check (activation_policy in ('always','vacancy_activated','candidate_selected')),
@@ -21,7 +21,16 @@ create table fit_element (
     active boolean not null default true,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    check ((category in ('CAP','TASK') and activation_policy='vacancy_activated') or category not in ('CAP','TASK')),
+    -- Per-category activation-policy allow-lists -- CAP/TASK/MOT/TEAM are
+    -- each pinned to exactly one policy for a real reason specific to that
+    -- category (see PROJECT_NOTES.md): CAP/TASK are candidate-side profile
+    -- content, always answerable independent of any vacancy (like PRACT/
+    -- CAREER/ENV) -- NOT vacancy-gated as originally designed pre-Phase-1.
+    -- MOT's candidate_selected policy is its own top-5-selection mechanic,
+    -- unrelated and unchanged. TEAM mixes one always-active item with the
+    -- rest vacancy-gated, also unchanged. A future category cannot silently
+    -- use an unintended policy without violating one of these.
+    check ((category in ('CAP','TASK') and activation_policy='always') or category not in ('CAP','TASK')),
     check ((category='MOT' and activation_policy='candidate_selected') or category<>'MOT'),
     check ((category='TEAM' and element_id='TEAM-COLLAB-INTENSITY' and activation_policy='always') or
            (category='TEAM' and element_id<>'TEAM-COLLAB-INTENSITY' and activation_policy='vacancy_activated') or
@@ -78,6 +87,14 @@ create table talent (
     -- was given, since that text will change over time.
     consent_at timestamptz,
     consent_version text,
+    -- Basic Info: contact/reachability fields (Phase 1 of Education/
+    -- Capabilities/Task History) -- plain talent columns like password_hash/
+    -- last_login_at above, deliberately NOT a Fit Dictionary category, since
+    -- these are never compared against a vacancy.
+    phone text,
+    linkedin_url text,
+    contact_preference text not null default 'email'
+        check (contact_preference in ('email','phone','either','in_app_only')),
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
@@ -190,6 +207,29 @@ create table poll_run (
     jobs_updated integer not null default 0,
     error_message text
 );
+
+-- Tracks status for the manual/recurring processes triggerable from the
+-- admin dashboard ("Run now" buttons) -- see migrations/007_v2_3_0_to_v2_4_0.sql.
+-- Distinct from poll_run (per job-board source) and job_discovery_batch_run
+-- (per pipeline invocation) -- this is the one place tracking "is a Run-now
+-- click for process X in flight, and what happened last time," uniformly
+-- across all 5 triggerable processes. Never written to automatically --
+-- every row here originates from an explicit admin click.
+create table admin_task_run (
+    task_run_id uuid primary key default gen_random_uuid(),
+    task_name text not null check (task_name in (
+        'reference_refresh_ror', 'reference_refresh_esco', 'reference_refresh_croho',
+        'ingestion_poll', 'job_discovery_run'
+    )),
+    status text not null default 'running' check (status in ('running', 'succeeded', 'failed')),
+    started_at timestamptz not null default now(),
+    completed_at timestamptz,
+    triggered_by text,
+    result_summary jsonb,
+    error_message text
+);
+
+create index idx_admin_task_run_lookup on admin_task_run (task_name, started_at desc);
 
 create table source_snapshot (
     snapshot_id text primary key,

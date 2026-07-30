@@ -1,9 +1,16 @@
 """Manually-triggered real run of src/job_discovery_pipeline.py's full cycle.
 
-Like api/job_discovery_scheduler.py, this is never imported by api/main.py and
-registers no scheduler, cron, or background task. The only way to run it is:
+Like api/job_discovery_scheduler.py, this registers no scheduler, cron, or
+background task -- nothing here ever runs on its own. The ways to run it are:
 
     python -m api.job_discovery_runner --run-once
+
+-- or an admin clicking "Run now" on the dashboard (api/admin_tasks.py's
+run_job_discovery_task, routed through POST /admin/tasks/job_discovery_run/run
+in api/routers/admin_tasks.py), which imports run_real_job_discovery_cycle
+lazily inside its own function body so this module still isn't imported at
+api/main.py startup -- only the first time an admin actually triggers a run.
+Each trigger makes real, billable Claude API calls, same as the CLI path.
 
 Loads real talents/vacancies from Postgres, builds a deterministic_matcher
 from the unmodified src/matching_service-equivalent logic (build_item_results +

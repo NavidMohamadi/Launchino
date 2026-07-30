@@ -1133,5 +1133,167 @@
     "version": "2.0.0",
     "is_template": false,
     "activation_policy": "always"
+  },
+  {
+    "element_id": "EDU-HISTORY",
+    "category": "EDU",
+    "label": "Education history",
+    "definition": "Every education entry the candidate wants considered: level, institution, program, standardized field of study, dates, and status. Repeatable -- a candidate may have more than one degree.",
+    "candidate_question": "What education do you have? Include level, institution, program, when you studied, and whether you completed it.",
+    "vacancy_question": "What level and field of education (if any) does this role genuinely require or prefer?",
+    "candidate_value_schema": {
+      "entries": [
+        {
+          "level": "secondary|vocational|bachelor|master|phd|other",
+          "institution": {
+            "ror_id": "string|null",
+            "name": "string"
+          },
+          "program": "string",
+          "field": {
+            "isced_code": "string|null",
+            "confidence": "number 0..1|null"
+          },
+          "start_date": "YYYY-MM-DD",
+          "end_date": "YYYY-MM-DD|null",
+          "status": "completed|currently_studying|did_not_complete"
+        }
+      ]
+    },
+    "vacancy_value_schema": {
+      "required_education": [
+        {
+          "isced_code": "string",
+          "level": "secondary|vocational|bachelor|master|phd",
+          "requirement": "required|preferred"
+        }
+      ]
+    },
+    "evidence_rule": "Candidate report; field-of-study mapped to ISCED-F 2013 by AI with a confidence score the candidate must confirm or correct when low (see PROJECT_NOTES.md).",
+    "comparator_key": "tagged_list_overlap_education",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAP-SKILLS",
+    "category": "CAP",
+    "label": "Skills",
+    "definition": "Every skill the candidate wants considered, with a self-reported proficiency level and an AI-mapped ESCO skill code with confidence score. Repeatable.",
+    "candidate_question": "What skills do you have, and how would you rate your level in each?",
+    "vacancy_question": "What skills does this role genuinely require or prefer, and at what level?",
+    "candidate_value_schema": {
+      "skills": [
+        {
+          "skill": "string",
+          "level": "beginner|intermediate|advanced|expert",
+          "esco_uri": "string|null",
+          "confidence": "number 0..1|null"
+        }
+      ]
+    },
+    "vacancy_value_schema": {
+      "required_skills": [
+        {
+          "esco_uri": "string",
+          "skill": "string",
+          "level": "beginner|intermediate|advanced|expert",
+          "requirement": "required|preferred"
+        }
+      ]
+    },
+    "evidence_rule": "Candidate self-report; skill text mapped to ESCO by AI with a confidence score the candidate must confirm or correct when low.",
+    "comparator_key": "tagged_list_overlap_skills",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "TASK-EXPERIENCE",
+    "category": "TASK",
+    "label": "Work experience",
+    "definition": "Every job the candidate wants considered: job title (AI-mapped to an ESCO occupation code with confidence), start date, and end date (or currently in this role). Repeatable.",
+    "candidate_question": "What jobs have you held? Include the job title and the dates you worked there.",
+    "vacancy_question": "What occupation domains (if any) does this role genuinely require or prefer experience in?",
+    "candidate_value_schema": {
+      "jobs": [
+        {
+          "job_title": "string",
+          "esco_uri": "string|null",
+          "confidence": "number 0..1|null",
+          "start_date": "YYYY-MM-DD",
+          "end_date": "YYYY-MM-DD|null",
+          "current": "boolean"
+        }
+      ]
+    },
+    "vacancy_value_schema": {
+      "required_occupations": [
+        {
+          "esco_uri": "string",
+          "occupation": "string",
+          "requirement": "required|preferred"
+        }
+      ]
+    },
+    "evidence_rule": "Candidate self-report; job title mapped to ESCO by AI with a confidence score the candidate must confirm or correct when low. Duration is never taken from here directly -- see TASK-YEARS, computed by the system from these dates.",
+    "comparator_key": "tagged_list_overlap_occupation",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "TASK-YEARS",
+    "category": "TASK",
+    "label": "Total years of experience",
+    "definition": "Total years of work experience, computed by the system from TASK-EXPERIENCE's own start/end dates -- never a self-reported number.",
+    "candidate_question": "(Not asked directly -- computed automatically from your work experience entries.)",
+    "vacancy_question": "How many years of relevant experience does this role genuinely require?",
+    "candidate_value_schema": {
+      "level": "integer (computed, whole years)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer (whole years)"
+    },
+    "evidence_rule": "System-computed from TASK-EXPERIENCE's dates at submission time -- never accepted as a direct candidate answer.",
+    "comparator_key": "ordinal_requirement",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "PRACT-WORKTYPE",
+    "category": "PRACT",
+    "label": "Work-type preference",
+    "definition": "The employment type(s) the candidate is open to: full-time, internship, student job, or part-time.",
+    "candidate_question": "What type(s) of work arrangement are you open to?",
+    "vacancy_question": "What work type(s) does this role offer?",
+    "candidate_value_schema": {
+      "acceptable": [
+        "full_time|internship|student_job|part_time"
+      ]
+    },
+    "vacancy_value_schema": {
+      "description": {
+        "offered": [
+          "full_time|internship|student_job|part_time"
+        ]
+      }
+    },
+    "evidence_rule": "Candidate self-report.",
+    "comparator_key": "work_type_set",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
   }
 ]

@@ -33,6 +33,9 @@ MODEL_FOR_TASK: dict[str, str] = {
     "source_classification": "claude-haiku-4-5-20251001",
     "duplicate_review_flagging": "claude-haiku-4-5-20251001",
     "sponsor_review_flagging": "claude-haiku-4-5-20251001",
+    "skill_mapping": "claude-haiku-4-5-20251001",
+    "occupation_mapping": "claude-haiku-4-5-20251001",
+    "program_mapping": "claude-haiku-4-5-20251001",
 }
 
 

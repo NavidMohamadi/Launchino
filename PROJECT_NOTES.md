@@ -13,6 +13,540 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-30 — Admin "Run now" buttons for the three manual/recurring processes; a real background-task/yield-dependency race caught by an end-to-end test
+
+Replaced CLI-only access to `api/reference_data_refresh.py` (ROR/ESCO/CROHO), `api/job_discovery_scheduler.py` (ingestion poll), and `api/job_discovery_runner.py` (recommendation pipeline) with admin-dashboard "Run now" buttons -- `api/admin_tasks.py` (business logic), `api/routers/admin_tasks.py` (endpoints), new `admin_task_run` table (`migrations/007_v2_3_0_to_v2_4_0.sql`). This does **not** change the "never auto-runs" principle stated in each of those three modules' own docstrings: every row in `admin_task_run` still originates from one explicit admin click, same as the CLI command it replaces -- it's a button in front of the same functions, not a scheduler. Each module's docstring updated to reflect that it's now reachable from the dashboard (still never imported at `api/main.py` startup -- the three `run_*_task` wrapper functions in `api/admin_tasks.py` import each module lazily, inside their own function bodies, specifically so that claim stays true).
+
+**Runs execute via FastAPI's `BackgroundTasks`**, so the triggering request returns immediately (202, `{task_run_id, status: "running"}`) rather than blocking -- ESCO alone is ~135 paginated calls, and the job-discovery pipeline makes real, billable Claude calls per subscribed candidate. The frontend (`OverviewTab.jsx`'s new "Manual processes" section, next to the existing "Ingestion health" table) polls `GET /admin/tasks/status` every 5s while any task shows `running`, so the status card updates to succeeded/failed on its own -- first polling pattern in this codebase's frontend (previously zero `setInterval`/polling anywhere).
+
+**A real bug caught by the end-to-end test, not assumed**: the first version of `api/routers/admin_tasks.py` used the shared `Depends(get_connection)` request-scoped connection to call `start_task_run` (which inserts the `'running'` row). FastAPI documents that a yield-dependency's post-yield cleanup (where `get_connection` commits) runs **after** any scheduled `BackgroundTasks` execute, not before. So the background task's own fresh connection (`_finish_task_run`, deliberately separate per the "don't reuse the request's conn" design) tried to `UPDATE` a row the inserting transaction hadn't committed yet -- a silent no-op (`UPDATE` matching 0 rows doesn't raise), leaving every triggered task permanently stuck at `status='running'`. No exception, no test failure until a real end-to-end test (`api/tests/test_admin_tasks.py::test_reference_refresh_croho_real_trigger_end_to_end`, a genuine live CROHO CSV download, chosen as the cheapest real path -- unlike ROR's large zip, ESCO's ~135 calls, or job-discovery's billable AI calls) polled for a final status and never got one. Fixed by having the router open and commit its own short `with engine.begin() as conn:` block inline for the mutating endpoints, instead of the shared dependency -- committed before the function returns, well before `BackgroundTasks` run. Verified for real in a live browser afterward too (admin dashboard, real click, watched "Running..." auto-flip to "Succeeded" via the 5s poll, no page refresh).
+
+**ISCED-F 2013 has no refresh mechanism at all** (static, hand-transcribed from a UNESCO PDF -- unchanged since prior phases). The request listed it alongside ROR/ESCO/CROHO as if all four needed a refresh button; shown instead as a status-only row (`status: "static"`, `refreshable: false`, explanatory note) rather than a fake no-op button or a silent omission.
+
+**Stale-run recovery**: any `admin_task_run` row still `status='running'` after 30 minutes is treated as interrupted (server restart mid-run) and auto-reaped to `failed` before either a status read or a new trigger attempt -- otherwise a crash mid-run would permanently block that task_name from ever running again.
+
+**"Refresh all" is not its own tracked task_name** -- it's a router-level convenience that triggers the 3 reference-refresh task_names as 3 independent rows, so each dataset's own last-run status stays meaningful regardless of trigger path.
+
+Full backend test suite (174 -- 168 existing + 6 new) passes.
+
+---
+
+## 2026-07-30 — GDPR export gap fixed; vacancy_merge.py EDU/CAP/TASK isolation confirmed safe; Phase 4 duplication-risk re-check found nothing broken; conditional phone requirement added
+
+Four follow-on items from the same session as the admin "Run now" work above.
+
+**GDPR export (`GET /candidates/{talent_id}/export`) was missing fields added after it was first built.** Its `talent` SELECT still only named the columns that existed when the endpoint was written -- `phone`, `linkedin_url`, `contact_preference` (Basic Info, Phase 3) and `subscription_updated_at` were silently absent from every export, even though they're real personal-data columns on `talent`. Fixed by adding all four to the SELECT (`api/routers/candidates.py`). EDU/CAP/TASK survey answers were **already** included -- they're just rows in `talent_element_value` like every other category, and the export's `survey_answers` query already selects from that table with no category filter. New test: `api/tests/test_candidate_export_endpoint.py`.
+
+**`vacancy_merge.py`'s trust-ranked conflict resolution was checked for whether it handles EDU/CAP/TASK requirement fields (`required_education`/`required_skills`/`required_occupations`) when a scraped update collides with a company's own submission -- finding: it can't collide, by construction, so there's nothing to fix.** `merge_profile_fields`'s `supported_fields` allowlist only names plain job-posting fields (title/description/location/etc.); `CanonicalVacancyProfile` (the Pydantic model it merges) has no `required_education`/`required_skills`/`required_occupations` fields at all; `vacancy_ingestion.py`'s `incoming_fields` dict (built from a scraper's `RawVacancyRecord`) never populates them either, since a scraper can't extract structured ESCO/ISCED-F-mapped requirement data from job-posting text -- exactly the Phase 5 decision that vacancy-side requirements come only from the company's own search-and-pick workshop submission. That submission lives entirely in `vacancy_element_value`, written only by `POST /vacancies/{id}/workshop`; confirmed both `load_existing_profiles` (`api/ingestion_store.py`) and `upsert_vacancy` (`api/vacancy_store.py`) -- the load/save pair around every poll-cycle merge -- only ever touch the `vacancy` table, never `vacancy_element_value`. The two write paths are fully isolated on both the read and write side. Locked in with a new regression test (`tests/test_vacancy_dedup_merge.py::test_merge_never_touches_edu_cap_task_requirement_fields`) rather than left as an untested assumption, since a future change to either function could silently break the isolation without anything else catching it.
+
+**Duplication-risk re-check (the "suspected, not yet fixed" note from the Phase 1 entry below, 2026-07-29) -- re-verified post-Phase-4, nothing found broken.** `CANDIDATE_DASHBOARD_CATEGORY_ORDER`'s flagged risk ("frontend page order might drift from this backend constant once 8 categories exist") turned out to be moot by construction: `CandidateDashboardPage.jsx` renders `completion.categories` straight from `GET /candidates/{id}/completion`'s response, in whatever order the backend returns -- there never was a second, independently-encoded frontend order to drift from. The two `CATEGORY_LABELS` dicts (backend: all 8; frontend `CategorySurveyPage.jsx`: a deliberate 5-category subset, since EDU/CAP/TASK route to their own dedicated pages) still exist separately, but the 5 overlapping labels match word-for-word today. `MOT_MAX_SELECTIONS = 5` is untouched since Phase 4 and still the only enforcement point, gating all 12 MOT elements correctly. No code changed for this item, per instruction to only fix what's actually found broken.
+
+**Conditional phone requirement**: `phone` is now required only when `contact_preference == 'phone'`, optional otherwise. Enforced in `api/candidate_service.py`'s `set_candidate_basic_info` against the *merged final state* (existing DB row + this request's partial update), not just the fields present in one PATCH call -- since a candidate can set either field alone in separate requests, and a partial update leaving `contact_preference` untouched must still be checked against whatever `phone` already is (and vice versa). Raises `ValueError` -> `422` (`api/routers/candidates.py`). Frontend (`BasicInfoPage.jsx` + shared `TextField`, `frontend/src/components/formFields.jsx`) shows a dynamic `*` indicator and sets the native HTML `required` attribute based on the currently-selected `contact_preference`, not a static label -- verified live in a browser: indicator/required toggles on selection change, an empty-phone submit is blocked client-side by the browser's native validation before it ever reaches the backend, and a real submit with both fields set saves successfully.
+
+Full backend test suite (177 -- 174 existing + 1 GDPR-export + 1 merge-isolation + 1 conditional-phone) passes.
+
+---
+
+## 2026-07-30 — Phase 5 of Education/Capabilities/Task History build: vacancy-side required education/skills/experience, matching symmetry with the candidate side
+
+**A real, pre-existing bug found while building this: `VacancyWorkshopPage.jsx`'s category list omitted EDU entirely.** `const categories = ['PRACT', 'ENV', 'CAP', 'TASK', 'TEAM', 'CAREER', 'MOT']` -- harmless while EDU had no active elements, but would have silently hidden the entire Education requirement section the moment EDU-HISTORY went live (Phase 4), exactly the "future category-order drift" risk flagged back in the Phase 1 entry above. Fixed by adding 'EDU'.
+
+**Search-and-pick, not AI mapping, for vacancy-side requirements.** Candidate-side CAP/TASK/EDU (Phase 2/4) use AI mapping with a confidence score, because a candidate is self-reporting an ambiguous personal fact in their own words. A company specifying a REQUIREMENT is different: it's authoritatively defining what the role needs, so a direct search-and-pick against the real ESCO/ISCED-F reference data (new `GET /reference/skills`, `/occupations`, `/isced-fields`) is both more appropriate and simpler -- no confidence/requires_confirmation handling needed on this side at all. Institutions/programs search stays candidate-only (education history is personal); skills/occupations/isced-fields opened to companies too (`require_role("candidate", "company", "admin")` on the whole `/reference` router, simpler than splitting auth per-endpoint for no real benefit).
+
+**Consolidated reference-dataset loading into one module.** `api/mapping_service.py` used to have its own private `_load_esco_skills`/`_load_esco_occupations`/`_load_isced_narrow_fields`; these moved to `api/reference_search.py` (now public: `load_esco_skills` etc.) since Phase 5's new search functions need the same data -- `mapping_service.py` now imports them back rather than maintaining a second copy of the same loading logic.
+
+**Vacancy-description AI extraction (P04) scoped to exclude EDU/CAP/TASK, mirroring Phase 3's CV-extraction fix exactly.** `VACANCY_EXTRACTION_EXCLUDED_CATEGORIES = {EDU, CAP, TASK}` (`api/extraction_service.py`) -- a vacancy-description extraction can only ever produce a low-confidence guess at a required-skill/occupation/field-to-ESCO/ISCED-F mapping, with no confidence gate at all (unlike the candidate-side AI mapping, which at least has one) -- strictly worse than the candidate-side case Phase 3 already fixed, so the same reasoning applies more urgently here, not less. `prompts/P04_vacancy_extraction.txt`'s own ACTIVATION RULES section, which Phase 3 had already updated once, needed updating *again* here since it explicitly said "extract required skills/experience/education as vacancy content here" -- exactly the opposite of this decision. Also caught and fixed a real inaccuracy in that same Phase 3 edit: it referenced `unmapped_terms`, a field that only exists on `CandidateExtractionResult`, not `VacancyExtractionResult` (whose real fields are `extracted_elements`/`unanswered_element_ids`/`review_flags`) -- found by checking the real Pydantic model, not by re-reading the prose.
+
+**Shared `RequirementListEditor` component, not three near-identical copies.** CAP-SKILLS/TASK-EXPERIENCE/EDU-HISTORY's vacancy editors are all "repeatable list, search-or-select a code, set an optional level, set required/preferred" -- one parameterized component (`frontend/src/components/RequirementListEditor.jsx`) handles all three, in two picker modes: "search" (ESCO, too large to list) and "select" (ISCED-F's 29 fields, small enough to show directly, better UX as a dropdown than a search box when every option already fits). `formFields.jsx`'s `Select` was extended to accept `{value, label}` option objects (backward-compatible with its original plain-string usage) specifically so ISCED-F codes don't have to be shown to the user as bare, meaningless codes.
+
+**Real, complete, end-to-end verification, not just persistence.** Beyond the unit/integration tests (168 total, 152 existing + 16 new -- reference-search endpoint tests, vacancy-extraction-scoping tests, vacancy-requirement-persistence test), walked the whole loop in a real browser: registered a company, created a vacancy, added a required skill (SQL, real ESCO URI, searched live against real data), a required occupation (software developer, real ESCO URI), and a required education field (ISCED-F 061/ICT + bachelor's, picked from the real 29-entry list fetched live from the backend), submitted, and confirmed the exact persisted JSON via direct DB read. Then closed the loop with a real weighted match (`run_match`, real `MatchConfiguration`, real comparator dispatch) between that exact vacancy and a candidate with matching CAP-SKILLS/TASK-EXPERIENCE/EDU-HISTORY data: CAP and EDU both scored 100%/100% (exact URI/code + level match), TASK scored 100% on the one comparable item (occupation) with coverage correctly at 50% since the browser test never set a vacancy-side TASK-YEARS requirement -- coverage reflecting real missing data, not a bug.
+
+Full test suite (168 -- 152 existing + 16 new) passes.
+
+---
+
+## 2026-07-30 — Category weight rebalance: equal 12.5% across all 8 categories (the deferred decision from Phase 1/4, now made)
+
+**Decision: equal weighting, 12.5% per category, all 8.** Previously PRACT/TEAM/CAREER/MOT/ENV at 20% each, EDU/CAP/TASK at 0% (a placeholder, not a judgement -- see the Phase 1 and Phase 4 entries above). Updated in all three locations that must stay in sync (no runtime single-sourcing between them):
+- `src/canonical_vacancy.py`'s `DEFAULT_PUBLIC_WEIGHTS` -- the real fallback every scraped/ingested vacancy actually uses.
+- `frontend/src/pages/VacancyWorkshopPage.jsx`'s `DEFAULT_CATEGORY_WEIGHTS` -- the company-direct submission form's starting point.
+- `data/public_weight_profile.json` -- still unwired to any real code path (confirmed again, unchanged since the Phase 0 finding), kept in sync by hand for whoever eventually wires it in. Bumped to v2.3.1.
+
+**Why equal, not recruiter-weighted toward CAP/TASK/EDU:** `DEFAULT_PUBLIC_WEIGHTS` specifically backs vacancies with *zero human review* (scraped/ingested postings a company never touched). An uneven split there would silently impose an editorial judgement -- "skills matter more than motivation" or similar -- on postings nobody actually validated. The company-direct form's default is the same value for consistency, but companies remain free to customize it immediately; only the scraped-vacancy path is genuinely unreviewable.
+
+**Recruiter-weighted alternative, logged as a potential future preset, not a default.** Considered and explicitly rejected as the *default*, but worth keeping on record as an opt-in a company could apply when customizing one specific vacancy's weights, since it reflects a real, common hiring intuition (skills/experience as the most direct, verifiable "can they do the job" signal, education as a comparatively weak signal for most roles):
+```
+PRACT 15 / CAP 15 / TASK 15 / EDU 10 / TEAM 11.25 / CAREER 11.25 / MOT 11.25 / ENV 11.25
+```
+**Revisit when**: if/when a "suggested weight presets" UI ever gets built for the vacancy customization flow (not currently planned), this is the first candidate preset to offer alongside "equal across all 8."
+
+**Verified three ways, not just eyeballed:**
+1. `MatchConfiguration`'s own real field validator (`weights_must_sum_to_100`, `src/schemas.py`) accepted `DEFAULT_PUBLIC_WEIGHTS` directly -- the actual production sum-to-100 enforcement, not a standalone check reimplementing the same rule a second time.
+2. New test `test_default_public_weights_are_equal_across_all_8_categories_and_sum_to_100` (`tests/test_canonical_vacancy.py`) asserts the real constant (not just the already-tested dead JSON file) covers exactly `Category`'s 8 members at 12.5 each.
+3. A real match run: created a real company + vacancy with the new weights, answered one real vacancy-side element (`PRACT-SPONSOR`) aligned with real candidate Jordan Vance's existing answer, and ran a real `POST /vacancies/{id}/match`. Confirmed `category_weight: 12.5` appears against all 8 categories in the real result, and PRACT correctly scored 100% at its 12.5% weight from that one answered pair. **Note on scope**: candidate *completion percentage* (the "Your profile" dashboard number, `compute_candidate_completion`) does not use `category_weights` at all -- it's a plain unweighted answered/active ratio with no vacancy in scope -- so there was nothing there to break or usefully re-verify; the real thing worth checking was a weighted match, which is what this instead confirms.
+
+Full test suite (164 -- 163 existing + 1 new) passes.
+
+---
+
+## 2026-07-30 — Phase 4 of Education/Capabilities/Task History build: frontend, 8-category reorder, and a real cross-category submit bug caught by browser testing
+
+**Career category kept after a spec inconsistency was caught before building against it.** The original Phase 4 order list (Basic Info -> Education -> Practical fit -> How you work -> What drives you -> Your ideal environment -> Capabilities -> Task History) omitted "Where you're headed" (CAREER) entirely, an existing live category with real candidate data (confirmed against a real test candidate, Jordan Vance). Flagged to the user before writing any dashboard/backend code against the literal 8-item list; confirmed as an oversight, not intentional. Final order: Basic Info (excluded from completion %) -> Education -> Practical fit -> How you work -> Where you're headed -> What drives you -> Your ideal environment -> Capabilities -> Task History -- 8 real Fit Dictionary categories plus Basic Info as a separate, uncounted first step.
+
+**Basic Info surfaced as its own dashboard concept, not a 9th category row.** `compute_candidate_completion` (`api/candidate_service.py`) returns a sibling `basic_info: {label, complete}` field alongside `categories`, computed directly from `talent.phone`/`linkedin_url` (both non-null = complete; `contact_preference` not counted since it always has a real DB default). Kept structurally separate from the `categories` array specifically so it can never be accidentally swept into `overall_percent_complete`'s denominator by a future generic loop over "all dashboard cards."
+
+**`data/fit_dictionary_starter.json`'s 5 Phase-1 elements flipped to `active: true` in the live DB** (EDU-HISTORY, CAP-SKILLS, TASK-EXPERIENCE, TASK-YEARS, PRACT-WORKTYPE) via `seed_fit_dictionary()`'s existing upsert -- the "revisit when" condition PROJECT_NOTES already flagged for this (full extraction+frontend loop built) is now met. Confirmed consequence, not a surprise: `PRACT-WORKTYPE` newly counting toward Practical fit's `active_item_count` means existing candidates' displayed Practical-fit completion drops until they answer it (real example: Jordan Vance's PRACT went from complete to 85.7%) -- exactly the tradeoff the earlier entry predicted, now accepted as the intended cost of shipping the feature.
+
+**A second work-type comparator key had no registered frontend editor at all.** `PRACT-WORKTYPE`'s `comparator_key` is `work_type_set` (employment type: full-time/internship/student-job/part-time) -- distinct from the pre-existing `work_mode_set` (work *location*: on-site/hybrid/remote). `frontend/src/components/valueEditors/index.jsx`'s `VALUE_EDITORS` map only had the latter; without a fix, activating PRACT-WORKTYPE would have silently hit the "no editor registered" fallback the moment a real candidate reached Practical fit. Found by reading the existing editor map against the new element's real comparator_key, not by running into it live -- added `WorkTypeSetCandidate`/`WorkTypeSetVacancy` before activating the element.
+
+**Three genuinely new dedicated pages, not the existing generic `CategorySurveyPage`.** Education/Capabilities/Task History each hold repeatable, multi-field structured entries (a list of `{level, institution, program, dates, status}` objects, etc.) -- no existing editor combined "true array" + "structured multi-field row" + "add/edit/delete" (`PRACT-LANG`'s map-shaped value and `CAREER`'s flat-string-array `SemanticOverlapEditor` were the closest partial precedents, neither sufficient). Built as three new page components (`EducationPage.jsx`/`CapabilitiesPage.jsx`/`TaskHistoryPage.jsx`) sharing extracted `formFields.jsx` primitives (`TextField`/`Select`/`CheckboxGroup`/`DateField` -- moved out of `valueEditors/index.jsx` rather than copied a third time) and a new `SearchAutocomplete.jsx` component.
+
+**New institution/programme search endpoints, confirmed not to already exist.** `GET /reference/institutions` and `GET /reference/programs` (`api/reference_search.py`, `api/routers/reference.py`) back Education's autocomplete against the ROR/DUO datasets Phase 0 bundled -- verified via a real research pass that no such endpoint existed anywhere before building it (Phase 2's `map-skill`/`map-occupation`/`map-program` are AI *classification* endpoints, not name *search*, and were confirmed unconsumed by any frontend code until this phase). The same local text-similarity shortlist logic Phase 2's `mapping_service.py` used was extracted into a shared `api/text_search.py` rather than copied a second time -- `mapping_service.py` now imports it too.
+
+**TASK-YEARS auto-computed server-side, with an overlap-merge algorithm, never re-derived in JS.** `src/task_years.py`'s `compute_total_years_experience()` merges overlapping job date ranges before summing (so two concurrent part-time jobs don't double-count that stretch), floors to whole years, and is wired into `POST /candidates/{id}/survey` (`api/routers/candidates.py`): submitting `TASK-EXPERIENCE` auto-derives and inserts `TASK-YEARS`; submitting `TASK-YEARS` directly is rejected with a 400. The frontend's Task History page deliberately does not reimplement this math for its "total years" display -- it re-fetches the backend's own computed value after each save, specifically to avoid a second, independently-maintained copy of the same algorithm silently drifting from the real one.
+
+**A real cross-category submit bug, found only by browser-testing the pages in the order a real candidate would use them.** `CategorySurveyPage.jsx`'s prefill has always merged *every* category's saved answers into local state (`GET .../survey-values` returns all categories at once), and its submit has always resent the *entire* merged `answers` object, not just the current page's category -- previously harmless (extra resubmitted values were just redundant, unchanged writes). The moment TASK-YEARS existed and could be directly rejected, this became a real, visible bug: saving Practical fit (or any other existing category) after Task History had ever been answered sent TASK-YEARS back along with it and the whole submission 400'd. Caught by actually walking through Basic Info -> Education -> Capabilities -> Task History -> Practical fit in a real browser, in that order, not by unit tests (which each test one category/endpoint in isolation and wouldn't reproduce a cross-category interaction). Fixed at the actual root cause -- `handleSubmit` now filters `answers` down to this page's own `categoryElements` before submitting -- rather than loosening the backend's rejection rule, since the backend's guarantee is exactly correct and the frontend's "resubmit everything" habit was the real latent bug.
+
+**Local dev environment: Node.js was not installed at all, and a Dropbox-sync race broke Vite's dev server.** Flagged to the user rather than silently working around; installed Node.js LTS via winget with explicit go-ahead. Separately, `frontend`'s home inside a Dropbox-synced folder causes Vite's dependency-optimizer to intermittently EBUSY-fail (Dropbox's sync agent races the temp-directory rename) -- reproduced twice, not a fluke. Fixed by pointing `cacheDir` (`frontend/vite.config.js`) at the OS temp directory instead of the default `node_modules/.vite`, a permanent fix for anyone running this project's dev server from this folder, not a session-specific hack.
+
+Full test suite (163 -- 152 existing + 11 new: reference-search endpoint/unit tests, task_years unit tests) passes. Real browser walkthrough covered: registration, Basic Info save, Education (institution autocomplete against real ROR data, programme AI-mapped to ISCED-F with a real high-confidence match, submit, prefill), Capabilities (skill AI-mapping including a real no-match case, submit), Task History (two overlapping jobs, confirmed the displayed computed total correctly merged the overlap rather than double-counting), Practical fit regression (including the new PRACT-WORKTYPE editor), and the cross-category submit bug above, found and fixed live.
+
+---
+
+## 2026-07-30 — Phase 3 of Education/Capabilities/Task History build: narrowed CV extraction scope, a gap discovered (Basic Info had no endpoint at all), and a real prompt-leak bug caught by a test
+
+**Scope gap found and filled: Basic Info had zero API surface.** Phase 1 only
+added `phone`/`linkedin_url`/`contact_preference` as raw `talent` columns
+(migration + DB schema) -- no endpoint anywhere read or wrote them, and
+`src/schemas.py`'s own `Talent` model didn't have the fields either. Since
+Phase 3 asks CV extraction to cover Basic Info, and there was nowhere for an
+extracted (or manually entered) value to land, this had to be built now, not
+deferred to Phase 4's frontend work: `ContactPreference` enum + `Talent`
+fields (`src/schemas.py`), `TalentOut`/`BasicInfoUpdate` (`api/models_api.py`),
+and `PATCH /candidates/{talent_id}/basic-info` (partial update -- a field
+omitted from the request is left untouched, `contact_preference` can never
+be written as SQL NULL since it's NOT NULL at the DB level). Flagging this
+here rather than treating it as silently in-scope, since it wasn't itemised
+in any of the original phase list.
+
+**Hard code-level category allowlist, not an active-flag side effect.**
+`api/extraction_service.py`'s new `CV_EXTRACTION_CATEGORIES = {PRACT, EDU}`
+filters the dictionary before it ever reaches the CV extraction prompt --
+CAP/TASK (and CAREER/MOT/ENV/TEAM) are structurally absent regardless of
+their `active` flag. This matters because the *previous* reason CAP/TASK
+never appeared in CV extraction was incidental (they were `active: false`,
+so `load_dictionary()` never returned them) -- once Phase 4 flips them
+active for manual entry, that accidental protection disappears. The
+allowlist is the real, permanent guarantee "must never attempt CAP/TASK
+extraction" asked for.
+
+**A second leak found only by a real test, not by reading the code twice.**
+The first version of the scoping test failed -- correctly -- because
+`data/mapping_memory.json` (an illustrative-only sample file with a
+`CAP-SQL` alias entry) was still being sent to the CV extraction prompt
+*unfiltered*, and `CV_ELEMENT_ID_RULE` treats mapping memory as an equally
+valid source for `element_id` as `fit_dictionary` itself. Category-scoping
+the dictionary alone was not airtight: a CAP alias could still reach the
+model through the side door. Fixed by filtering `_mapping_memory()` to only
+entries whose `canonical_element_id` is a key of the dictionary actually
+being sent (works the same way for vacancy extraction, a no-op there today
+since vacancies aren't category-scoped). **Lesson, same shape as Phase 2's
+Excel/KDevelop finding**: a scoping/confidence guarantee is only as strong as
+every path that could leak around it, and the second path here was only
+found because a real test asserted the actual dictionary JSON sent to the
+model, not because the code was re-read more carefully.
+
+**Basic Info extraction is phone/linkedin_url only, never contact_preference.**
+A CV essentially never states how someone wants to be contacted; extracting
+or guessing it would violate the same "explicit information only" rule
+`P01_cv_extraction.txt`'s system role already states for personality/
+motivation/nationality/etc. It stays manual-entry-only via the new PATCH
+endpoint, defaulting to `'email'`.
+
+**Known minor limitation, not fixed here: extracted education dates
+sometimes get invented day/month granularity.** A real API test CV stating
+only "2019-2021" for a degree came back with `start_date: "2019-01-01"`,
+`end_date: "2021-12-31"` -- plausible, but the day/month weren't actually
+stated. `EDU-HISTORY`'s `candidate_value_schema` (Phase 1) requires full
+`YYYY-MM-DD` strings with no partial-date option, so there's no schema-level
+way for the model to say "only the year is known." Not a Phase 3 regression
+(the schema shape predates this phase) and not fixed here since it would
+mean revisiting a Phase 1 schema decision without being asked to. **Revisit
+when**: if this proves to matter in practice (e.g. mis-sorted timelines),
+consider a nullable day/month or a `precision: "year"|"month"|"day"` field
+alongside `start_date`/`end_date`.
+
+**Real API verification**: a real CV (contact info, two degrees, one job
+with SQL/Python/"led a team" language, an explicit no-sponsorship-needed
+statement) extracted correctly through `run_cv_extraction` against the real
+41-element live dictionary plus a manually-activated `EDU-HISTORY` for
+testing (still `active: false` for real candidates until Phase 4, per the
+Phase 1 entry above): Basic Info and Practical fit answered correctly, all
+skill/task/education-programme terms routed to `unmapped_terms` (never
+invented as CAP/TASK), and citizenship-adjacent language correctly excluded
+per `review_flags`.
+
+**A second, unrelated regression caught only by the full suite**: an earlier
+`Edit` call meant to add `ContactPreference` after `SubscriptionSource` in
+`src/schemas.py` matched only a prefix of `SubscriptionSource`'s real body
+(missing its last member, `PREMIUM_REQUEST_APPROVED`, which a narrower
+earlier `grep -A6` had not shown) -- the replacement spliced `ContactPreference`
+in before that line, silently reassigning it to the wrong enum. Caught
+immediately by the full test suite (Premium-request approval flow), not by
+re-reading the diff. Fixed by reading the complete original class body
+before editing. **Lesson**: read the *whole* section being edited, not a
+grep excerpt of it, before writing an old_string that assumes it's complete.
+
+Full test suite (152 -- 146 existing + 6 new) passes.
+
+---
+
+## 2026-07-30 — Phase 2 of Education/Capabilities/Task History build: AI mapping service, and a real confidence-trust bug found via live testing
+
+**Two-stage design: cheap local pre-filter, then a real semantic judgement call.**
+ESCO has 13,485 skills and 2,942 occupations -- far too many to hand Claude in
+one prompt (same reasoning as `api/extraction_service.py`'s own value-schema
+fix). `api/mapping_service.py`'s `_shortlist()` narrows each call to ~20
+candidates using plain normalised-text similarity (`difflib.SequenceMatcher`
++ `vacancy_utils.normalise_text`) -- the *same mechanism*
+`src/ind_sponsor_registry.py`'s `SponsorRegistry.lookup()` already uses for
+company-name fuzzy matching, reused rather than reinvented. Claude then makes
+the real meaning-based judgement (not just spelling) from that shortlist,
+plus a confidence score. ISCED-F 2013 has only 29 narrow fields -- small
+enough to send in full, no shortlist stage needed for programme mapping.
+
+**`requires_confirmation` reuses the "never silently accept" pattern
+literally, not just in spirit.** It mirrors
+`CompanySponsorshipSignal.human_review_required` (same file as
+`SponsorRegistry`, above) -- true whenever nothing matched, or confidence is
+below `MAPPING_CONFIDENCE_THRESHOLD` (env-var overridable, default 0.7, same
+"tunable, not hardcoded" precedent as `RECOMMENDED_REFRESH_INTERVAL_DAYS`
+from Phase 0). The candidate must confirm or correct before it's treated as
+settled -- this endpoint never persists anything (same "draft only" shape as
+`extract-cv`).
+
+**ISCED-F granularity decision: narrow fields (3-digit, 29 entries), not
+broad (2-digit, 11) or detailed (4-digit, 80).** `tagged_list_overlap_education`
+(Phase 1) does exact-string tag matching, not hierarchy-aware partial
+matching -- broad would be too coarse to mean much (e.g. one code covers both
+Marketing and Law), detailed would make an exact match between a vacancy's
+stated requirement and a candidate's specific programme improbably strict.
+Narrow is the standardisation level for **both** sides -- this decision must
+carry through to Phase 5's vacancy-side ISCED-F extraction unchanged, or the
+comparator's exact match will silently stop working across the two sides.
+
+**DUO/CROHO's own `ISCED` column checked and rejected as a mapping
+shortcut.** The bundled `data/reference/duo_ho_opleidingsoverzicht.csv` (Phase
+0) has a real `ISCED` column, which looked at first glance like it might let
+programme->ISCED-F skip AI mapping entirely for Dutch programmes. Checked
+directly before assuming reuse (same discipline as the Phase 1
+`fit_element_proposal`/`fit_element_alias` check): only 730 of 6,807 rows
+(~11%) have it populated, and populated values ("81", "0", "914", "923")
+don't fit ISCED-F 2013's actual code shape at all (valid codes are 2/3/4-digit
+strings from a fixed ~120-entry set; "81" isn't one). This is very likely a
+different, uncatalogued DUO-internal or ISCED-1997 scheme, not usable as a
+free crosswalk. Real AI mapping from free text is used for all programmes,
+Dutch or not, rather than a fragile partial shortcut for a subset.
+
+**`src/normalisation_registry.py` / `prompts/P03_element_normalisation.txt`
+flagged as now *doubly* obsolete -- not fixed, just flagged.** Already
+dead/unwired (found during the Phase 1 duplication sweep: zero real callers
+besides its own test). Now also architecturally superseded: its whole design
+premise -- mint one new canonical Fit Dictionary element per distinct
+skill/task (`CAP-{SLUG}`) -- directly conflicts with the Phase 1 redesign,
+where CAP/TASK/EDU are each a *single* repeatable-array element instead.
+Worth deleting alongside the next real touch of either file, rather than
+carrying two competing designs indefinitely.
+
+**A real defect caught only by calling the real API, not by clean test
+output.** First real run of `map_skill_to_esco("Excel")` returned
+`matched_code` = ESCO's "KDevelop" (a C++ IDE) at confidence 0.9 --
+confidently wrong, and `requires_confirmation=False` despite Claude's own
+reasoning admitting "not a perfect semantic match." ESCO genuinely has no
+Microsoft Excel entry (confirmed by a direct substring search across all
+13,485 skills), so the shortlist reaching Claude was mostly spelling-adjacent
+noise (KDevelop, C#, Xcode, Perl) -- and self-reported confidence alone
+didn't reliably reflect that. Fixed at two levels, since a prompt-only fix
+can't be trusted to hold on every future call:
+1. Code-level backstop (`api/mapping_service.py`'s `_to_result`): any
+   `matched_code` not literally present in the list Claude was given is
+   discarded outright, regardless of confidence. Catches invention; does not
+   by itself catch "picked a real shortlist item that isn't a real match"
+   (the Excel/KDevelop case), since KDevelop genuinely was in the shortlist.
+2. Prompt-level (`prompts/P22_skill_esco_mapping.txt` /
+   `P23_occupation_esco_mapping.txt`): added a HARD RULE anchoring confidence
+   to genuine-match judgement ("if your own reasoning admits the pick is
+   imperfect or a different real-world thing, that is a below-0.5 case, not
+   0.5-0.8") plus the concrete Excel/KDevelop worked example. Re-verified
+   with a real follow-up call: `map_skill_to_esco("Excel")` now returns
+   `matched_code=null`, confidence 0.1, `requires_confirmation=True`; known
+   real matches (SQL, "Software Engineer"->"software developer") still
+   confirm confidently and correctly. **Lesson**: an AI's own confidence
+   score is not self-verifying -- when it can be checked against ground
+   truth (here, "does ESCO even have this concept"), check it before trusting
+   the number, the same way `ai_client.py`'s `max_tokens` truncation check
+   already refuses to trust "no exception was raised" as proof of a complete
+   response.
+
+**Endpoints**: `POST /candidates/{talent_id}/map-skill|map-occupation|map-program`
+(candidate-authenticated via the existing `require_candidate_self_or_admin`,
+rate-limited 60/hour, never persist). Consolidated the talent-existence
+check into one `_require_candidate()` helper shared with `extract-cv` rather
+than leaving a second copy of the same query right after the CAP/TASK
+duplication feedback above -- caught before it became a fifth instance of
+that exact failure mode, not after.
+
+Full test suite (146 -- 133 existing + 13 new) passes.
+
+---
+
+## 2026-07-29 — Phase 1 of Education/Capabilities/Task History build: schema + Fit Dictionary + comparator, and a rule found duplicated in 4 separate places
+
+**`fit_element_proposal`/`fit_element_alias` -- confirmed not reusable, not
+touched.** Read both tables' real DDL before deciding anything.
+`fit_element_alias` maps a free-text synonym to an *existing* Fit Dictionary
+`element_id` (FK-constrained to `fit_element`) -- built for resolving
+synonyms of the ~40 fixed canonical questions, not for mapping a candidate's
+free-text skill to an external ESCO code. No confidence-score column at all.
+`fit_element_proposal` is for proposing a brand-new *canonical* Fit
+Dictionary element (extending the shared taxonomy itself), gated to CAP/TASK
+only by its own check constraint, with mandatory human-review fields
+(`reviewed_by`/`reviewed_at`) -- a taxonomy-governance workflow, not a
+per-candidate-entry AI-confidence mechanism. Neither has a `talent_id`.
+Adapting either would mean rewriting it into something else entirely, which
+defeats "reuse, don't build a third system." **Decision**: store each
+ESCO/ISCED mapping's code + confidence directly inside the same
+`talent_element_value.value` JSON blob that already holds every other
+element's answer -- no new table, reusing the existing flexible-JSON
+mechanism `PRACT-LANG` already relies on.
+
+**Comparator generalization -- built, not just proposed.** Added
+`score_tagged_list_overlap()` to `src/practical_comparators.py` (a new
+function; `score_language` and the other existing comparators are
+untouched), merging `score_language`'s leveled single-tag lookup with
+`score_set_compatibility`'s overlap-matching rule into: does the candidate
+have at least one `{"tag", "level"}` entry that satisfies at least one
+required entry of the same shape? Unleveled (pure tag overlap) when
+`level_order=None`; leveled (exact-or-above aligned, one-below weak,
+further-below misaligned) otherwise. Serves all three new repeatable
+categories via `api/comparators_dispatch.py`'s three new dispatch keys,
+each mapping that category's own richer entry shape into the same flat
+`{tag, level}` pair before calling the one shared function:
+- `CAP-SKILLS` (`tagged_list_overlap_skills`) -- leveled by
+  `SKILL_PROFICIENCY_LEVEL` (beginner/intermediate/advanced/expert).
+- `TASK-EXPERIENCE` (`tagged_list_overlap_occupation`) -- unleveled
+  (occupation-domain presence only; years of experience is the *separate*
+  `TASK-YEARS` element below, reusing `ordinal_requirement` as-is with zero
+  new code, exactly as scoped).
+- `EDU-HISTORY` (`tagged_list_overlap_education`) -- leveled by
+  `EDUCATION_LEVEL` (secondary/vocational/bachelor/master/phd), tag = the
+  ISCED-F field code (falling back to the raw program text if unmapped).
+An entry with no ESCO/ISCED mapping yet (or one the candidate hasn't
+confirmed) still gets literal-text comparability via its own raw free-text
+fallback -- never silently excluded from matching. 10 new real unit tests in
+`tests/test_tagged_list_overlap.py` cover the leveled/unleveled/overlap/
+fallback behavior directly.
+
+**Repeatable entries: one Fit Dictionary element per category, JSON-array
+value** -- `EDU-HISTORY`, `CAP-SKILLS`, `TASK-EXPERIENCE` each hold a list of
+structured entries in their single `talent_element_value.value`. Confirmed
+this needs zero new persistence code: `POST /candidates/{id}/survey` and
+`GET .../survey-values` already treat `value` as opaque JSON with no
+per-element key validation, so the existing versioned-insert and resume-fill
+logic (see the earlier per-category survey-page entry above) works
+unchanged for an array-shaped value exactly as it does for `PRACT-LANG`'s
+map-shaped one. EDU was originally going to be a single non-repeatable
+record (my own ambiguous first draft) -- corrected to repeatable before any
+code was written, since a candidate can have multiple degrees and a
+single-entry model can't represent "graduated on one degree, in progress on
+another" at the same time.
+
+**A rule found duplicated in four separate places, only one of them
+correct.** CAP/TASK originally required `activation_policy='vacancy_activated'`
+(the pre-Phase-1 design: CAP/TASK would only activate once a specific
+vacancy requested that skill/task, mirroring TEAM). Candidate-entered
+skills/work history need to be always answerable, independent of any
+vacancy -- like PRACT/CAREER/ENV -- so this needed to become `'always'`.
+Fixing it surfaced that the *same* rule was implemented four times, fully
+independently, with no single source of truth:
+1. `fit_element`'s own DB check constraint (`fit_element_check`) -- swapped
+   via `migrations/006_v2_2_0_to_v2_3_0.sql`, a targeted allow-list value
+   change, not a broad relaxation (MOT's `fit_element_check1` and TEAM's
+   `fit_element_check2` are separate constraints, untouched).
+2. `schemas.py`'s `expected_activation_policy()`, enforced by every
+   `FitElement`'s own `model_validator` -- fixed, this is now the one real
+   source of truth the other two below should have been calling all along.
+3. `src/dictionary_tools.py`'s `validate_dictionary()` had its own *third*,
+   fully independent copy of the same three per-category rules (CAP/TASK,
+   MOT, TEAM) -- and turned out to be dead code once traced: every caller
+   reaches it only via `load_fit_dictionary()`, which already runs
+   `FitElement.model_validate()` first, so a violation would always raise
+   there before ever reaching this "check." Removed rather than fixed a
+   second time, since keeping it "in sync by hand" is exactly the failure
+   mode this note is about.
+4. `src/normalisation_registry.py`'s `build_approved_dynamic_element()`
+   hardcoded the literal directly, despite its own docstring already
+   promising activation is "system-derived, never reviewer-selected" -- now
+   actually calls `expected_activation_policy()` instead of asserting that
+   and not doing it.
+Caught only because the full test suite was run after the change, not
+assumed clean from "the migration applied without error." **Lesson,
+consistent with the CAP:30/TASK:25 weighting bug from 2026-07-27**: a
+business rule expressed as a DB constraint should have at most one
+*additional* enforcement point in application code (ideally zero, with
+everything else calling that one function) -- every independent
+reimplementation is a place the next change can update three copies and
+miss the fourth.
+
+**Follow-up per explicit user feedback: broadened the sweep past the 4 places
+above.** Told directly that since this is the *second* rule found duplicated
+across files (after the CAP:30/TASK:25 weighting bug), a broad repo-wide grep
+for the rule's other encodings -- not just the two places raised -- should
+happen before calling a fix "complete," including data fixtures, tests, and
+AI prompt files, not just application code. A case-insensitive grep for
+CAP/TASK near `vacancy_activated` across the whole repo (21 files matched)
+found 4 more stale copies beyond the 4 already fixed:
+- `data/fit_dictionary_demo_extensions.json` -- 3 entries (`CAP-SQL`,
+  `CAP-FORECASTING`, `TASK-ANALYSE-OPERATIONAL-DATA`) still
+  `vacancy_activated`. Confirmed zero application-code references (dead,
+  same category as the earlier `public_weight_profile.json` precedent) --
+  fixed anyway, since a stale fixture is exactly the kind of thing someone
+  copies from later.
+- `data/fit_element_templates.json` -- the `CAP-DYNAMIC`/`TASK-DYNAMIC`
+  minting templates (referenced conceptually, not by code path, from
+  `normalisation_registry.py`'s dynamic-element minting). Also dead by
+  reference-check; fixed.
+- `prompts/P14_activation_status_audit.txt` -- an AI audit-prompt's CHECK
+  list item still said CAP/TASK are `VACANCY_ACTIVATED`. Grepped for its own
+  filename across `api/` and found no live caller -- unwired/dead. Fixed
+  anyway for the same reason as the JSON fixtures.
+- `prompts/P04_vacancy_extraction.txt` -- **the one exception that was
+  actually live.** Same stale "CAP/TASK items may be VACANCY_ACTIVATED after
+  human confirmation" framing, but `api/extraction_service.py:257`
+  (`build_vacancy_extraction_prompt`) loads this file verbatim as the real
+  prompt for every live vacancy-description extraction call -- confirmed via
+  direct grep of `extraction_service.py`, which has no other hardcoded copy
+  of the rule. Left uncorrected, every real vacancy extraction would have
+  kept nudging the AI toward drafting a CAP/TASK activation step that no
+  longer exists. Fixed to state CAP/TASK are always active candidate-side,
+  and to note the vacancy-side required-skills/experience/education fields
+  (Phase 5, not yet built) are a separate mechanism.
+Full test suite re-run after all 4 additional fixes: still 133 passed, 0
+failed. **Practice going forward, not just this once**: when a rule turns
+out to be enforced in more than one place, grep broadly (code, data/JSON
+fixtures, tests, prompt files) for every other encoding before calling the
+fix complete, and check each hit against real callers/references rather than
+assuming "found in a file" means "found in a live path" -- P04 above is the
+concrete example of why that check matters.
+
+**Other rules suspected of the same multi-location duplication risk --
+flagged, not fixed.** Noticed while doing the above sweep; none touched yet:
+- Candidate-facing category display labels exist in two places:
+  `api/candidate_service.py`'s backend `CATEGORY_LABELS` dict and a separate,
+  independently-written `CATEGORY_LABELS` dict in
+  `frontend/src/pages/CategorySurveyPage.jsx`. Nothing enforces they stay in
+  sync today; a label rename on one side silently drifts from the other.
+- `api/candidate_service.py`'s `CANDIDATE_DASHBOARD_CATEGORY_ORDER` constant
+  is the backend's source of truth for category ordering. Phase 4 of this
+  same build will add dedicated Education/Capabilities/Task History pages
+  and reorder the survey frontend-side -- real risk the frontend's page
+  order (wherever it ends up encoded) drifts from this backend constant once
+  8 categories exist instead of 5.
+- `MOT_MAX_SELECTIONS = 5` is currently enforced in exactly *one* place
+  (`frontend/src/pages/CategorySurveyPage.jsx`), with no backend mirror at
+  all. Not a duplication yet, but the precursor to one: the moment a second
+  enforcement point is added (e.g. a backend validation on submit), it
+  becomes the same one-source-of-truth risk as CAP/TASK activation above if
+  the two aren't wired to read from the same constant.
+**Revisit when**: touching any of the three areas above for unrelated
+reasons -- worth consolidating to a single source at that point rather than
+waiting for a third incident to force it.
+
+**All 5 new Fit Dictionary elements seeded `active: false`.** `EDU-HISTORY`,
+`CAP-SKILLS`, `TASK-EXPERIENCE`, `TASK-YEARS`, and `PRACT-WORKTYPE` (the new
+work-type-preference element) exist as real rows today but are dormant --
+`load_dictionary()` only selects `where active = true`, so none of them are
+visible via the live `GET /fit-dictionary` (confirmed directly: still
+exactly 41 elements exposed, same 5 categories as before). This was a
+deliberate, necessary safeguard, not an oversight: `PRACT-WORKTYPE` is a
+*new* element on an *already-active, already-live* category -- flipping it
+to `active: true` today would immediately raise every real candidate's PRACT
+`active_item_count` from 6 to 7 with no way to answer the new item yet (no
+extraction/frontend support exists until Phase 3/4), silently *lowering*
+their displayed Practical-fit completion on the already-shipped dashboard.
+**Revisit when**: each category's full extraction + frontend loop is built
+(Phase 3/4) -- flip `active: true` for that category's elements only once
+candidates can actually answer them, not before.
+
+Full test suite (133 -- 123 existing + 10 new) passes.
+
+---
+
+## 2026-07-29 — Phase 0 of Education/Capabilities/Task History build: 4 reference datasets bundled locally; a real ESCO pagination bug found and fixed
+
+Built `api/reference_data_refresh.py` (same "never imported by api/main.py, no
+scheduler, manually invoked" pattern as `api/job_discovery_scheduler.py`) and
+bundled the result under `data/reference/`, ready for Phase 1's schema/Fit
+Dictionary work.
+
+**Real record counts, verified directly, not assumed from a "no error" exit**:
+- **ROR institutions**: 25,439 (filtered from 132,537 total ROR records to
+  those whose `types` includes `"education"` -- ROR's own type taxonomy, not
+  a separate `institution_type` field. This is a reasonable proxy for
+  "university/college," not a perfect one: ROR doesn't catalogue primary/
+  secondary schools at all (its whole scope is research-active
+  organisations), so in practice this means universities, colleges, and
+  similar research-active institutes, with a handful of non-university
+  educational bodies also swept in. Source: ROR's Zenodo concept DOI
+  (`zenodo.org/api/records/6347574`, always redirects to the latest release
+  -- currently v2.10, 2026-07-20).
+- **ESCO skills**: 13,485. **ESCO occupations**: 2,942. Source: the real
+  `ec.europa.eu/esco/api/search` REST endpoint (the portal's own bulk-CSV
+  download requires an interactive email/click-through flow with no stable
+  URL to automate, so the live search API is used instead -- only at refresh
+  time, never at request time).
+- **DUO higher-education programs**: 6,807 rows. Source: `onderwijsdata.duo.nl`'s
+  current "HO Opleidingsoverzicht" CSV -- this is the dataset that succeeded
+  the older CROHO-specific downloads DUO used to publish (DUO's CROHO page
+  itself now points here). Already carries EQF/NLQF/ISCED columns per row.
+- **ISCED-F 2013**: hand-transcribed from UNESCO's own published PDF manual
+  (no machine-readable source exists at all for this one -- it's a fixed
+  international standard, not a living registry, so `data/reference/isced_f_2013.json`
+  has no refresh function and isn't expected to need one).
+
+**Real bug found and fixed before it could quietly ship**: the first
+`--refresh esco` run "succeeded" (exit 0, no exception) but silently
+collected only 200 of 13,485 skills and 100 of 2,942 occupations. Root
+cause: ESCO's `search` endpoint's `offset` query parameter is a **page
+index**, not a raw record count -- confirmed empirically (the API's own
+`_links.next` href increments `offset` by exactly 1 regardless of `limit`,
+and `offset=1&limit=5` returns records 5-9, not records 1-5). The original
+code did `offset += limit` (the natural assumption for almost every other
+paginated API), which after the first page jumps straight to a page index
+equal to the previous *raw offset* -- e.g. requesting "page 100" instead of
+"page 1" -- skipping nearly the entire dataset while still returning valid-
+looking (but wrong) pages, so nothing ever raised an error. Fixed by tracking
+a real `page` counter incremented by 1, with the loop's exit condition
+comparing `page * limit` against `total` (matching units) instead of
+comparing a page index directly against a record count. Re-ran after the fix
+and got the exact real totals above. **Lesson, generalizable beyond this one
+API**: "the script exited cleanly with no exception" is not evidence a
+paginated bulk-fetch actually completed -- always verify the collected count
+against the API's own reported `total`, especially for any paginated
+external API whose `offset`/`page` semantics haven't been explicitly
+confirmed (raw record offset and page index look identical in the common
+case of `offset=0`, and only diverge once you're past the first page).
+
+**Refresh interval is a config value, not hardcoded**: `RECOMMENDED_REFRESH_INTERVAL_DAYS`
+reads `REFERENCE_DATA_REFRESH_INTERVAL_DAYS` (env var, default `30`) -- purely
+informational today (printed in `--help`, not enforced by any scheduler),
+since nothing calls this script automatically.
+
+Full test suite (123) passes -- this phase touched no application code paths,
+only added a new standalone script and bundled data files.
+
+---
+
 ## 2026-07-29 — Survey split into 5 per-category pages; found and fixed a real MOT-rendering bug and a real CV-extraction reachability regression along the way
 
 Replaced the single long-scrolling `CandidateSurveyPage.jsx` (one page, all 5

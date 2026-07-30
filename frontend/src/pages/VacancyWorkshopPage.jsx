@@ -6,9 +6,13 @@ import { useAuth } from '../auth/AuthContext'
 
 // Same default category weights the backend itself falls back to
 // (src/canonical_vacancy.py's DEFAULT_PUBLIC_WEIGHTS) -- not invented here.
+// Equal weighting across all 8 real categories (2026-07-30 decision, see
+// PROJECT_NOTES.md) -- this is only a starting point for a company's own
+// vacancy, freely customizable from here, unlike the scraped-vacancy path
+// where this default is never reviewed by anyone.
 // Keep this in exact sync with that constant; there is no runtime
 // single-sourcing between the two (see PROJECT_NOTES.md).
-const DEFAULT_CATEGORY_WEIGHTS = { PRACT: 20.0, CAP: 0.0, TASK: 0.0, TEAM: 20.0, CAREER: 20.0, MOT: 20.0, ENV: 20.0 }
+const DEFAULT_CATEGORY_WEIGHTS = { PRACT: 12.5, CAP: 12.5, TASK: 12.5, TEAM: 12.5, CAREER: 12.5, MOT: 12.5, ENV: 12.5, EDU: 12.5 }
 
 function blankAnswer(elementId) {
   return { element_id: elementId, value: {}, value_status: 'answered', unknown_reason: null, not_scored_reason: null, source_type: 'job_description' }
@@ -121,7 +125,11 @@ export default function VacancyWorkshopPage() {
   if (!elements && step !== 'identify') return <p>Loading questions...</p>
 
   const visibleElements = (elements || []).filter((e) => e.active || answers[e.element_id])
-  const categories = ['PRACT', 'ENV', 'CAP', 'TASK', 'TEAM', 'CAREER', 'MOT']
+  // A real pre-existing bug found during Phase 5 (see PROJECT_NOTES.md): this
+  // list omitted EDU entirely, which was harmless while EDU had no active
+  // elements but would have silently hidden the whole Education requirement
+  // section the moment EDU-HISTORY went live (Phase 4).
+  const categories = ['PRACT', 'EDU', 'ENV', 'CAP', 'TASK', 'TEAM', 'CAREER', 'MOT']
 
   return (
     <div>

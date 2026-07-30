@@ -8,9 +8,9 @@ INPUTS
 - match_items: {{MATCH_ITEMS_JSON}}
 
 CHECK
-1. ALWAYS elements are active.
+1. ALWAYS elements are active. This includes every CAP (skills) and TASK (work experience) element -- candidate-side profile content, always answerable independent of any vacancy, same as Practical fit/Career/Environment.
 2. CANDIDATE_SELECTED MOT elements are active only for the candidate's ranked top five.
-3. VACANCY_ACTIVATED CAP/TASK/teamwork-behaviour elements are active only when the frozen Role Fit Profile activates them.
+3. VACANCY_ACTIVATED teamwork-behaviour (TEAM) elements, other than TEAM-COLLAB-INTENSITY, are active only when the frozen Role Fit Profile activates them.
 4. TEAM-COLLAB-INTENSITY is always active.
 5. Active missing information is UNKNOWN with a reason and reduces coverage.
 6. Inactive elements are NOT_SCORED with a reason and do not reduce coverage.

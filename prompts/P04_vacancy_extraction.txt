@@ -29,9 +29,9 @@ OUTPUT JSON
   "hiring_manager_questions":["string"],
   "warnings":["string"]
 }
-V2.0.0 ACTIVATION RULES
+V2.5.0 ACTIVATION RULES
 - Draft activation candidates only; do not make final activation decisions.
-- CAP/TASK items may be VACANCY_ACTIVATED after human confirmation.
+- CAP (skills), TASK (work experience), and EDU (education) are excluded from this extraction entirely -- fit_dictionary above will never contain elements from these three categories, regardless of what the vacancy text says about required skills, experience, or education. A company enters those requirements directly through their own dedicated pickers (exact ESCO/ISCED-F code, searched and selected by the company itself), not via AI extraction -- do not attempt to fill this gap by inventing element_ids, codes, or values for these categories, and do not mention required-skill/experience/education content in review_flags either (it is not this extraction's job to surface it at all).
 - TEAM-COLLAB-INTENSITY is always collected. Six teamwork behaviours are activated only after the hiring-manager priority exercise.
 - Extract all twelve MOT supply claims where stated; unresolved factors remain not_specified for the workshop.
 - Preserve five-point ordinal values; never convert them to low/medium/high.

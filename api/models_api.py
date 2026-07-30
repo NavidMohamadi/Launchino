@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from schemas import (
-    Category, JobDiscoverySubscription, NotScoredReason, RequirementType,
+    Category, ContactPreference, JobDiscoverySubscription, NotScoredReason, RequirementType,
     SourceType, SubscriptionSource, TrainabilityWindow, UnknownReason, ValueStatus,
 )
 
@@ -53,6 +53,9 @@ class TalentOut(BaseModel):
     job_discovery_campaign_opt_in: bool
     subscription_updated_at: Optional[datetime] = None
     subscription_source: Optional[SubscriptionSource] = None
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    contact_preference: ContactPreference = ContactPreference.EMAIL
 
 
 class CandidateLoginRequest(BaseModel):
@@ -173,6 +176,26 @@ class VacancyDescriptionExtractionRequest(BaseModel):
     description_text: str = Field(min_length=1, max_length=20_000)
 
 
+class TermMappingRequest(BaseModel):
+    # 200 chars is generous for a single skill/job-title/programme name (real
+    # ones run well under 100) while capping a single request's prompt size.
+    term: str = Field(min_length=1, max_length=200)
+
+
+class BasicInfoUpdate(BaseModel):
+    """PATCH /candidates/{talent_id}/basic-info -- partial update: a field
+    omitted from the request body is left untouched (see
+    exclude_unset=True at the call site), unlike SubscriptionUpdateRequest's
+    full-replace shape. phone/linkedin_url/contact_preference are plain
+    talent columns, not a Fit Dictionary category (see PROJECT_NOTES.md's
+    Phase 1 entry) -- never compared against a vacancy.
+    """
+
+    phone: Optional[str] = Field(default=None, max_length=40)
+    linkedin_url: Optional[str] = Field(default=None, max_length=300)
+    contact_preference: Optional[ContactPreference] = None
+
+
 class VacancyCreate(BaseModel):
     """Company-direct vacancy submission.
 
@@ -266,12 +289,18 @@ class CategoryCompletionOut(BaseModel):
     answered_item_count: int
 
 
+class BasicInfoCompletionOut(BaseModel):
+    label: str
+    complete: bool
+
+
 class CandidateCompletionOut(BaseModel):
     talent_id: UUID
     categories: List[CategoryCompletionOut]
     overall_percent_complete: float
     premium_readiness_threshold_percent: float
     premium_ready: bool
+    basic_info: BasicInfoCompletionOut
 
 
 class PremiumRequestCreate(BaseModel):

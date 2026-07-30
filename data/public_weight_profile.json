@@ -1,22 +1,23 @@
 {
-  "version": "2.0.2",
+  "version": "2.3.1",
   "name": "SHEXON public-vacancy discovery ordering",
   "purpose": "A transparent provisional profile used only when the employer has not validated vacancy-specific category weights.",
   "_status": "NOT CURRENTLY LOADED BY ANY REAL CODE PATH as of 2026-07-27 -- load_public_weight_profile() (src/public_weighting.py) that reads this file is referenced only by its own definition and its own test (tests/test_public_weighting.py), never by application code. The real default for scraped/ingested vacancies is src/canonical_vacancy.py's DEFAULT_PUBLIC_WEIGHTS, and for company-direct submissions it's frontend/src/pages/VacancyWorkshopPage.jsx's DEFAULT_CATEGORY_WEIGHTS -- both must be kept in sync with the values below by hand, not via this file. Kept up to date here for whoever eventually wires this in for real, but do not assume this file is currently authoritative. See PROJECT_NOTES.md.",
   "category_weights": {
-    "PRACT": 20,
-    "CAP": 0,
-    "TASK": 0,
-    "TEAM": 20,
-    "CAREER": 20,
-    "MOT": 20,
-    "ENV": 20
+    "PRACT": 12.5,
+    "CAP": 12.5,
+    "TASK": 12.5,
+    "TEAM": 12.5,
+    "CAREER": 12.5,
+    "MOT": 12.5,
+    "ENV": 12.5,
+    "EDU": 12.5
   },
   "rules": [
     "The result must be labelled preliminary and provisional.",
     "Explicit requirement wording may adjust item importance, but AI may not invent company priorities.",
     "A company-validated profile replaces this profile without creating a second vacancy record.",
     "Unknown fields reduce coverage and generate clarification; they never score as zero.",
-    "CAP and TASK are weighted 0 as of v2.0.1+: the Fit Dictionary has zero seeded elements for either category today (see PROJECT_NOTES.md), so any nonzero weight here would either be silently excluded from the score (pre-fix aggregate_match behavior) or now correctly trigger a 'no data available' clarification flag -- neither useful when it can just be 0. The remaining five categories are weighted equally (20% each) as of v2.0.2."
+    "All 8 categories are weighted equally (12.5% each) as of v2.3.1, now that EDU/CAP/TASK have real seeded, active elements (Phase 1-4 of Education/Capabilities/Task History -- see PROJECT_NOTES.md). Deliberately equal, not recruiter-weighted: this profile is meant for vacancies nobody has actually reviewed, so an uneven split here would silently impose an editorial judgement on postings with zero human input. See PROJECT_NOTES.md for a logged recruiter-weighted alternative, intended as a potential future opt-in preset for a company customizing one specific vacancy's weights, never as a default."
   ]
 }

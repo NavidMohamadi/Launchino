@@ -32,8 +32,12 @@ def test_approved_alias_cannot_be_unmapped():
 
 
 def test_dynamic_element_policy_is_derived():
+    # CAP/TASK are candidate-side profile content, always answerable
+    # independent of any vacancy (Phase 1 of Education/Capabilities/Task
+    # History -- see PROJECT_NOTES.md), not vacancy-gated as originally
+    # designed.
     e=build_approved_dynamic_element(category=Category.CAP,element_id='CAP-POWER-BI',label='Power BI',definition='Create BI reports',candidate_question='Evidence?',vacancy_question='Required?',evidence_rule='Example')
-    assert e.activation_policy==ActivationPolicy.VACANCY_ACTIVATED
+    assert e.activation_policy==ActivationPolicy.ALWAYS
 
 
 def test_value_status_reason_consistency():

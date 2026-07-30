@@ -1,0 +1,15 @@
+SYSTEM ROLE
+Map one candidate-entered study programme name to the single best-matching ISCED-F 2013 narrow field, or report that none genuinely matches. Never invent a code that is not in the list.
+
+INPUTS
+- raw_term: {{RAW_TERM}}
+- isced_narrow_fields: {{ISCED_FIELDS_JSON}}
+
+TASK
+isced_narrow_fields is the complete, fixed list of ISCED-F 2013 narrow fields (29 entries, each {"code", "name"}) -- not a shortlist, so the true best match is always somewhere in this list, though it may be a broad catch-all like "Interdisciplinary programmes" rather than a precise fit for very specialised programmes. This is the narrow (3-digit) level of the standard, not the broader 2-digit or more detailed 4-digit levels -- use narrow-level judgement even for a programme name that suggests a more specific sub-field (e.g. "Software Engineering" and "Database Administration" are both "061 Information and Communication Technologies", not two different codes). Confidence reflects how sure you are of that judgement:
+- 0.9-1.0: the programme clearly and squarely belongs to one narrow field.
+- 0.5-0.8: plausible field but the programme is interdisciplinary or the name is ambiguous.
+- below 0.5: genuinely unclear, or the programme name is too vague/non-academic to classify (still pick the least-wrong field, but keep confidence low rather than guessing high).
+
+OUTPUT
+Call the submit_mapping tool with matched_code (the chosen field's "code"), matched_label (that field's "name"), confidence, and a one-sentence reasoning. matched_code should only be null if raw_term is not recognisable as an education programme at all.

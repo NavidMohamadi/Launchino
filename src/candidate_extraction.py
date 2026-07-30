@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,8 +13,25 @@ class ExtractedTalentElement(BaseModel):
     extraction_confidence: float = Field(ge=0, le=1)
 
 
+class ExtractedBasicInfo(BaseModel):
+    """phone/linkedin_url only -- plain talent columns, not Fit Dictionary
+    elements (see PROJECT_NOTES.md's Phase 1 entry), so they don't fit
+    ExtractedTalentElement/TalentElementValue's shape. contact_preference is
+    deliberately NOT extractable here: a CV would essentially never state how
+    someone wants to be contacted, and guessing it would violate this whole
+    prompt's "extract only explicit information" rule -- it stays
+    manual-entry-only via PATCH /candidates/{id}/basic-info, defaulting to
+    'email' until the candidate sets it themselves.
+    """
+
+    phone: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    evidence_quote: Optional[str] = None
+
+
 class CandidateExtractionResult(BaseModel):
     extracted_elements: List[ExtractedTalentElement] = Field(default_factory=list)
+    basic_info: Optional[ExtractedBasicInfo] = None
     # A real skill/tool/task the CV supports but that has no match in the Fit
     # Dictionary sent to the model (e.g. because it's a CAP/TASK category with
     # no canonical elements yet). Without a real place to put these, an

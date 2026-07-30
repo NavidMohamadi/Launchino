@@ -1,51 +1,16 @@
 // One editor pair (candidate/vacancy) per comparator_key actually used in
-// data/fit_dictionary_starter.json (9 total, confirmed against the real
-// dictionary -- this is a closed, known set, not an open-ended renderer).
+// data/fit_dictionary_starter.json -- a closed, known set, not an
+// open-ended renderer. tagged_list_overlap_skills/_occupation/_education
+// (Phase 5) are vacancy-side only here -- their candidate side is handled
+// by dedicated pages (Education/Capabilities/Task History, Phase 4) that
+// bypass this registry entirely, not by an entry registered here.
 // Each editor only produces the value dict; TriStateAnswer / ElementQuestion
 // own the value_status/reason wrapper around it.
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import * as api from '../../api'
 import { OrdinalActualControl, OrdinalRangeCandidateControl } from '../OrdinalRangeControl'
-
-function TextField({ label, value, onChange, placeholder }) {
-  return (
-    <label className="field">
-      {label}
-      <input type="text" value={value ?? ''} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />
-    </label>
-  )
-}
-
-function Select({ label, value, options, onChange }) {
-  return (
-    <label className="field">
-      {label}
-      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
-        <option value="" disabled>-- choose --</option>
-        {options.map((o) => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </label>
-  )
-}
-
-function CheckboxGroup({ label, value, options, onChange }) {
-  const selected = new Set(value || [])
-  const toggle = (opt) => {
-    const next = new Set(selected)
-    next.has(opt) ? next.delete(opt) : next.add(opt)
-    onChange([...next])
-  }
-  return (
-    <fieldset className="field">
-      <legend>{label}</legend>
-      {options.map((opt) => (
-        <label key={opt} className="checkbox">
-          <input type="checkbox" checked={selected.has(opt)} onChange={() => toggle(opt)} />
-          {opt}
-        </label>
-      ))}
-    </fieldset>
-  )
-}
+import RequirementListEditor from '../RequirementListEditor'
+import { CheckboxGroup, DateField, Select, TextField } from '../formFields'
 
 // --- ordinal_requirement (TEAM-*): 0-4 level ---
 function OrdinalRequirementCandidate({ value, onChange }) {
@@ -129,14 +94,6 @@ function CountryPresenceVacancy({ value, onChange }) {
 }
 
 // --- availability (PRACT-START) ---
-function DateField({ label, value, onChange }) {
-  return (
-    <label className="field">
-      {label}
-      <input type="date" value={value ?? ''} onChange={(e) => onChange(e.target.value || null)} />
-    </label>
-  )
-}
 function AvailabilityCandidate({ value, onChange }) {
   return <DateField label="Earliest start" value={value.earliest_start} onChange={(v) => onChange({ ...value, earliest_start: v })} />
 }
@@ -225,6 +182,62 @@ function WorkModeSetVacancy({ value, onChange }) {
     onChange={(v) => onChange({ ...value, description: { offered: v } })} />
 }
 
+// --- work_type_set (PRACT-WORKTYPE, Phase 4) -- distinct from work_mode_set
+// above: this is employment TYPE (full-time/internship/student job/part-time),
+// not work-location arrangement.
+function WorkTypeSetCandidate({ value, onChange }) {
+  return <CheckboxGroup label="Acceptable work type(s)" value={value.acceptable}
+    options={['full_time', 'internship', 'student_job', 'part_time']}
+    onChange={(v) => onChange({ ...value, acceptable: v })} />
+}
+function WorkTypeSetVacancy({ value, onChange }) {
+  const offered = (value.description && value.description.offered) || []
+  return <CheckboxGroup label="Work type(s) offered" value={offered}
+    options={['full_time', 'internship', 'student_job', 'part_time']}
+    onChange={(v) => onChange({ ...value, description: { offered: v } })} />
+}
+
+
+// --- tagged_list_overlap_skills/_occupation/_education (Phase 5) --
+// vacancy-side only; see this file's own top-of-file comment for why there
+// is no candidate-side entry for these three keys.
+function RequiredSkillsVacancy({ value, onChange }) {
+  return (
+    <RequirementListEditor
+      entries={value.required_skills || []}
+      onChange={(entries) => onChange({ ...value, required_skills: entries })}
+      codeField="esco_uri" textField="skill"
+      picker={{ mode: 'search', label: 'Skill', searchFn: api.searchSkills, placeholder: 'Start typing a required skill...' }}
+      requirementLevelField="level" requirementLevels={['beginner', 'intermediate', 'advanced', 'expert']}
+    />
+  )
+}
+
+function RequiredOccupationsVacancy({ value, onChange }) {
+  return (
+    <RequirementListEditor
+      entries={value.required_occupations || []}
+      onChange={(entries) => onChange({ ...value, required_occupations: entries })}
+      codeField="esco_uri" textField="occupation"
+      picker={{ mode: 'search', label: 'Occupation', searchFn: api.searchOccupations, placeholder: 'Start typing a required occupation...' }}
+    />
+  )
+}
+
+function RequiredEducationVacancy({ value, onChange }) {
+  const [iscedFields, setIscedFields] = useState([])
+  useEffect(() => { api.getIscedFields().then((fields) => setIscedFields(fields.map((f) => ({ value: f.code, label: f.label })))) }, [])
+  return (
+    <RequirementListEditor
+      entries={value.required_education || []}
+      onChange={(entries) => onChange({ ...value, required_education: entries })}
+      codeField="isced_code"
+      picker={{ mode: 'select', label: 'Field of study', options: iscedFields }}
+      requirementLevelField="level" requirementLevels={['secondary', 'vocational', 'bachelor', 'master', 'phd']}
+    />
+  )
+}
+
 
 export const VALUE_EDITORS = {
   ordinal_range: {
@@ -239,6 +252,10 @@ export const VALUE_EDITORS = {
   language_level: { candidate: LanguageLevelCandidate, vacancy: LanguageLevelVacancy },
   contract_set: { candidate: ContractSetCandidate, vacancy: ContractSetVacancy },
   work_mode_set: { candidate: WorkModeSetCandidate, vacancy: WorkModeSetVacancy },
+  work_type_set: { candidate: WorkTypeSetCandidate, vacancy: WorkTypeSetVacancy },
+  tagged_list_overlap_skills: { vacancy: RequiredSkillsVacancy },
+  tagged_list_overlap_occupation: { vacancy: RequiredOccupationsVacancy },
+  tagged_list_overlap_education: { vacancy: RequiredEducationVacancy },
 }
 
 export function getValueEditor(comparatorKey, side) {

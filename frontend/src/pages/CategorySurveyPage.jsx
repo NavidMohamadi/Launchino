@@ -137,11 +137,23 @@ export default function CategorySurveyPage() {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      const values = Object.values(answers).map((a) => ({
-        element_id: a.element_id, value: a.value, value_status: a.value_status,
-        unknown_reason: a.unknown_reason, not_scored_reason: a.not_scored_reason,
-        source_type: a.source_type || 'self_report', shareable_with_employer: !!a.shareable_with_employer,
-      }))
+      // Scoped to this page's own category -- `answers` is prefilled from
+      // GET .../survey-values, which returns EVERY category's saved answers
+      // (see the prefill effect above), not just this page's. Submitting
+      // the whole merged object would resubmit unrelated categories' data
+      // on every save -- always wasteful, and actively broken once a
+      // system-computed element existed (TASK-YEARS, Phase 4): any other
+      // category's page would re-include it verbatim and the backend
+      // correctly rejects a direct TASK-YEARS submission, so an unscoped
+      // submit here would 400 on saving e.g. Practical fit alone.
+      const categoryElementIds = new Set(categoryElements.map((e) => e.element_id))
+      const values = Object.values(answers)
+        .filter((a) => categoryElementIds.has(a.element_id))
+        .map((a) => ({
+          element_id: a.element_id, value: a.value, value_status: a.value_status,
+          unknown_reason: a.unknown_reason, not_scored_reason: a.not_scored_reason,
+          source_type: a.source_type || 'self_report', shareable_with_employer: !!a.shareable_with_employer,
+        }))
       await api.submitCandidateSurvey(talentId, values)
       // Back to the dashboard, not an in-page "done" step -- the candidate
       // should immediately see this category's updated progress reflected.

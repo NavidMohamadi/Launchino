@@ -23,24 +23,32 @@ from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
 from activation import is_activated
-from schemas import Category, JobDiscoverySubscription, MatchConfiguration, SubscriptionSource, Talent
+from schemas import Category, ContactPreference, JobDiscoverySubscription, MatchConfiguration, SubscriptionSource, Talent
 
 from api.matching_service import load_dictionary
 
 CATEGORY_LABELS: Dict[Category, str] = {
+    Category.EDU: "Education",
     Category.PRACT: "Practical fit",
     Category.TEAM: "How you work",
     Category.CAREER: "Where you're headed",
     Category.MOT: "What drives you",
     Category.ENV: "Your ideal environment",
+    Category.CAP: "Capabilities",
+    Category.TASK: "Task History",
 }
 
-# The 5 categories with real seeded elements today, in the fixed order the
-# candidate dashboard's "Continue: ..." CTA walks through (see
-# frontend/src/pages/CandidateDashboardPage.jsx). CAP/TASK are excluded --
-# zero seeded elements, not candidate-facing categories (see PROJECT_NOTES.md).
+# The 8 real Fit Dictionary categories, in the fixed order the candidate
+# dashboard's cards and "Continue: ..." CTA walk through (see
+# frontend/src/pages/CandidateDashboardPage.jsx and PROJECT_NOTES.md's
+# Phase 4 entry). Basic Info (phone/linkedin_url/contact_preference) is
+# deliberately NOT in this list -- it's a plain talent column, not a Fit
+# Dictionary category, and is surfaced separately (see
+# compute_candidate_completion's own "basic_info" field below), excluded
+# from the overall completion percentage.
 CANDIDATE_DASHBOARD_CATEGORY_ORDER: List[Category] = [
-    Category.PRACT, Category.TEAM, Category.CAREER, Category.MOT, Category.ENV,
+    Category.EDU, Category.PRACT, Category.TEAM, Category.CAREER,
+    Category.MOT, Category.ENV, Category.CAP, Category.TASK,
 ]
 
 
@@ -140,11 +148,24 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
     # revisit this equivalence if item_importance ever becomes candidate-
     # visible/configurable outside a specific vacancy.
     threshold_percent = get_premium_readiness_threshold_percent()
+
+    # Basic Info: phone/linkedin_url are plain talent columns (see
+    # PROJECT_NOTES.md's Phase 1/4 entries), not Fit Dictionary elements --
+    # deliberately excluded from total_active/total_answered and
+    # overall_percent above, surfaced here as its own field instead.
+    # contact_preference isn't counted: it always has a real DB default
+    # ('email'), so it's never meaningfully "incomplete".
+    basic_info_row = conn.execute(
+        text("select phone, linkedin_url from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)},
+    ).mappings().first()
+    basic_info_complete = bool(basic_info_row and basic_info_row["phone"] and basic_info_row["linkedin_url"])
+
     return {
         "categories": categories,
         "overall_percent_complete": overall_percent,
         "premium_readiness_threshold_percent": threshold_percent,
         "premium_ready": overall_percent >= threshold_percent,
+        "basic_info": {"label": "Basic Info", "complete": basic_info_complete},
     }
 
 
@@ -186,6 +207,50 @@ def set_candidate_subscription(
             "subscription_source": subscription_source.value if subscription_source else None,
         },
     )
+    updated = conn.execute(
+        text("select * from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).mappings().first()
+    return dict(updated)
+
+
+def set_candidate_basic_info(conn: Connection, talent_id: UUID, fields: Dict[str, Any]) -> Dict[str, Any]:
+    """Partial update of talent.phone/linkedin_url/contact_preference -- Basic
+    Info (see PROJECT_NOTES.md's Phase 1 entry), plain account columns, not a
+    Fit Dictionary category. fields is payload.model_dump(exclude_unset=True)
+    from api.models_api.BasicInfoUpdate: only keys actually present in the
+    request are updated, so a candidate can set one field at a time without
+    clobbering the others back to null. A no-op (empty fields) still returns
+    the current row rather than erroring, so callers don't need a special case.
+    """
+    # Values of None are dropped, not written as SQL NULL: contact_preference
+    # is NOT NULL at the DB level (migrations/006_v2_2_0_to_v2_3_0.sql), and a
+    # null phone/linkedin_url here just means "no change" for now, not "clear
+    # it" -- an explicit null would otherwise either violate that constraint
+    # or silently wipe a field the candidate didn't intend to touch.
+    allowed = {"phone", "linkedin_url", "contact_preference"}
+    updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if updates:
+        if "contact_preference" in updates:
+            updates["contact_preference"] = ContactPreference(updates["contact_preference"]).value
+
+        # phone is required only when contact_preference is (or is becoming)
+        # "phone" -- checked against the merged final state, not just this
+        # request's own fields, since a partial update can set either field
+        # alone while the other one's existing DB value stays in force.
+        current = conn.execute(
+            text("select phone, contact_preference from talent where talent_id = :talent_id"),
+            {"talent_id": str(talent_id)},
+        ).mappings().first()
+        resulting_contact_preference = updates.get("contact_preference", current["contact_preference"])
+        resulting_phone = updates.get("phone", current["phone"])
+        if resulting_contact_preference == ContactPreference.PHONE.value and not resulting_phone:
+            raise ValueError("phone is required when contact_preference is 'phone'")
+
+        set_clause = ", ".join(f"{column} = :{column}" for column in updates)
+        conn.execute(
+            text(f"update talent set {set_clause} where talent_id = :talent_id"),
+            {**updates, "talent_id": str(talent_id)},
+        )
     updated = conn.execute(
         text("select * from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
     ).mappings().first()

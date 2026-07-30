@@ -48,6 +48,24 @@ _PRACT_ANSWERS = [
     {"element_id": "PRACT-COUNTRY", "value": {"current_country": "NL", "presence_relative_to_vacancy": "in_country"}},
     {"element_id": "PRACT-LANG", "value": {"languages": {"English": "fluent"}}},
     {"element_id": "PRACT-CONTRACT", "value": {"acceptable": ["full_time"]}},
+    {"element_id": "PRACT-WORKTYPE", "value": {"acceptable": ["full_time"]}},
+]
+# Phase 4: EDU/CAP/TASK real ALWAYS-activated elements. TASK-YEARS is
+# deliberately absent -- it's computed automatically from TASK-EXPERIENCE's
+# dates (see src/task_years.py), never submitted directly.
+_EDU_CAP_TASK_ANSWERS = [
+    {"element_id": "EDU-HISTORY", "value": {"entries": [{
+        "level": "bachelor", "institution": {"ror_id": None, "name": "Test University"},
+        "program": "Computer Science", "field": {"isced_code": None, "confidence": None},
+        "start_date": "2015-01-01", "end_date": "2019-01-01", "status": "completed",
+    }]}},
+    {"element_id": "CAP-SKILLS", "value": {"skills": [
+        {"skill": "SQL", "level": "advanced", "esco_uri": None, "confidence": None},
+    ]}},
+    {"element_id": "TASK-EXPERIENCE", "value": {"jobs": [
+        {"job_title": "Software Engineer", "esco_uri": None, "confidence": None,
+         "start_date": "2019-06-01", "end_date": None, "current": True},
+    ]}},
 ]
 
 
@@ -71,14 +89,15 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         assert body["talent_id"] == talent_id
         assert body["overall_percent_complete"] == 0.0
         by_category = {c["category"]: c for c in body["categories"]}
-        assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV"}
+        assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV", "EDU", "CAP", "TASK"}
+        assert body["basic_info"] == {"label": "Basic Info", "complete": False}
         pract = by_category["PRACT"]
         assert pract["label"] == "Practical fit"
         assert pract["status"] == "not_started"
         assert pract["percent_complete"] == 0.0
-        assert pract["active_item_count"] == 6  # 6 real ALWAYS-activated PRACT elements
+        assert pract["active_item_count"] == 7  # 7 real ALWAYS-activated PRACT elements (incl. PRACT-WORKTYPE, Phase 4)
 
-        # Answer 3 of PRACT's 6 real elements -- real values, real schema keys.
+        # Answer 3 of PRACT's 7 real elements -- real values, real schema keys.
         r = client.post(f"/candidates/{talent_id}/survey", headers=headers, json={
             "values": [
                 {
@@ -104,12 +123,12 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         pract = by_category["PRACT"]
         assert pract["status"] == "in_progress"
         assert pract["answered_item_count"] == 3
-        assert pract["active_item_count"] == 6
-        assert pract["percent_complete"] == 50.0
+        assert pract["active_item_count"] == 7
+        assert pract["percent_complete"] == round(3 / 7 * 100, 1)
         # Untouched categories are still genuinely not_started, not a stale default.
         assert by_category["ENV"]["status"] == "not_started"
 
-        # Answer the remaining 3 PRACT elements -> category flips to complete.
+        # Answer the remaining 4 PRACT elements -> category flips to complete.
         r = client.post(f"/candidates/{talent_id}/survey", headers=headers, json={
             "values": [
                 {
@@ -119,6 +138,10 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
                 },
                 {
                     "element_id": "PRACT-LANG", "value": {"languages": {"English": "fluent"}},
+                    "value_status": "answered", "source_type": "self_report",
+                },
+                {
+                    "element_id": "PRACT-WORKTYPE", "value": {"acceptable": ["full_time"]},
                     "value_status": "answered", "source_type": "self_report",
                 },
                 {
@@ -210,10 +233,13 @@ def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
         assert body["overall_percent_complete"] == 0.0
         assert body["premium_ready"] is False
 
-        # Answer every real ALWAYS-activated element (PRACT+TEAM+CAREER+ENV =
-        # 23 items; MOT stays unselected, 0 active there, doesn't count) --
-        # a genuinely complete (100%) profile must cross any threshold <=100%.
-        all_answers = _PRACT_ANSWERS + _TEAM_CAREER_ENV_ANSWERS
+        # Answer every real ALWAYS-activated element (PRACT+TEAM+CAREER+ENV+
+        # EDU+CAP+TASK = 27 submitted items; MOT stays unselected, 0 active
+        # there, doesn't count) -- a genuinely complete (100%) profile must
+        # cross any threshold <=100%. TASK-YEARS isn't submitted directly (see
+        # _EDU_CAP_TASK_ANSWERS's own comment) but is auto-derived from
+        # TASK-EXPERIENCE, so values_stored is 28, one more than submitted.
+        all_answers = _PRACT_ANSWERS + _TEAM_CAREER_ENV_ANSWERS + _EDU_CAP_TASK_ANSWERS
         r = client.post(f"/candidates/{talent_id}/survey", headers=headers, json={
             "values": [
                 {"element_id": a["element_id"], "value": a["value"], "value_status": "answered", "source_type": "self_report"}
@@ -221,7 +247,7 @@ def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
             ],
         })
         assert r.status_code == 201, r.text
-        assert r.json()["values_stored"] == 23
+        assert r.json()["values_stored"] == 28
 
         r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
         body = r.json()

@@ -11,22 +11,29 @@ from source_schemas import (
 from vacancy_utils import canonical_job_key, normalise_domain, stable_hash
 
 
-# Equal weighting across the 5 categories with real seeded elements today
-# (PRACT/TEAM/CAREER/MOT/ENV). CAP/TASK stay at 0 -- the Fit Dictionary has zero
-# seeded elements for either (see PROJECT_NOTES.md); a nonzero weight here would
-# either be silently renormalized away (pre-fix behavior) or now correctly
-# trigger a "no data available for this category" clarification flag -- neither
-# of which is useful when it can just be 0 instead. Keep this in exact sync with
-# frontend/src/pages/VacancyWorkshopPage.jsx's DEFAULT_CATEGORY_WEIGHTS -- there
-# is no runtime single-sourcing between the two (see PROJECT_NOTES.md).
+# Equal weighting across all 8 real Fit Dictionary categories (2026-07-30
+# decision, see PROJECT_NOTES.md) -- 12.5% each, now that EDU/CAP/TASK have
+# real seeded, active elements (Phase 1-4 of Education/Capabilities/Task
+# History). Deliberately equal, not recruiter-weighted toward CAP/TASK/EDU:
+# this default applies to scraped/ingested vacancies with zero human review
+# (see this constant's real caller below), so an uneven split here would
+# silently impose an editorial judgement on postings nobody actually
+# reviewed. A company customizing a specific vacancy's weights remains free
+# to weight skills/experience higher -- see PROJECT_NOTES.md's logged
+# "recruiter-weighted" alternative, offered there as a potential future
+# opt-in preset for that customization flow, not as any kind of default.
+# Keep this in exact sync with frontend/src/pages/VacancyWorkshopPage.jsx's
+# DEFAULT_CATEGORY_WEIGHTS -- there is no runtime single-sourcing between the
+# two (see PROJECT_NOTES.md).
 DEFAULT_PUBLIC_WEIGHTS = {
-    Category.PRACT: 20.0,
-    Category.CAP: 0.0,
-    Category.TASK: 0.0,
-    Category.TEAM: 20.0,
-    Category.CAREER: 20.0,
-    Category.MOT: 20.0,
-    Category.ENV: 20.0,
+    Category.PRACT: 12.5,
+    Category.CAP: 12.5,
+    Category.TASK: 12.5,
+    Category.TEAM: 12.5,
+    Category.CAREER: 12.5,
+    Category.MOT: 12.5,
+    Category.ENV: 12.5,
+    Category.EDU: 12.5,
 }
 
 

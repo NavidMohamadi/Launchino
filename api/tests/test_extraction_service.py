@@ -23,19 +23,56 @@ from schemas import Category, FitElement, SharingStatus  # noqa: E402
 
 import api.ai_client as ai_client  # noqa: E402
 from api.ai_client import AIExtractionError  # noqa: E402
-from api.extraction_service import run_cv_extraction, run_vacancy_extraction  # noqa: E402
+from api.extraction_service import (  # noqa: E402
+    _scope_to_cv_extraction_categories, _scope_to_vacancy_extraction_categories, build_cv_extraction_prompt,
+    build_vacancy_extraction_prompt, run_cv_extraction, run_vacancy_extraction,
+)
 
 
 def _element(**overrides) -> FitElement:
+    # CAP is candidate-side profile content, always answerable independent
+    # of any vacancy (Phase 1 of Education/Capabilities/Task History -- see
+    # PROJECT_NOTES.md), not vacancy-gated as originally designed.
     base = dict(
         element_id="CAP-SQL", category=Category.CAP, label="SQL",
-        definition="Writes and reads SQL queries.", activation_policy="vacancy_activated",
+        definition="Writes and reads SQL queries.", activation_policy="always",
         candidate_question="q?", vacancy_question="q?",
         candidate_value_schema={"level": "integer 0..4"}, vacancy_value_schema={"required_level": "integer 0..4"},
         evidence_rule="rule", comparator_key="ordinal_requirement", sharing_status=SharingStatus.CANDIDATE_VISIBLE,
     )
     base.update(overrides)
     return FitElement.model_validate(base)
+
+
+def _pract_element() -> FitElement:
+    return _element(
+        element_id="PRACT-SPONSOR", category=Category.PRACT, activation_policy="always",
+        comparator_key="tri_state_requirement", candidate_value_schema={"requirement": "required|not_required|not_sure"},
+        vacancy_value_schema={"policy": "available|conditional|unavailable|not_specified"},
+    )
+
+
+def _edu_element() -> FitElement:
+    return _element(
+        element_id="EDU-HISTORY", category=Category.EDU, activation_policy="always",
+        comparator_key="tagged_list_overlap_education", candidate_value_schema={"entries": []},
+        vacancy_value_schema={"required_education": []},
+    )
+
+
+def _task_element() -> FitElement:
+    return _element(
+        element_id="TASK-EXPERIENCE", category=Category.TASK, activation_policy="always",
+        comparator_key="tagged_list_overlap_occupation", candidate_value_schema={"jobs": []},
+        vacancy_value_schema={"required_occupations": []},
+    )
+
+
+def _career_element() -> FitElement:
+    return _element(
+        element_id="CAREER-GROWTH", category=Category.CAREER, activation_policy="always",
+        comparator_key="ordinal_range", candidate_value_schema={"scale_id": "x"}, vacancy_value_schema={"scale_id": "x"},
+    )
 
 
 def _env_element() -> FitElement:
@@ -51,6 +88,7 @@ def test_model_for_task_mapping_is_correct_per_task():
     haiku_tasks = {
         "gap_questions", "clarification_questions", "source_classification",
         "duplicate_review_flagging", "sponsor_review_flagging",
+        "skill_mapping", "occupation_mapping", "program_mapping",
     }
     assert set(ai_client.MODEL_FOR_TASK) == sonnet_tasks | haiku_tasks
     for task in sonnet_tasks:
@@ -191,3 +229,107 @@ def test_vacancy_extraction_schema_validation_failure_raises_clear_error():
             run_vacancy_extraction(
                 vacancy_id="V-1", vacancy_text="... a vacancy description ...", dictionary={"ENV-STRUCTURE": _env_element()},
             )
+
+
+# --- Phase 3: CV extraction is structurally scoped to PRACT+EDU only -----
+
+def test_cv_extraction_scoping_excludes_cap_task_career_mot_env_even_if_active():
+    # A hard code-level allowlist (CV_EXTRACTION_CATEGORIES), not a side
+    # effect of which elements happen to be active=true -- so this must hold
+    # even when given a dictionary spanning every category, all "active".
+    # Checks the actual dictionary-scoping function directly rather than
+    # grepping the full rendered prompt text: CV_ELEMENT_ID_RULE's own
+    # worked example legitimately mentions "CAP-SQL" by name as an
+    # anti-pattern, which a blunt substring check would misreport as a leak.
+    full_dictionary = {
+        "PRACT-SPONSOR": _pract_element(),
+        "EDU-HISTORY": _edu_element(),
+        "CAP-SQL": _element(),
+        "TASK-EXPERIENCE": _task_element(),
+        "CAREER-GROWTH": _career_element(),
+        "ENV-STRUCTURE": _env_element(),
+    }
+    scoped = _scope_to_cv_extraction_categories(full_dictionary)
+    assert set(scoped) == {"PRACT-SPONSOR", "EDU-HISTORY"}
+
+
+def test_cv_extraction_prompt_never_offers_out_of_scope_element_ids_as_valid():
+    # The FIT_DICTIONARY_JSON blob embedded in the rendered prompt -- the
+    # thing the model is actually told it may choose element_id from -- must
+    # not contain any out-of-scope element_id, distinct from the rule text
+    # merely discussing one as a named anti-pattern (see the test above).
+    full_dictionary = {
+        "PRACT-SPONSOR": _pract_element(), "EDU-HISTORY": _edu_element(),
+        "CAP-SQL": _element(), "TASK-EXPERIENCE": _task_element(),
+        "CAREER-GROWTH": _career_element(), "ENV-STRUCTURE": _env_element(),
+    }
+    _, user = build_cv_extraction_prompt(candidate_id="T-1", cv_text="a CV", dictionary=full_dictionary)
+    dictionary_json_line = next(line for line in user.splitlines() if '"element_id": "PRACT-SPONSOR"' in line)
+    assert "CAP-SQL" not in dictionary_json_line
+    assert "TASK-EXPERIENCE" not in dictionary_json_line
+    assert "CAREER-GROWTH" not in dictionary_json_line
+    assert "ENV-STRUCTURE" not in dictionary_json_line
+
+
+# --- Phase 5: vacancy extraction excludes EDU/CAP/TASK --------------------
+
+def test_vacancy_extraction_scoping_excludes_edu_cap_task_even_if_active():
+    # A hard code-level exclusion (VACANCY_EXTRACTION_EXCLUDED_CATEGORIES),
+    # not a side effect of which elements happen to be active=true --
+    # PRACT/CAREER/ENV must survive scoping unchanged (vacancy extraction's
+    # existing behavior for these is not being narrowed), while EDU/CAP/TASK
+    # must always be excluded, mirroring CV_EXTRACTION_CATEGORIES's own test.
+    full_dictionary = {
+        "PRACT-SPONSOR": _pract_element(),
+        "EDU-HISTORY": _edu_element(),
+        "CAP-SQL": _element(),
+        "TASK-EXPERIENCE": _task_element(),
+        "CAREER-GROWTH": _career_element(),
+        "ENV-STRUCTURE": _env_element(),
+    }
+    scoped = _scope_to_vacancy_extraction_categories(full_dictionary)
+    assert set(scoped) == {"PRACT-SPONSOR", "CAREER-GROWTH", "ENV-STRUCTURE"}
+
+
+def test_vacancy_extraction_prompt_never_offers_edu_cap_task_element_ids_as_valid():
+    full_dictionary = {
+        "PRACT-SPONSOR": _pract_element(), "EDU-HISTORY": _edu_element(),
+        "CAP-SQL": _element(), "TASK-EXPERIENCE": _task_element(),
+        "CAREER-GROWTH": _career_element(), "ENV-STRUCTURE": _env_element(),
+    }
+    _, user = build_vacancy_extraction_prompt(vacancy_id="V-1", vacancy_text="a vacancy", dictionary=full_dictionary)
+    dictionary_json_line = next(line for line in user.splitlines() if '"element_id": "PRACT-SPONSOR"' in line)
+    assert "EDU-HISTORY" not in dictionary_json_line
+    assert "CAP-SQL" not in dictionary_json_line
+    assert "TASK-EXPERIENCE" not in dictionary_json_line
+    assert "CAREER-GROWTH" in dictionary_json_line  # confirms this isn't just an empty/broken dictionary
+
+
+def test_cv_extraction_returns_basic_info_when_present():
+    canned = {
+        "extracted_elements": [],
+        "basic_info": {"phone": "+31 6 1234 5678", "linkedin_url": "https://linkedin.com/in/jdoe", "evidence_quote": "+31 6 1234 5678 | linkedin.com/in/jdoe"},
+        "unanswered_element_ids": [], "unmapped_terms": [], "review_flags": [],
+    }
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_cv_extraction(candidate_id="T-1", cv_text="... a CV ...", dictionary={})
+
+    assert result.basic_info is not None
+    assert result.basic_info.phone == "+31 6 1234 5678"
+    assert result.basic_info.linkedin_url == "https://linkedin.com/in/jdoe"
+
+
+def test_cv_extraction_basic_info_defaults_to_none_when_absent():
+    canned = {"extracted_elements": [], "unanswered_element_ids": [], "unmapped_terms": [], "review_flags": []}
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_cv_extraction(candidate_id="T-1", cv_text="... a CV with no contact info ...", dictionary={})
+
+    assert result.basic_info is None

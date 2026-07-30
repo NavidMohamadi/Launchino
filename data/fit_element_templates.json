@@ -7,7 +7,7 @@
     "example": "CAP-SQL",
     "minting_rule": "Search canonical dictionary and approved mapping memory first; human reviewer approves a new ID only when no adequate element exists.",
     "version": "2.0.0",
-    "activation_policy": "vacancy_activated"
+    "activation_policy": "always"
   },
   {
     "template_id": "TASK-DYNAMIC",
@@ -17,6 +17,6 @@
     "example": "TASK-ANALYSE-OPERATIONAL-DATA",
     "minting_rule": "Search canonical dictionary and approved mapping memory first; human reviewer approves a new ID only when no adequate element exists.",
     "version": "2.0.0",
-    "activation_policy": "vacancy_activated"
+    "activation_policy": "always"
   }
 ]

@@ -11,7 +11,10 @@ from slowapi.middleware import SlowAPIMiddleware
 import api  # noqa: F401  (ensures src/ is on sys.path before any src import below)
 from api.database import bootstrap
 from api.rate_limit import limiter
-from api.routers import admin, admin_reports, admin_review, candidates, companies, fit_dictionary, matches, vacancies
+from api.routers import (
+    admin, admin_reports, admin_review, admin_tasks, candidates, companies, fit_dictionary, matches, reference,
+    vacancies,
+)
 
 
 @asynccontextmanager
@@ -59,6 +62,8 @@ app.include_router(companies.router)
 app.include_router(admin.router)
 app.include_router(admin_reports.router)
 app.include_router(admin_review.router)
+app.include_router(admin_tasks.router)
+app.include_router(reference.router)
 
 
 @app.get("/health", tags=["health"])

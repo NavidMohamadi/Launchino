@@ -15,19 +15,22 @@ from api.auth import (
     CANDIDATE_TOKEN_EXPIRY, create_access_token, hash_password, require_candidate_self_or_admin, require_role,
     verify_password,
 )
-from api.candidate_service import compute_candidate_completion, set_candidate_subscription
+from api.candidate_service import compute_candidate_completion, set_candidate_basic_info, set_candidate_subscription
 from api.database import get_connection
 from api.extraction_service import run_cv_extraction
+from api.mapping_service import map_occupation_to_esco, map_program_to_isced, map_skill_to_esco
 from api.matching_service import load_dictionary, load_talent_values
 from api.models_api import (
-    CONSENT_POLICY_VERSION, CandidateAuthResponse, CandidateCompletionOut, CandidateLoginRequest,
-    CandidateSurveySubmission, CVExtractionRequest, PremiumRequestCreate, PremiumRequestOut,
-    SubscriptionUpdateRequest, TalentCreate, TalentOut,
+    CONSENT_POLICY_VERSION, BasicInfoUpdate, CandidateAuthResponse, CandidateCompletionOut, CandidateElementValueIn,
+    CandidateLoginRequest, CandidateSurveySubmission, CVExtractionRequest, PremiumRequestCreate, PremiumRequestOut,
+    SubscriptionUpdateRequest, TalentCreate, TalentOut, TermMappingRequest,
 )
 from api.premium_requests import PremiumRequestError, create_premium_request, get_pending_request_for_candidate
 from api.rate_limit import limiter
 from candidate_extraction import CandidateExtractionResult
-from schemas import Talent, TalentElementValue
+from mapping_schemas import MappingResult
+from schemas import SourceType, Talent, TalentElementValue, UnknownReason, ValueStatus
+from task_years import compute_total_years_experience
 
 router = APIRouter(prefix="/candidates", tags=["candidates"])
 
@@ -156,6 +159,23 @@ def update_candidate_subscription(
     return TalentOut(**updated)
 
 
+@router.patch("/{talent_id}/basic-info", response_model=TalentOut)
+def update_candidate_basic_info(
+    talent_id: UUID, payload: BasicInfoUpdate, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> TalentOut:
+    """Basic Info: phone/linkedin_url/contact_preference -- plain talent
+    account columns, not a Fit Dictionary category (see PROJECT_NOTES.md's
+    Phase 1 entry). Partial update: fields omitted from the request body are
+    left untouched (see set_candidate_basic_info's own docstring)."""
+    _require_candidate(talent_id, conn)
+    try:
+        updated = set_candidate_basic_info(conn, talent_id, payload.model_dump(exclude_unset=True))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return TalentOut(**updated)
+
+
 @router.get("/{talent_id}/completion", response_model=CandidateCompletionOut)
 def get_candidate_completion(
     talent_id: UUID, conn: Connection = Depends(get_connection),
@@ -229,6 +249,31 @@ def get_premium_request(
     return PremiumRequestOut(**result) if result else None
 
 
+TASK_EXPERIENCE_ELEMENT_ID = "TASK-EXPERIENCE"
+TASK_YEARS_ELEMENT_ID = "TASK-YEARS"
+
+
+def _derive_task_years_item(task_experience_item: CandidateElementValueIn) -> CandidateElementValueIn:
+    """TASK-YEARS is computed from TASK-EXPERIENCE's own job entries at
+    submission time -- never a direct candidate answer (see
+    src/task_years.py's own docstring). Mirrors TASK-EXPERIENCE's own
+    value_status/source_type/shareable_with_employer rather than inventing
+    independent ones: if the candidate hasn't answered TASK-EXPERIENCE yet,
+    TASK-YEARS shouldn't claim to be answered either.
+    """
+    if task_experience_item.value_status != ValueStatus.ANSWERED:
+        return CandidateElementValueIn(
+            element_id=TASK_YEARS_ELEMENT_ID, value={}, value_status=ValueStatus.UNKNOWN,
+            unknown_reason=UnknownReason.CANDIDATE_NOT_ANSWERED, source_type=task_experience_item.source_type,
+            shareable_with_employer=task_experience_item.shareable_with_employer,
+        )
+    years = compute_total_years_experience(task_experience_item.value.get("jobs") or [])
+    return CandidateElementValueIn(
+        element_id=TASK_YEARS_ELEMENT_ID, value={"level": years}, value_status=ValueStatus.ANSWERED,
+        source_type=task_experience_item.source_type, shareable_with_employer=task_experience_item.shareable_with_employer,
+    )
+
+
 @router.post("/{talent_id}/survey", status_code=201)
 def submit_candidate_survey(
     talent_id: UUID, payload: CandidateSurveySubmission, conn: Connection = Depends(get_connection),
@@ -240,10 +285,21 @@ def submit_candidate_survey(
     if not talent_row:
         raise HTTPException(status_code=404, detail="Candidate not found")
 
+    if any(item.element_id == TASK_YEARS_ELEMENT_ID for item in payload.values):
+        raise HTTPException(
+            status_code=400,
+            detail=f"{TASK_YEARS_ELEMENT_ID} cannot be submitted directly -- it is computed automatically from {TASK_EXPERIENCE_ELEMENT_ID}.",
+        )
+
+    items_to_store = list(payload.values)
+    task_experience_item = next((i for i in payload.values if i.element_id == TASK_EXPERIENCE_ELEMENT_ID), None)
+    if task_experience_item is not None:
+        items_to_store.append(_derive_task_years_item(task_experience_item))
+
     known_elements = {r[0] for r in conn.execute(text("select element_id from fit_element")).all()}
 
     stored = 0
-    for item in payload.values:
+    for item in items_to_store:
         if item.element_id not in known_elements:
             raise HTTPException(status_code=400, detail=f"Unknown element_id: {item.element_id}")
 
@@ -308,15 +364,65 @@ def extract_cv(
     items through POST /candidates/{talent_id}/survey, which is the only
     place talent_element_value actually gets written.
     """
-    talent_row = conn.execute(
-        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
-    ).first()
-    if not talent_row:
-        raise HTTPException(status_code=404, detail="Candidate not found")
+    _require_candidate(talent_id, conn)
 
     dictionary = load_dictionary(conn)
     try:
         return run_cv_extraction(candidate_id=str(talent_id), cv_text=payload.cv_text, dictionary=dictionary)
+    except AIExtractionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+def _require_candidate(talent_id: UUID, conn: Connection) -> None:
+    row = conn.execute(text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+
+@router.post("/{talent_id}/map-skill", response_model=MappingResult)
+@limiter.limit("60/hour")
+def map_skill(
+    request: Request, talent_id: UUID, payload: TermMappingRequest, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> MappingResult:
+    """AI-map one free-text skill to an ESCO skill code with a confidence score.
+
+    Never persists -- the caller (the CAP-SKILLS survey UI) shows the result
+    to the candidate, who must confirm or correct it (see
+    MappingResult.requires_confirmation) before it goes into a real
+    POST /candidates/{talent_id}/survey submission.
+    """
+    _require_candidate(talent_id, conn)
+    try:
+        return map_skill_to_esco(payload.term, candidate_id=str(talent_id))
+    except AIExtractionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/{talent_id}/map-occupation", response_model=MappingResult)
+@limiter.limit("60/hour")
+def map_occupation(
+    request: Request, talent_id: UUID, payload: TermMappingRequest, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> MappingResult:
+    """AI-map one free-text job title to an ESCO occupation code -- see map_skill's docstring."""
+    _require_candidate(talent_id, conn)
+    try:
+        return map_occupation_to_esco(payload.term, candidate_id=str(talent_id))
+    except AIExtractionError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+
+@router.post("/{talent_id}/map-program", response_model=MappingResult)
+@limiter.limit("60/hour")
+def map_program(
+    request: Request, talent_id: UUID, payload: TermMappingRequest, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> MappingResult:
+    """AI-map one free-text study programme name to an ISCED-F 2013 field -- see map_skill's docstring."""
+    _require_candidate(talent_id, conn)
+    try:
+        return map_program_to_isced(payload.term, candidate_id=str(talent_id))
     except AIExtractionError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
@@ -331,8 +437,9 @@ def export_candidate_data(
     as every other candidate-scoped route)."""
     talent_row = conn.execute(
         text(
-            "select talent_id, full_name, email, profile_status, job_discovery_subscription, "
-            "subscription_expires_at, job_discovery_campaign_opt_in, subscription_source, "
+            "select talent_id, full_name, email, phone, linkedin_url, contact_preference, "
+            "profile_status, job_discovery_subscription, subscription_expires_at, subscription_updated_at, "
+            "job_discovery_campaign_opt_in, subscription_source, "
             "consent_at, consent_version, last_login_at, created_at, updated_at "
             "from talent where talent_id = :talent_id"
         ),

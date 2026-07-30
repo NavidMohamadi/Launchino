@@ -1,6 +1,6 @@
 from schemas import Category
 from company_intake import canonicalise_company_submission
-from canonical_vacancy import canonicalise_raw_vacancy
+from canonical_vacancy import DEFAULT_PUBLIC_WEIGHTS, canonicalise_raw_vacancy
 from source_schemas import (
     AcquisitionMethod, RawVacancyRecord, SourceTrustLevel, VacancyIntakeSource,
     VerificationStatus, WeightingMode,
@@ -44,6 +44,18 @@ def test_company_and_public_use_same_canonical_profile_type():
     assert public.weighting_mode == WeightingMode.BALANCED_DEFAULT
     assert direct.weighting_mode == WeightingMode.COMPANY_CONFIRMED
     assert direct.verification_status == VerificationStatus.COMPANY_VALIDATED
+
+
+def test_default_public_weights_are_equal_across_all_8_categories_and_sum_to_100():
+    # 2026-07-30 decision (see PROJECT_NOTES.md): equal 12.5% weighting
+    # across all 8 real categories, now that EDU/CAP/TASK have real seeded
+    # elements. This is the constant every scraped/ingested vacancy actually
+    # uses (canonicalise_raw_vacancy below never passes category_weights),
+    # so a real sum-to-100 check on it -- not just the dead JSON profile's
+    # own already-existing test -- matters.
+    assert set(DEFAULT_PUBLIC_WEIGHTS) == set(Category)
+    assert all(weight == 12.5 for weight in DEFAULT_PUBLIC_WEIGHTS.values())
+    assert sum(DEFAULT_PUBLIC_WEIGHTS.values()) == 100.0
 
 
 def test_public_profile_is_not_company_confirmed():

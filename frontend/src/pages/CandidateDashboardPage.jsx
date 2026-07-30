@@ -1,19 +1,22 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  IconBolt, IconBuilding, IconChartBar, IconCheck, IconClock, IconEye, IconFlag, IconMapPin, IconQuote, IconStar,
-  IconUsers,
+  IconAddressBook, IconBolt, IconBriefcase, IconBuilding, IconChartBar, IconCheck, IconClock, IconEye, IconFlag,
+  IconMapPin, IconQuote, IconSchool, IconStar, IconTools, IconUsers,
 } from '@tabler/icons-react'
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
-import { surveyPathFor } from '../categorySlugs'
+import { BASIC_INFO_PATH, surveyPathFor } from '../categorySlugs'
 
 const CATEGORY_ICONS = {
+  EDU: IconSchool,
   PRACT: IconMapPin,
   TEAM: IconUsers,
   CAREER: IconFlag,
   MOT: IconBolt,
   ENV: IconBuilding,
+  CAP: IconTools,
+  TASK: IconBriefcase,
 }
 
 const STATUS_LABELS = { complete: 'Complete', in_progress: 'In progress', not_started: 'Not started' }
@@ -33,7 +36,16 @@ export default function CandidateDashboardPage() {
   if (error) return <p className="hint-error">Could not load your profile: {error}</p>
   if (!completion) return <p>Loading...</p>
 
-  const nextIncomplete = completion.categories.find((c) => c.status !== 'complete')
+  // Basic Info is deliberately not part of completion.categories (see
+  // api/candidate_service.py's compute_candidate_completion) -- it's a plain
+  // talent column, not a Fit Dictionary category, excluded from
+  // overall_percent_complete. Still surfaced first here, as its own
+  // synthetic "next incomplete" candidate, since it's the first real step
+  // in the intended survey order (see PROJECT_NOTES.md's Phase 4 entry).
+  const nextIncomplete = !completion.basic_info.complete
+    ? { category: 'BASIC_INFO', label: completion.basic_info.label }
+    : completion.categories.find((c) => c.status !== 'complete')
+  const pathFor = (category) => (category === 'BASIC_INFO' ? BASIC_INFO_PATH : surveyPathFor(category))
 
   return (
     <div>
@@ -53,6 +65,21 @@ export default function CandidateDashboardPage() {
       </div>
 
       <div className="ll-dash-grid">
+        <div
+          key="basic-info" className="ll-dash-card clickable"
+          role="button" tabIndex={0} onClick={() => navigate(BASIC_INFO_PATH)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(BASIC_INFO_PATH) } }}
+        >
+          {completion.basic_info.complete && (
+            <span className="ll-dash-card-badge complete"><IconCheck size={20} /></span>
+          )}
+          <div className="ll-dash-card-icon"><IconAddressBook size={20} /></div>
+          <div className="ll-dash-card-label">{completion.basic_info.label}</div>
+          <div className={`ll-dash-card-status ${completion.basic_info.complete ? 'complete' : 'not_started'}`}>
+            {STATUS_LABELS[completion.basic_info.complete ? 'complete' : 'not_started']}
+          </div>
+        </div>
+
         {completion.categories.map((cat) => {
           const Icon = CATEGORY_ICONS[cat.category]
           const goToCategory = () => navigate(surveyPathFor(cat.category))
@@ -113,7 +140,7 @@ export default function CandidateDashboardPage() {
       {nextIncomplete ? (
         <button
           type="button" className="ll-dash-cta"
-          onClick={() => navigate(surveyPathFor(nextIncomplete.category))}
+          onClick={() => navigate(pathFor(nextIncomplete.category))}
         >
           Continue: {nextIncomplete.label}
         </button>

@@ -32,11 +32,58 @@ from typing import Dict, List, Tuple
 
 from api import REPO_ROOT, ai_client
 from candidate_extraction import CandidateExtractionResult
-from schemas import FitElement
+from schemas import Category, FitElement
 from vacancy_extraction import VacancyExtractionResult
 
 PROMPTS_DIR = REPO_ROOT / "prompts"
 MAPPING_MEMORY_PATH = REPO_ROOT / "data" / "mapping_memory.json"
+
+# CV extraction is scoped to Basic Info (handled separately, see
+# CandidateExtractionResult.basic_info) + these two Fit Dictionary
+# categories only (Phase 3 of Education/Capabilities/Task History -- see
+# PROJECT_NOTES.md). CAP/TASK are deliberately excluded: a CV extraction can
+# only ever produce a low-confidence guess at a skill/job-title-to-ESCO
+# mapping, and Phase 1/2 already built a real, purpose-built path for that
+# (api/mapping_service.py, driven by explicit candidate entry) -- letting CV
+# extraction attempt the same thing via a completely different, less
+# reliable route would give two silently-diverging ways to fill the same
+# data. CAREER/MOT/ENV/TEAM are excluded because a CV is a record of what
+# someone did, not a survey of preferences/motivations it could ever
+# honestly answer. This is a hard code-level allowlist, not a side effect of
+# which elements happen to be active=true -- it must keep excluding CAP/TASK
+# even after Phase 4 flips their active flag to make them real for manual
+# entry.
+CV_EXTRACTION_CATEGORIES = {Category.PRACT, Category.EDU}
+
+
+def _scope_to_cv_extraction_categories(dictionary: Dict[str, FitElement]) -> Dict[str, FitElement]:
+    return {element_id: element for element_id, element in dictionary.items() if element.category in CV_EXTRACTION_CATEGORIES}
+
+
+# Vacancy-description extraction is scoped to exclude EDU/CAP/TASK (Phase 5
+# of Education/Capabilities/Task History -- see PROJECT_NOTES.md), the exact
+# same reasoning CV_EXTRACTION_CATEGORIES above already applies candidate-side:
+# a vacancy-description extraction can only ever produce a low-confidence
+# guess at a required-skill/occupation/field-of-study-to-ESCO/ISCED-F
+# mapping, and Phase 5 already built a real, purpose-built path for that --
+# a company directly searches and picks an exact ESCO/ISCED-F code (see
+# frontend/src/components/RequirementListEditor.jsx), rather than getting an
+# AI's best-guess code inline with no confidence check at all (unlike the
+# candidate-side AI mapping, which at least has api/mapping_service.py's own
+# confidence/requires_confirmation gate -- vacancy extraction has no
+# equivalent gate today, so silently accepting an inline-guessed code here
+# would be strictly worse than the candidate-side case Phase 3 already fixed).
+# PRACT/TEAM/CAREER/MOT/ENV keep their existing behavior unchanged -- there is
+# no equivalent dedicated manual-entry alternative for those, so vacancy
+# extraction remains the real, useful path for them.
+VACANCY_EXTRACTION_EXCLUDED_CATEGORIES = {Category.EDU, Category.CAP, Category.TASK}
+
+
+def _scope_to_vacancy_extraction_categories(dictionary: Dict[str, FitElement]) -> Dict[str, FitElement]:
+    return {
+        element_id: element for element_id, element in dictionary.items()
+        if element.category not in VACANCY_EXTRACTION_EXCLUDED_CATEGORIES
+    }
 
 TOOL_OUTPUT_INSTRUCTIONS = (
     "Return your answer only by calling the submit_extraction tool with arguments "
@@ -65,8 +112,19 @@ def _dictionary_summary(dictionary: Dict[str, FitElement], *, schema_field: str)
     ]
 
 
-def _mapping_memory() -> List[dict]:
-    return json.loads(MAPPING_MEMORY_PATH.read_text(encoding="utf-8"))
+def _mapping_memory(dictionary: Dict[str, FitElement]) -> List[dict]:
+    # Filtered to entries whose canonical_element_id is actually in the
+    # dictionary being sent to this prompt -- an alias for an element_id
+    # that isn't included is useless at best. This is also what makes CV
+    # extraction's category scoping (CV_EXTRACTION_CATEGORIES) actually
+    # airtight: CV_ELEMENT_ID_RULE treats mapping memory as an equally valid
+    # source for element_id as fit_dictionary itself, so an unfiltered
+    # mapping_memory would let a CAP/TASK alias (e.g. data/mapping_memory.json's
+    # illustrative "CAP-SQL" entries) leak into a CV-scoped prompt and defeat
+    # the dictionary-level filtering entirely. Found via a real test
+    # assertion, not assumed -- see PROJECT_NOTES.md's Phase 3 entry.
+    entries = json.loads(MAPPING_MEMORY_PATH.read_text(encoding="utf-8"))
+    return [entry for entry in entries if entry.get("canonical_element_id") in dictionary]
 
 
 def _fill(template: str, **values: str) -> str:
@@ -76,12 +134,6 @@ def _fill(template: str, **values: str) -> str:
 
 
 CV_ELEMENT_ID_RULE = """
-THE "OUTPUT JSON" SECTION ABOVE IS A LEGACY FORMAT -- DO NOT FOLLOW IT.
-In particular, ignore its "mapped_elements" field and the idea that element_id can be
-the literal string "unmapped". That format does not exist in the tool schema you must
-actually call. The rules below are the only ones that apply to element_id, and they
-override anything in the OUTPUT JSON section above.
-
 THE RULE: element_id is copy-paste only. Before writing any element_id in
 extracted_elements, find that exact string, character-for-character, already present in
 the fit_dictionary JSON above (or approved_mapping_memory). If you cannot find it
@@ -92,11 +144,16 @@ name are ALL subject to this rule with no exception. A skill being real, well-kn
 obviously CAP/TASK-shaped is irrelevant to whether you may write an element_id for it --
 only literal presence in the dictionary you were given matters.
 
-This dictionary currently has zero CAP or TASK elements. That means, for essentially
-every CV you will ever process, EVERY skill/tool/task term belongs in unmapped_terms,
-and extracted_elements will often end up empty or close to it. That is the CORRECT,
-expected result -- it is not a sign you failed to find matches, and it is not a reason
-to start constructing plausible-looking IDs to fill extracted_elements.
+This dictionary NEVER includes CAP (skills) or TASK (work experience) elements, by
+deliberate design -- not a temporary gap. CV extraction is scoped to Basic Info +
+Education + Practical fit only; skills and work experience are always manual
+candidate entry (each backed by its own AI mapping to an ESCO code, a separate,
+purpose-built path -- see api/mapping_service.py), never CV-extracted. That means, for
+essentially every CV you will ever process, EVERY skill/tool/task term belongs in
+unmapped_terms, and extracted_elements will often end up containing only Practical fit
+and education-adjacent items. That is the CORRECT, expected result -- it is not a sign
+you failed to find matches, and it is not a reason to start constructing plausible-looking
+IDs to fill extracted_elements.
 
 Mechanical check before you finalize your answer: for every element_id you are about to
 write in extracted_elements, re-scan the fit_dictionary JSON text above character by
@@ -104,12 +161,24 @@ character for that exact string. If this exact re-scan does not find it, delete 
 extracted_elements entry and move the term to unmapped_terms instead.
 
 Worked example: the CV says "Wrote SQL queries daily against a Postgres warehouse."
-fit_dictionary contains no SQL or Postgres entry (correct, since it has no CAP elements
-at all). Correct output:
+fit_dictionary contains no SQL or Postgres entry (correct -- it never contains any CAP
+elements at all). Correct output:
   extracted_elements: (nothing added for SQL or Postgres)
   unmapped_terms: ["SQL", "Postgres"]
 Writing element_id "CAP-SQL" here would be WRONG even though it looks like a perfectly
 sensible ID -- it does not appear in fit_dictionary, so it is not available to use.
+"""
+
+
+CV_BASIC_INFO_RULE = """
+BASIC INFO -- a separate top-level "basic_info" field, not a fit_dictionary element.
+Extract phone and linkedin_url only if the CV explicitly states them (e.g. in a header
+or contact section) -- set the field to null if absent, never guess or construct one
+from a name. Do NOT extract or infer contact_preference under any circumstances: a CV
+essentially never states how someone wants to be contacted, and this field is manual
+candidate entry only (defaults to "email" until they set it themselves). If both phone
+and linkedin_url are absent, set "basic_info" to null entirely rather than an object of
+two nulls.
 """
 
 
@@ -151,16 +220,21 @@ same information.
 
 
 def build_cv_extraction_prompt(*, candidate_id: str, cv_text: str, dictionary: Dict[str, FitElement]) -> Tuple[str, str]:
+    # Hard code-level scoping (CV_EXTRACTION_CATEGORIES), not just a prompt
+    # instruction -- dictionary may contain any category (it's whatever the
+    # caller's load_dictionary() returned), but only PRACT/EDU ever reach the
+    # model. See CV_EXTRACTION_CATEGORIES's own comment for why.
+    scoped_dictionary = _scope_to_cv_extraction_categories(dictionary)
     user = _fill(
         _load_prompt("P01_cv_extraction.txt"),
         CV_TEXT=cv_text, CANDIDATE_ID=candidate_id,
-        FIT_DICTIONARY_JSON=json.dumps(_dictionary_summary(dictionary, schema_field="candidate_value_schema")),
-        MAPPING_MEMORY_JSON=json.dumps(_mapping_memory()),
+        FIT_DICTIONARY_JSON=json.dumps(_dictionary_summary(scoped_dictionary, schema_field="candidate_value_schema")),
+        MAPPING_MEMORY_JSON=json.dumps(_mapping_memory(scoped_dictionary)),
     )
     user += (
         f'\n\nWhen building each extracted element, set value.talent_id to "{candidate_id}" '
         f'exactly and value.source_type to "ai_extraction" exactly.'
-        f'\n{CV_ELEMENT_ID_RULE}\n{CV_VALUE_SCHEMA_RULE}\n{TOOL_OUTPUT_INSTRUCTIONS}'
+        f'\n{CV_ELEMENT_ID_RULE}\n{CV_VALUE_SCHEMA_RULE}\n{CV_BASIC_INFO_RULE}\n{TOOL_OUTPUT_INSTRUCTIONS}'
     )
     return "You are the SHEXON CV extraction assistant described below.", user
 
@@ -253,11 +327,15 @@ This is WRONG: {"type": "full-time"} -- wrong key name and wrong (unnested, sing
 
 
 def build_vacancy_extraction_prompt(*, vacancy_id: str, vacancy_text: str, dictionary: Dict[str, FitElement]) -> Tuple[str, str]:
+    # Hard code-level scoping (VACANCY_EXTRACTION_EXCLUDED_CATEGORIES), not
+    # just a prompt instruction -- same reasoning and same shape as
+    # build_cv_extraction_prompt's own scoping above.
+    scoped_dictionary = _scope_to_vacancy_extraction_categories(dictionary)
     user = _fill(
         _load_prompt("P04_vacancy_extraction.txt"),
         VACANCY_ID=vacancy_id, VACANCY_TEXT=vacancy_text,
-        FIT_DICTIONARY_JSON=json.dumps(_dictionary_summary(dictionary, schema_field="vacancy_value_schema")),
-        MAPPING_MEMORY_JSON=json.dumps(_mapping_memory()),
+        FIT_DICTIONARY_JSON=json.dumps(_dictionary_summary(scoped_dictionary, schema_field="vacancy_value_schema")),
+        MAPPING_MEMORY_JSON=json.dumps(_mapping_memory(scoped_dictionary)),
     )
     user += (
         f'\n\nWhen building each extracted element, set value.vacancy_id to "{vacancy_id}" exactly and '

@@ -21,7 +21,7 @@
     "active": true,
     "version": "2.0.0",
     "is_template": false,
-    "activation_policy": "vacancy_activated"
+    "activation_policy": "always"
   },
   {
     "element_id": "CAP-FORECASTING",
@@ -47,7 +47,7 @@
     "active": true,
     "version": "2.0.0",
     "is_template": false,
-    "activation_policy": "vacancy_activated"
+    "activation_policy": "always"
   },
   {
     "element_id": "TASK-ANALYSE-OPERATIONAL-DATA",
@@ -72,6 +72,6 @@
     "active": true,
     "version": "2.0.0",
     "is_template": false,
-    "activation_policy": "vacancy_activated"
+    "activation_policy": "always"
   }
 ]

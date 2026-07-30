@@ -1,10 +1,16 @@
 """Manually-triggered job discovery polling: adapters -> dedup -> merge -> lifecycle.
 
-This module is never imported by api/main.py and registers no scheduler,
-cron, or background task of any kind. The only ways to run it are:
+This module registers no scheduler, cron, or background task of any kind --
+nothing here ever runs on its own. The ways to run it are:
 
     python -m api.job_discovery_scheduler --validate-only
     python -m api.job_discovery_scheduler --run-once
+
+-- or an admin clicking "Run now" on the dashboard (api/admin_tasks.py's
+run_ingestion_poll_task, routed through POST /admin/tasks/ingestion_poll/run
+in api/routers/admin_tasks.py), which imports run_poll_cycle lazily inside
+its own function body so this module still isn't imported at api/main.py
+startup -- only the first time an admin actually triggers a poll.
 
 Company/board list: data/company_registry_live.json. Adding or removing a
 board is a one-line edit to that file's "boards" array -- no code change,

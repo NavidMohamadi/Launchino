@@ -2,6 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate, NavLink, Link } from 'react-rou
 import { IconStar } from '@tabler/icons-react'
 import CandidateDashboardPage from './pages/CandidateDashboardPage'
 import CategorySurveyPage from './pages/CategorySurveyPage'
+import BasicInfoPage from './pages/BasicInfoPage'
+import EducationPage from './pages/EducationPage'
+import CapabilitiesPage from './pages/CapabilitiesPage'
+import TaskHistoryPage from './pages/TaskHistoryPage'
 import PremiumPage from './pages/PremiumPage'
 import VacancyWorkshopPage from './pages/VacancyWorkshopPage'
 import MatchPage from './pages/MatchPage'
@@ -80,6 +84,10 @@ function AppRoutes() {
       <Route path="/privacy" element={<PrivacyPolicyPage />} />
       <Route path="/terms" element={<TermsOfServicePage />} />
       <Route path="/candidate" element={<RequireRole role="candidate"><AuthedLayout><CandidateDashboardPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey/basic-info" element={<RequireRole role="candidate"><AuthedLayout><BasicInfoPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey/education" element={<RequireRole role="candidate"><AuthedLayout><EducationPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey/capabilities" element={<RequireRole role="candidate"><AuthedLayout><CapabilitiesPage /></AuthedLayout></RequireRole>} />
+      <Route path="/candidate/survey/task-history" element={<RequireRole role="candidate"><AuthedLayout><TaskHistoryPage /></AuthedLayout></RequireRole>} />
       <Route path="/candidate/survey/:categorySlug" element={<RequireRole role="candidate"><AuthedLayout><CategorySurveyPage /></AuthedLayout></RequireRole>} />
       <Route path="/candidate/premium" element={<RequireRole role="candidate"><AuthedLayout><PremiumPage /></AuthedLayout></RequireRole>} />
       <Route path="/vacancy" element={<RequireRole role="company"><AuthedLayout><VacancyWorkshopPage /></AuthedLayout></RequireRole>} />

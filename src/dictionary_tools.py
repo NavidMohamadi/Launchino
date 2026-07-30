@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Iterable, List
 
-from schemas import ActivationPolicy, Category, FitElement
+from schemas import Category, FitElement
 
 
 REQUIRED_MOTIVATION_IDS = {
@@ -35,13 +35,16 @@ def validate_dictionary(elements: Iterable[FitElement]) -> list[str]:
     missing_mot = REQUIRED_MOTIVATION_IDS - motivation_ids
     if missing_mot:
         errors.append(f"Missing motivation elements: {sorted(missing_mot)}")
-    for e in elements:
-        if e.category in {Category.CAP, Category.TASK} and e.activation_policy != ActivationPolicy.VACANCY_ACTIVATED:
-            errors.append(f"{e.element_id}: CAP/TASK must be vacancy_activated")
-        if e.category == Category.MOT and e.activation_policy != ActivationPolicy.CANDIDATE_SELECTED:
-            errors.append(f"{e.element_id}: MOT must be candidate_selected")
-        if e.category == Category.TEAM and e.element_id != "TEAM-COLLAB-INTENSITY" and e.activation_policy != ActivationPolicy.VACANCY_ACTIVATED:
-            errors.append(f"{e.element_id}: teamwork behaviour must be vacancy_activated")
+    # Per-category activation-policy correctness (CAP/TASK/MOT/TEAM) is NOT
+    # re-checked here -- it was a second, independent copy of the exact same
+    # rule FitElement.validate_id_and_policy (schemas.py, via
+    # expected_activation_policy) already enforces at construction time, and
+    # since `elements` here always comes from load_fit_dictionary()'s own
+    # FitElement.model_validate() calls, a violation could never actually
+    # reach this function to be reported -- dead code masquerading as a
+    # real check. Removed rather than kept in sync by hand a second time
+    # (found while fixing Phase 1's CAP/TASK activation-policy change, which
+    # had silently drifted between this file and schemas.py already).
     return errors
 
 
