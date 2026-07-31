@@ -20,11 +20,11 @@ function blankAnswer(elementId, sourceType) {
   return { element_id: elementId, value: {}, value_status: 'answered', unknown_reason: null, not_scored_reason: null, source_type: sourceType, shareable_with_employer: false }
 }
 
-// CV extraction is NOT offered here -- it's a one-time step on the dashboard
-// (QuickStartCvCard.jsx) covering only Basic Info/Education/Practical fit
-// (api/extraction_service.py's CV_EXTRACTION_CATEGORIES), since that's all a
-// CV can ever honestly answer. TEAM/CAREER/MOT/ENV never had anything a CV
-// extraction could fill; PRACT itself was moved to the dashboard step too.
+// CV extraction is NOT offered here -- it's an opt-in panel embedded on the
+// Education page (CvImportPanel.jsx, via EducationPage.jsx), covering only
+// Education + "What you've done" (api/extraction_service.py's
+// CV_EXTRACTION_CATEGORIES), since that's all a CV can ever honestly answer.
+// TEAM/CAREER/MOT/ENV/PRACT never had anything a CV extraction could fill.
 // (Previously this page offered "Share your CV" on all 5 of its routes --
 // see PROJECT_NOTES.md for the real bug that caused that and why it's gone.)
 export default function CategorySurveyPage() {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
+import CvImportPanel from '../components/CvImportPanel'
 import EducationEntryEditor from '../components/EducationEntryEditor'
 
 export default function EducationPage() {
@@ -56,6 +57,11 @@ export default function EducationPage() {
         <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)', marginBottom: 12 }}>
           Add every degree or programme you want considered. Start typing an institution or programme name for suggestions -- or just type your own if it isn't listed.
         </p>
+
+        <CvImportPanel
+          talentId={talentId}
+          onEducationExtracted={(extracted) => setEntries((prev) => [...prev, ...extracted])}
+        />
 
         <EducationEntryEditor talentId={talentId} entries={entries} onChange={setEntries} />
 

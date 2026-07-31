@@ -26,8 +26,8 @@ export function formatEntryDuration(startDate, endDate, current) {
 }
 
 // Shared between TaskHistoryPage.jsx ("What you've done", the standalone
-// category page) and QuickStartCvCard.jsx (the one-time dashboard CV step) --
-// same entry-editing UI, not two copies. Covers jobs, internships, and
+// category page) and CvImportPanel.jsx (the CV import panel embedded on the
+// Education page) -- same entry-editing UI, not two copies. Covers jobs, internships, and
 // projects alike: employer/organization is free text, purely informational,
 // never matched or mapped to anything (same pattern as Education's
 // institution name) -- only job_title/"role or project name" gets a

@@ -1144,7 +1144,7 @@
     "candidate_value_schema": {
       "entries": [
         {
-          "level": "secondary|vocational|bachelor|master|phd|other",
+          "level": "secondary|vocational|bachelor|master|phd|postdoc|other",
           "institution": {
             "ror_id": "string|null",
             "name": "string"
@@ -1164,7 +1164,7 @@
       "required_education": [
         {
           "isced_code": "string",
-          "level": "secondary|vocational|bachelor|master|phd",
+          "level": "secondary|vocational|bachelor|master|phd|postdoc",
           "requirement": "required|preferred"
         }
       ]

@@ -91,8 +91,11 @@ export default function LoginPage() {
           {/* Same icon + sans wordmark as the dashboard/nav (App.jsx's TopNav)
               on every role tab here, including candidate -- deliberately
               overrides the marketing-script/UI-sans split for this one page,
-              so the first thing a candidate sees matches everything after it. */}
-          <img src={logoIcon} alt="" width="72" height="72" />
+              so the first thing a candidate sees matches everything after it.
+              Sized much larger than the nav treatment (24px there) and
+              centered, so it reads as a hero brand mark, not a small nav
+              logo (see PROJECT_NOTES.md). */}
+          <img src={logoIcon} alt="" />
           <span className="ll-wordmark ll-wordmark-sans">
             Launchino
           </span>

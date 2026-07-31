@@ -1,29 +1,33 @@
 import { useState } from 'react'
+import { IconChevronDown } from '@tabler/icons-react'
 import * as api from '../api'
 import EducationEntryEditor from './EducationEntryEditor'
 import TaskEntryEditor from './TaskEntryEditor'
 import { TextField } from './formFields'
 
-// The one-time "paste your CV" step, shown at the very start of the
-// candidate journey -- see PROJECT_NOTES.md for why this lives here (on the
-// dashboard) rather than on any single category page: a CV extraction can
-// only ever honestly answer Basic Info's phone, Education, and "What
-// you've done" (api/extraction_service.py's CV_EXTRACTION_CATEGORIES =
-// {EDU, TASK} -- revised 2026-07-31, was {PRACT, EDU}: practical-fit facts
-// like visa/sponsorship/location are exactly the kind of thing a candidate
-// should state themselves, not have inferred from CV text), and those are
-// three separate routes/pages, not one. One paste here reviews and saves
-// all three together; the candidate never sees this offered again once any
-// of the three has real data (see CandidateDashboardPage.jsx's visibility
-// condition).
-export default function QuickStartCvCard({ talentId, onDone }) {
-  const [dismissed, setDismissed] = useState(false)
+// Embedded, opt-in CV import -- lives on the Education page (see
+// EducationPage.jsx) rather than as a separate dashboard step, since a CV
+// paste is fundamentally something a candidate does *while* filling in
+// Education, not a gate before it (see PROJECT_NOTES.md for the earlier
+// dashboard-step version this replaced). Extraction covers Education +
+// "What you've done" together (api/extraction_service.py's
+// CV_EXTRACTION_CATEGORIES = {EDU, TASK}) since one CV is the real source
+// for both -- Task History and phone are saved immediately here (this page
+// doesn't otherwise own them); Education entries are handed back to the
+// parent via onEducationExtracted so they flow through this page's own
+// existing "Confirm and submit" button, same as any manually-typed entry,
+// not a second parallel save path.
+//
+// Only shows the fields that actually land somewhere in the real profile
+// (phone, Education, Task History) -- unmapped_terms/review_flags from the
+// extraction response are deliberately not rendered here, since neither has
+// anywhere in the profile to go (see PROJECT_NOTES.md).
+export default function CvImportPanel({ talentId, onEducationExtracted }) {
+  const [open, setOpen] = useState(false)
   const [stage, setStage] = useState('offer') // offer -> reviewing
   const [cvText, setCvText] = useState('')
   const [extracting, setExtracting] = useState(false)
   const [extractError, setExtractError] = useState(null)
-  const [unmappedTerms, setUnmappedTerms] = useState([])
-  const [reviewFlags, setReviewFlags] = useState([])
 
   const [phone, setPhone] = useState('')
   const [eduEntries, setEduEntries] = useState([])
@@ -42,8 +46,6 @@ export default function QuickStartCvCard({ talentId, onDone }) {
       setEduEntries(eduItem?.value.value?.entries || [])
       setTaskJobs(taskItem?.value.value?.jobs || [])
       setPhone(result.basic_info?.phone || '')
-      setUnmappedTerms(result.unmapped_terms || [])
-      setReviewFlags(result.review_flags || [])
       setStage('reviewing')
     } catch (err) {
       setExtractError(err.message)
@@ -52,18 +54,12 @@ export default function QuickStartCvCard({ talentId, onDone }) {
     }
   }
 
-  async function handleSubmit() {
+  async function handleConfirm() {
     setSubmitting(true)
     setSubmitError(null)
     try {
       if (phone.trim()) {
         await api.updateBasicInfo(talentId, { phone: phone.trim() })
-      }
-      const eduValue = {
-        element_id: 'EDU-HISTORY', value: { entries: eduEntries },
-        value_status: eduEntries.length ? 'answered' : 'unknown',
-        unknown_reason: eduEntries.length ? null : 'candidate_not_answered',
-        source_type: 'self_report', shareable_with_employer: false,
       }
       const taskValue = {
         element_id: 'TASK-EXPERIENCE', value: { jobs: taskJobs },
@@ -71,8 +67,11 @@ export default function QuickStartCvCard({ talentId, onDone }) {
         unknown_reason: taskJobs.length ? null : 'candidate_not_answered',
         source_type: 'self_report', shareable_with_employer: false,
       }
-      await api.submitCandidateSurvey(talentId, [eduValue, taskValue])
-      onDone()
+      await api.submitCandidateSurvey(talentId, [taskValue])
+      onEducationExtracted(eduEntries)
+      setOpen(false)
+      setStage('offer')
+      setCvText('')
     } catch (err) {
       setSubmitError(err.message)
     } finally {
@@ -80,44 +79,37 @@ export default function QuickStartCvCard({ talentId, onDone }) {
     }
   }
 
-  if (dismissed) return null
-
   return (
-    <div className="card" style={{ marginBottom: 24 }}>
-      {stage === 'offer' && (
-        <>
-          <h2>Quick start: paste your CV</h2>
-          <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)', marginBottom: 12 }}>
-            We'll pre-fill your phone number, education, and what you've done from it --
-            you'll still review and confirm everything before it's saved.
-          </p>
+    <div style={{ border: '1px solid var(--ll-neutral-200)', borderRadius: 'var(--ll-radius-md)', marginBottom: 20, overflow: 'hidden' }}>
+      <button
+        type="button" onClick={() => setOpen((v) => !v)}
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
+          background: 'var(--ll-neutral-100)', border: 'none', padding: '12px 16px', cursor: 'pointer',
+          textAlign: 'left', fontWeight: 600, color: 'var(--ll-navy)',
+        }}
+      >
+        <span>Have a CV? Paste it here to speed this up</span>
+        <IconChevronDown size={18} style={{ transition: 'transform 0.2s ease', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+      </button>
+
+      {open && stage === 'offer' && (
+        <div style={{ padding: 16 }}>
           <textarea className="cv-input" placeholder="Paste raw CV text here..." value={cvText} onChange={(e) => setCvText(e.target.value)} />
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             <button onClick={handleExtract} disabled={extracting || !cvText.trim()}>
               {extracting ? 'Reading your CV…' : 'Extract from CV'}
             </button>
-            <button className="secondary" onClick={() => setDismissed(true)}>Skip -- I'll fill it in myself</button>
           </div>
           {extractError && <p className="hint-error">Extraction failed: {extractError}</p>}
-        </>
+        </div>
       )}
 
-      {stage === 'reviewing' && (
-        <>
-          <h2>Review and confirm</h2>
-
-          {unmappedTerms.length > 0 && (
-            <div className="unmapped-terms">
-              <strong>Terms found in your CV we couldn't match yet:</strong>
-              <ul>{unmappedTerms.map((t) => <li key={t}>{t}</li>)}</ul>
-            </div>
-          )}
-          {reviewFlags.length > 0 && (
-            <div className="unmapped-terms">
-              <strong>Notes from extraction:</strong>
-              <ul>{reviewFlags.map((f, i) => <li key={i}>{f}</li>)}</ul>
-            </div>
-          )}
+      {open && stage === 'reviewing' && (
+        <div style={{ padding: 16 }}>
+          <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)', marginBottom: 12 }}>
+            Review and confirm what we found before it's saved to your profile.
+          </p>
 
           <TextField label="Phone" value={phone} onChange={setPhone} placeholder="+31 6 1234 5678" />
 
@@ -128,10 +120,10 @@ export default function QuickStartCvCard({ talentId, onDone }) {
           <TaskEntryEditor talentId={talentId} jobs={taskJobs} onChange={setTaskJobs} />
 
           <div style={{ marginTop: 20 }}>
-            <button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Saving…' : 'Confirm and save'}</button>
+            <button onClick={handleConfirm} disabled={submitting}>{submitting ? 'Saving…' : 'Confirm and save'}</button>
           </div>
           {submitError && <p className="hint-error">{submitError}</p>}
-        </>
+        </div>
       )}
     </div>
   )

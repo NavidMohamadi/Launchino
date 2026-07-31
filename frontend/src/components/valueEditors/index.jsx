@@ -233,7 +233,7 @@ function RequiredEducationVacancy({ value, onChange }) {
       onChange={(entries) => onChange({ ...value, required_education: entries })}
       codeField="isced_code"
       picker={{ mode: 'select', label: 'Field of study', options: iscedFields }}
-      requirementLevelField="level" requirementLevels={['secondary', 'vocational', 'bachelor', 'master', 'phd']}
+      requirementLevelField="level" requirementLevels={['secondary', 'vocational', 'bachelor', 'master', 'phd', 'postdoc']}
     />
   )
 }

@@ -32,6 +32,7 @@ EDUCATION_LEVEL = {
     "bachelor": 3,
     "master": 4,
     "phd": 5,
+    "postdoc": 6,
     # "other" is deliberately absent -- it has no defined rank, so a
     # candidate/vacancy entry at "other" always resolves UNKNOWN for the
     # leveled comparison rather than silently sorting first or last.

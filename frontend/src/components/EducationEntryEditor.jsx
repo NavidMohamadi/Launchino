@@ -3,7 +3,7 @@ import * as api from '../api'
 import { Select, DateField } from './formFields'
 import SearchAutocomplete from './SearchAutocomplete'
 
-const LEVELS = ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'other']
+const LEVELS = ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'postdoc', 'other']
 const STATUSES = ['completed', 'currently_studying', 'did_not_complete']
 
 export function blankEducationEntry() {
@@ -14,9 +14,9 @@ export function blankEducationEntry() {
 }
 
 // Shared between EducationPage.jsx (the standalone Education category page)
-// and QuickStartCvCard.jsx (the one-time dashboard CV step, which reviews
-// extracted EDU-HISTORY entries alongside phone/Practical fit) -- same
-// entry-editing UI, not two copies.
+// and CvImportPanel.jsx (the CV import panel embedded on that same page,
+// which reviews extracted EDU-HISTORY entries before handing them back) --
+// same entry-editing UI, not two copies.
 export default function EducationEntryEditor({ talentId, entries, onChange }) {
   const [programMappings, setProgramMappings] = useState({})
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconChevronDown, IconChevronUp } from '@tabler/icons-react'
+import { IconChevronDown, IconSparkles } from '@tabler/icons-react'
 import * as api from '../api'
 
 // Collapsed by default; auto-expands exactly once, on a genuinely
@@ -9,7 +9,9 @@ import * as api from '../api'
 // PROJECT_NOTES.md for why this needs a real persisted flag rather than
 // just checking overall_percent_complete === 0 (that stays true on every
 // revisit until real progress is made, so it can't tell "first visit"
-// from "tenth visit, still nothing saved").
+// from "tenth visit, still nothing saved"). Placed at the very top of the
+// dashboard, above the profile-completion header -- see PROJECT_NOTES.md
+// for why it moved here from below the Continue button.
 export default function DashboardIntro({ talentId, introSeen }) {
   const [expanded, setExpanded] = useState(false)
 
@@ -22,19 +24,29 @@ export default function DashboardIntro({ talentId, introSeen }) {
   }, [])
 
   return (
-    <div className="card" style={{ marginBottom: 24 }}>
+    <div
+      className="card"
+      style={{ marginBottom: 24, padding: 0, overflow: 'hidden', border: '1px solid var(--ll-neutral-200)' }}
+    >
       <button
         type="button" onClick={() => setExpanded((v) => !v)}
         style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%',
-          background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left',
+          gap: 12, background: 'var(--ll-neutral-100)', border: 'none', padding: '16px 20px',
+          cursor: 'pointer', textAlign: 'left',
         }}
       >
-        <h2 style={{ margin: 0 }}>What Launchino does for you</h2>
-        {expanded ? <IconChevronUp size={20} /> : <IconChevronDown size={20} />}
+        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <IconSparkles size={20} color="var(--ll-turquoise-dark)" />
+          <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--ll-navy)' }}>What Launchino does for you</span>
+        </span>
+        <IconChevronDown
+          size={20}
+          style={{ transition: 'transform 0.2s ease', transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}
+        />
       </button>
       {expanded && (
-        <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <p>
             Most people never get the chance to properly map out what they&rsquo;re actually good at, what
             kind of work energizes them, and what environment lets them do their best work &mdash; you&rsquo;re
