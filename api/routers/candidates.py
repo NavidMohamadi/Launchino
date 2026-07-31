@@ -164,9 +164,9 @@ def update_candidate_basic_info(
     talent_id: UUID, payload: BasicInfoUpdate, conn: Connection = Depends(get_connection),
     claims: dict = Depends(require_candidate_self_or_admin),
 ) -> TalentOut:
-    """Basic Info: phone/linkedin_url/contact_preference -- plain talent
-    account columns, not a Fit Dictionary category (see PROJECT_NOTES.md's
-    Phase 1 entry). Partial update: fields omitted from the request body are
+    """Basic Info: phone/contact_preference -- plain talent account columns,
+    not a Fit Dictionary category (see PROJECT_NOTES.md's Phase 1 entry).
+    Partial update: fields omitted from the request body are
     left untouched (see set_candidate_basic_info's own docstring)."""
     _require_candidate(talent_id, conn)
     try:
@@ -437,7 +437,7 @@ def export_candidate_data(
     as every other candidate-scoped route)."""
     talent_row = conn.execute(
         text(
-            "select talent_id, full_name, email, phone, linkedin_url, contact_preference, "
+            "select talent_id, full_name, email, phone, contact_preference, "
             "profile_status, job_discovery_subscription, subscription_expires_at, subscription_updated_at, "
             "job_discovery_campaign_opt_in, subscription_source, "
             "consent_at, consent_version, last_login_at, created_at, updated_at "

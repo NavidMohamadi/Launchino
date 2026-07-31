@@ -1,9 +1,9 @@
 """Real API + DB test for GET /candidates/{id}/export (the GDPR data-export
 mechanism, api/routers/candidates.py). Confirms it covers the fields added
-after the endpoint was originally built: phone/linkedin_url/
-contact_preference/subscription_updated_at (Basic Info, Phase 3) and EDU/
-CAP/TASK survey answers (Phase 4) -- previously the endpoint's talent SELECT
-still only named the columns that existed when it was first written. See
+after the endpoint was originally built: phone/contact_preference/
+subscription_updated_at (Basic Info, Phase 3) and EDU/CAP/TASK survey
+answers (Phase 4) -- previously the endpoint's talent SELECT still only
+named the columns that existed when it was first written. See
 PROJECT_NOTES.md.
 """
 
@@ -37,8 +37,7 @@ def test_export_includes_basic_info_and_edu_cap_task_answers():
             headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
 
             r = client.patch(f"/candidates/{talent_id}/basic-info", json={
-                "phone": "+31 6 1111 2222", "linkedin_url": "https://linkedin.com/in/export-test",
-                "contact_preference": "phone",
+                "phone": "+31 6 1111 2222", "contact_preference": "phone",
             }, headers=headers)
             assert r.status_code == 200, r.text
 
@@ -64,7 +63,6 @@ def test_export_includes_basic_info_and_edu_cap_task_answers():
 
         profile = body["profile"]
         assert profile["phone"] == "+31 6 1111 2222"
-        assert profile["linkedin_url"] == "https://linkedin.com/in/export-test"
         assert profile["contact_preference"] == "phone"
         assert "subscription_updated_at" in profile
         assert "password_hash" not in profile  # security credential, not exported personal data

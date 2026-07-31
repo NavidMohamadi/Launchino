@@ -308,7 +308,7 @@ def test_vacancy_extraction_prompt_never_offers_edu_cap_task_element_ids_as_vali
 def test_cv_extraction_returns_basic_info_when_present():
     canned = {
         "extracted_elements": [],
-        "basic_info": {"phone": "+31 6 1234 5678", "linkedin_url": "https://linkedin.com/in/jdoe", "evidence_quote": "+31 6 1234 5678 | linkedin.com/in/jdoe"},
+        "basic_info": {"phone": "+31 6 1234 5678", "evidence_quote": "+31 6 1234 5678"},
         "unanswered_element_ids": [], "unmapped_terms": [], "review_flags": [],
     }
 
@@ -320,7 +320,6 @@ def test_cv_extraction_returns_basic_info_when_present():
 
     assert result.basic_info is not None
     assert result.basic_info.phone == "+31 6 1234 5678"
-    assert result.basic_info.linkedin_url == "https://linkedin.com/in/jdoe"
 
 
 def test_cv_extraction_basic_info_defaults_to_none_when_absent():

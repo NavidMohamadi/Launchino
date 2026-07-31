@@ -1,6 +1,6 @@
 """Real API + DB test for PATCH /candidates/{id}/basic-info (Phase 3 of
-Education/Capabilities/Task History -- phone/linkedin_url/contact_preference,
-plain talent columns, not a Fit Dictionary category).
+Education/Capabilities/Task History -- phone/contact_preference, plain
+talent columns, not a Fit Dictionary category).
 """
 
 from __future__ import annotations
@@ -32,33 +32,27 @@ def test_basic_info_partial_update_and_defaults():
             talent_id = r.json()["candidate"]["talent_id"]
             headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
 
-            # New account: default contact_preference is "email", phone/linkedin_url null.
+            # New account: default contact_preference is "email", phone null.
             body = r.json()["candidate"]
             assert body["contact_preference"] == "email"
             assert body["phone"] is None
-            assert body["linkedin_url"] is None
 
             r = client.patch(f"/candidates/{talent_id}/basic-info", json={"phone": "+31 6 1111 2222"}, headers=headers)
             assert r.status_code == 200, r.text
             assert r.json()["phone"] == "+31 6 1111 2222"
-            assert r.json()["linkedin_url"] is None  # untouched by a partial update
             assert r.json()["contact_preference"] == "email"  # untouched
 
             r = client.patch(
-                f"/candidates/{talent_id}/basic-info",
-                json={"linkedin_url": "https://linkedin.com/in/test", "contact_preference": "phone"},
-                headers=headers,
+                f"/candidates/{talent_id}/basic-info", json={"contact_preference": "either"}, headers=headers,
             )
             assert r.status_code == 200, r.text
             assert r.json()["phone"] == "+31 6 1111 2222"  # still there, untouched by this second call
-            assert r.json()["linkedin_url"] == "https://linkedin.com/in/test"
-            assert r.json()["contact_preference"] == "phone"
+            assert r.json()["contact_preference"] == "either"
 
             r = client.get(f"/candidates/{talent_id}", headers=headers)
             assert r.status_code == 200, r.text
             assert r.json()["phone"] == "+31 6 1111 2222"
-            assert r.json()["linkedin_url"] == "https://linkedin.com/in/test"
-            assert r.json()["contact_preference"] == "phone"
+            assert r.json()["contact_preference"] == "either"
 
             r = client.patch(
                 f"/candidates/{talent_id}/basic-info", json={"contact_preference": "not_a_real_value"}, headers=headers,
@@ -90,7 +84,7 @@ def test_phone_required_only_when_contact_preference_is_phone():
             assert r.status_code == 422, r.text
 
             # Non-phone preferences never require a phone number.
-            for pref in ["email", "either", "in_app_only"]:
+            for pref in ["email", "either"]:
                 r = client.patch(f"/candidates/{talent_id}/basic-info", json={"contact_preference": pref}, headers=headers)
                 assert r.status_code == 200, r.text
 
@@ -111,6 +105,10 @@ def test_phone_required_only_when_contact_preference_is_phone():
             r = client.patch(f"/candidates/{talent_id}/basic-info", json={"contact_preference": "phone"}, headers=headers)
             assert r.status_code == 200, r.text
             assert r.json()["phone"] == "+31 6 1111 2222"
+
+            # "in_app_only" no longer exists as a valid preference.
+            r = client.patch(f"/candidates/{talent_id}/basic-info", json={"contact_preference": "in_app_only"}, headers=headers)
+            assert r.status_code == 422, r.text
     finally:
         with engine.begin() as conn:
             if talent_id:

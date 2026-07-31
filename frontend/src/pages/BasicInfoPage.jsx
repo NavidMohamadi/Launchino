@@ -4,7 +4,7 @@ import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { TextField, Select } from '../components/formFields'
 
-const CONTACT_PREFERENCES = ['email', 'phone', 'either', 'in_app_only']
+const CONTACT_PREFERENCES = ['email', 'phone', 'either']
 
 export default function BasicInfoPage() {
   const { auth } = useAuth()
@@ -13,8 +13,9 @@ export default function BasicInfoPage() {
 
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(null)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [linkedinUrl, setLinkedinUrl] = useState('')
   const [contactPreference, setContactPreference] = useState('email')
 
   const [submitting, setSubmitting] = useState(false)
@@ -23,8 +24,9 @@ export default function BasicInfoPage() {
   useEffect(() => {
     api.getCandidate(talentId)
       .then((candidate) => {
+        setFullName(candidate.full_name || '')
+        setEmail(candidate.email || '')
         setPhone(candidate.phone || '')
-        setLinkedinUrl(candidate.linkedin_url || '')
         setContactPreference(candidate.contact_preference || 'email')
       })
       .catch((err) => setLoadError(err.message))
@@ -37,7 +39,7 @@ export default function BasicInfoPage() {
     setSubmitError(null)
     try {
       await api.updateBasicInfo(talentId, {
-        phone: phone.trim() || null, linkedin_url: linkedinUrl.trim() || null, contact_preference: contactPreference,
+        phone: phone.trim() || null, contact_preference: contactPreference,
       })
       navigate('/candidate')
     } catch (err) {
@@ -57,6 +59,16 @@ export default function BasicInfoPage() {
       </p>
       <h1>Basic Info</h1>
       <div className="card">
+        <div className="field-group" style={{ marginBottom: 16 }}>
+          <div className="field">
+            <span>Name</span>
+            <p style={{ margin: '4px 0 0' }}>{fullName}</p>
+          </div>
+          <div className="field">
+            <span>Email</span>
+            <p style={{ margin: '4px 0 0' }}>{email}</p>
+          </div>
+        </div>
         <p style={{ fontSize: 13, color: 'var(--ll-neutral-600)', marginBottom: 12 }}>
           How companies can reach you. This is never compared against a vacancy -- it's just your contact details.
         </p>
@@ -66,7 +78,6 @@ export default function BasicInfoPage() {
               label="Phone" value={phone} onChange={setPhone} placeholder="+31 6 1234 5678"
               required={contactPreference === 'phone'}
             />
-            <TextField label="LinkedIn URL" value={linkedinUrl} onChange={setLinkedinUrl} placeholder="linkedin.com/in/yourname" />
             <Select label="How should companies contact you?" value={contactPreference} options={CONTACT_PREFERENCES} onChange={setContactPreference} />
           </div>
           <div style={{ marginTop: 20 }}>

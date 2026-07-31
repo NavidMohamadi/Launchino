@@ -54,7 +54,6 @@ class TalentOut(BaseModel):
     subscription_updated_at: Optional[datetime] = None
     subscription_source: Optional[SubscriptionSource] = None
     phone: Optional[str] = None
-    linkedin_url: Optional[str] = None
     contact_preference: ContactPreference = ContactPreference.EMAIL
 
 
@@ -186,13 +185,12 @@ class BasicInfoUpdate(BaseModel):
     """PATCH /candidates/{talent_id}/basic-info -- partial update: a field
     omitted from the request body is left untouched (see
     exclude_unset=True at the call site), unlike SubscriptionUpdateRequest's
-    full-replace shape. phone/linkedin_url/contact_preference are plain
-    talent columns, not a Fit Dictionary category (see PROJECT_NOTES.md's
-    Phase 1 entry) -- never compared against a vacancy.
+    full-replace shape. phone/contact_preference are plain talent columns,
+    not a Fit Dictionary category (see PROJECT_NOTES.md's Phase 1 entry) --
+    never compared against a vacancy.
     """
 
     phone: Optional[str] = Field(default=None, max_length=40)
-    linkedin_url: Optional[str] = Field(default=None, max_length=300)
     contact_preference: Optional[ContactPreference] = None
 
 

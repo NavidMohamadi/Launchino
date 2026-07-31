@@ -14,8 +14,8 @@ class ExtractedTalentElement(BaseModel):
 
 
 class ExtractedBasicInfo(BaseModel):
-    """phone/linkedin_url only -- plain talent columns, not Fit Dictionary
-    elements (see PROJECT_NOTES.md's Phase 1 entry), so they don't fit
+    """phone only -- a plain talent column, not a Fit Dictionary element
+    (see PROJECT_NOTES.md's Phase 1 entry), so it doesn't fit
     ExtractedTalentElement/TalentElementValue's shape. contact_preference is
     deliberately NOT extractable here: a CV would essentially never state how
     someone wants to be contacted, and guessing it would violate this whole
@@ -25,7 +25,6 @@ class ExtractedBasicInfo(BaseModel):
     """
 
     phone: Optional[str] = None
-    linkedin_url: Optional[str] = None
     evidence_quote: Optional[str] = None
 
 

@@ -13,6 +13,20 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-30 — Basic Info trim: show name/email read-only, drop `linkedin_url` entirely, remove the dead-end `in_app_only` contact preference
+
+Prompted by a real question raised while reviewing the Basic Info page: does choosing "contact me in-app only" actually do anything? Checked -- there is no messaging/inbox mechanism anywhere in this codebase (no such table, router, or frontend UI), and `contact_preference` was write-only even for the three options that stayed (set/read back to the candidate, never read by any company-facing code path). Rather than build a messaging feature right now, the user asked for three narrower changes:
+
+**Show `full_name`/`email` read-only at the top of the page.** Both already returned by `GET /candidates/{talent_id}`, no backend change needed -- just displayed above the editable fields (`frontend/src/pages/BasicInfoPage.jsx`).
+
+**Dropped `talent.linkedin_url` entirely** -- not hidden, actually removed (migration, model, service, CV-extraction pipeline, tests). Checked the live DB first: 0 of 351 real talent rows had it set, so nothing was lost. Touched: `migrations/008_v2_4_0_to_v2_5_0.sql` (mirrored in `src/database_schema.sql`), `api/models_api.py` (`BasicInfoUpdate`/`TalentOut`), `api/candidate_service.py` (`set_candidate_basic_info`'s allowed-fields set, and the Basic-Info-completeness check in `compute_candidate_completion`, which used to require *both* phone and linkedin_url to be set -- now just phone), `api/routers/candidates.py`'s GDPR export SELECT (added just this session, in item 2 above -- removed again here rather than left stale), `src/candidate_extraction.py`'s `ExtractedBasicInfo`, `api/extraction_service.py`'s `CV_BASIC_INFO_RULE` prompt text, and `prompts/P01_cv_extraction.txt`. Left the *other* "linkedin" mentions in this codebase alone (`ARCHITECTURE.md`, `src/source_classification.py`, `data/source_registry.json`) -- those are about LinkedIn as a prohibited job-board scraping source, an unrelated concept that happens to share a name.
+
+**Removed `in_app_only` from `contact_preference`'s allowed values.** Checked the live DB first here too: exactly 1 of 351 rows had it set. The migration reassigns that row to `'email'` *before* narrowing the CHECK constraint (Postgres won't let you add a constraint existing data already violates). `src/schemas.py`'s `ContactPreference` enum and the frontend's `CONTACT_PREFERENCES` array both dropped the value.
+
+Full backend test suite (177 -- no new tests, existing ones updated for the removed fields) passes. Verified live in a browser: Basic Info now shows name/email read-only, no LinkedIn field, and the contact-preference dropdown only offers email/phone/either.
+
+---
+
 ## 2026-07-30 — Admin "Run now" buttons for the three manual/recurring processes; a real background-task/yield-dependency race caught by an end-to-end test
 
 Replaced CLI-only access to `api/reference_data_refresh.py` (ROR/ESCO/CROHO), `api/job_discovery_scheduler.py` (ingestion poll), and `api/job_discovery_runner.py` (recommendation pipeline) with admin-dashboard "Run now" buttons -- `api/admin_tasks.py` (business logic), `api/routers/admin_tasks.py` (endpoints), new `admin_task_run` table (`migrations/007_v2_3_0_to_v2_4_0.sql`). This does **not** change the "never auto-runs" principle stated in each of those three modules' own docstrings: every row in `admin_task_run` still originates from one explicit admin click, same as the CLI command it replaces -- it's a button in front of the same functions, not a scheduler. Each module's docstring updated to reflect that it's now reachable from the dashboard (still never imported at `api/main.py` startup -- the three `run_*_task` wrapper functions in `api/admin_tasks.py` import each module lazily, inside their own function bodies, specifically so that claim stays true).

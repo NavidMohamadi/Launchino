@@ -9,7 +9,7 @@ INPUTS
 
 SCOPE (deliberately narrow -- see PROJECT_NOTES.md's Phase 3 entry)
 This extraction covers three things only:
-1. Basic Info -- phone and linkedin_url, only if explicitly stated (see the BASIC INFO rule appended below for the exact output shape).
+1. Basic Info -- phone only, if explicitly stated (see the BASIC INFO rule appended below for the exact output shape).
 2. Education -- fit_dictionary above will only ever contain EDU-category elements alongside Practical fit (never CAP/TASK/CAREER/MOT/ENV/TEAM), so map education history there using its value_schema.
 3. Practical fit (PRACT) -- the other category fit_dictionary above may contain.
 Skills and work experience (CAP/TASK) are NEVER extracted here, even if the CV clearly lists them -- they are always manual candidate entry, each backed by their own AI-to-ESCO mapping through a separate, purpose-built path. Do not attempt to fill this gap by inventing or repurposing other fields.

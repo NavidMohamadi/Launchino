@@ -172,13 +172,12 @@ sensible ID -- it does not appear in fit_dictionary, so it is not available to u
 
 CV_BASIC_INFO_RULE = """
 BASIC INFO -- a separate top-level "basic_info" field, not a fit_dictionary element.
-Extract phone and linkedin_url only if the CV explicitly states them (e.g. in a header
-or contact section) -- set the field to null if absent, never guess or construct one
-from a name. Do NOT extract or infer contact_preference under any circumstances: a CV
+Extract phone only if the CV explicitly states it (e.g. in a header or contact
+section) -- set the field to null if absent, never guess or construct one from a
+name. Do NOT extract or infer contact_preference under any circumstances: a CV
 essentially never states how someone wants to be contacted, and this field is manual
-candidate entry only (defaults to "email" until they set it themselves). If both phone
-and linkedin_url are absent, set "basic_info" to null entirely rather than an object of
-two nulls.
+candidate entry only (defaults to "email" until they set it themselves). If phone is
+absent, set "basic_info" to null entirely rather than an object with a null phone.
 """
 
 

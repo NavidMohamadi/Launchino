@@ -63,14 +63,14 @@ class SubscriptionSource(str, Enum):
 
 class ContactPreference(str, Enum):
     """Mirrors the talent.contact_preference DB check constraint
-    (migrations/006_v2_2_0_to_v2_3_0.sql) -- plain account contact info, not
+    (migrations/008_v2_4_0_to_v2_5_0.sql) -- plain account contact info, not
     a Fit Dictionary category, never compared against a vacancy (see
-    PROJECT_NOTES.md's Phase 1 entry)."""
+    PROJECT_NOTES.md's Phase 1 entry). IN_APP_ONLY existed briefly but was
+    removed -- there was never an in-app messaging mechanism to back it."""
 
     EMAIL = "email"
     PHONE = "phone"
     EITHER = "either"
-    IN_APP_ONLY = "in_app_only"
 
 
 class SourceType(str, Enum):

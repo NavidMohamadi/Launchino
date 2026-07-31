@@ -92,9 +92,8 @@ create table talent (
     -- last_login_at above, deliberately NOT a Fit Dictionary category, since
     -- these are never compared against a vacancy.
     phone text,
-    linkedin_url text,
     contact_preference text not null default 'email'
-        check (contact_preference in ('email','phone','either','in_app_only')),
+        check (contact_preference in ('email','phone','either')),
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );

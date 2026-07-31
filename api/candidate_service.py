@@ -41,7 +41,7 @@ CATEGORY_LABELS: Dict[Category, str] = {
 # The 8 real Fit Dictionary categories, in the fixed order the candidate
 # dashboard's cards and "Continue: ..." CTA walk through (see
 # frontend/src/pages/CandidateDashboardPage.jsx and PROJECT_NOTES.md's
-# Phase 4 entry). Basic Info (phone/linkedin_url/contact_preference) is
+# Phase 4 entry). Basic Info (phone/contact_preference) is
 # deliberately NOT in this list -- it's a plain talent column, not a Fit
 # Dictionary category, and is surfaced separately (see
 # compute_candidate_completion's own "basic_info" field below), excluded
@@ -149,16 +149,16 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
     # visible/configurable outside a specific vacancy.
     threshold_percent = get_premium_readiness_threshold_percent()
 
-    # Basic Info: phone/linkedin_url are plain talent columns (see
-    # PROJECT_NOTES.md's Phase 1/4 entries), not Fit Dictionary elements --
-    # deliberately excluded from total_active/total_answered and
-    # overall_percent above, surfaced here as its own field instead.
-    # contact_preference isn't counted: it always has a real DB default
-    # ('email'), so it's never meaningfully "incomplete".
+    # Basic Info: phone is a plain talent column (see PROJECT_NOTES.md's
+    # Phase 1/4 entries), not a Fit Dictionary element -- deliberately
+    # excluded from total_active/total_answered and overall_percent above,
+    # surfaced here as its own field instead. contact_preference isn't
+    # counted: it always has a real DB default ('email'), so it's never
+    # meaningfully "incomplete".
     basic_info_row = conn.execute(
-        text("select phone, linkedin_url from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)},
+        text("select phone from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)},
     ).mappings().first()
-    basic_info_complete = bool(basic_info_row and basic_info_row["phone"] and basic_info_row["linkedin_url"])
+    basic_info_complete = bool(basic_info_row and basic_info_row["phone"])
 
     return {
         "categories": categories,
@@ -214,9 +214,9 @@ def set_candidate_subscription(
 
 
 def set_candidate_basic_info(conn: Connection, talent_id: UUID, fields: Dict[str, Any]) -> Dict[str, Any]:
-    """Partial update of talent.phone/linkedin_url/contact_preference -- Basic
-    Info (see PROJECT_NOTES.md's Phase 1 entry), plain account columns, not a
-    Fit Dictionary category. fields is payload.model_dump(exclude_unset=True)
+    """Partial update of talent.phone/contact_preference -- Basic Info (see
+    PROJECT_NOTES.md's Phase 1 entry), plain account columns, not a Fit
+    Dictionary category. fields is payload.model_dump(exclude_unset=True)
     from api.models_api.BasicInfoUpdate: only keys actually present in the
     request are updated, so a candidate can set one field at a time without
     clobbering the others back to null. A no-op (empty fields) still returns
@@ -224,10 +224,10 @@ def set_candidate_basic_info(conn: Connection, talent_id: UUID, fields: Dict[str
     """
     # Values of None are dropped, not written as SQL NULL: contact_preference
     # is NOT NULL at the DB level (migrations/006_v2_2_0_to_v2_3_0.sql), and a
-    # null phone/linkedin_url here just means "no change" for now, not "clear
-    # it" -- an explicit null would otherwise either violate that constraint
-    # or silently wipe a field the candidate didn't intend to touch.
-    allowed = {"phone", "linkedin_url", "contact_preference"}
+    # null phone here just means "no change" for now, not "clear it" -- an
+    # explicit null would otherwise either violate that constraint or
+    # silently wipe a field the candidate didn't intend to touch.
+    allowed = {"phone", "contact_preference"}
     updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if updates:
         if "contact_preference" in updates:
