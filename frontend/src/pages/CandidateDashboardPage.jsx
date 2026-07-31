@@ -7,6 +7,7 @@ import {
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { BASIC_INFO_PATH, surveyPathFor } from '../categorySlugs'
+import QuickStartCvCard from '../components/QuickStartCvCard'
 
 const CATEGORY_ICONS = {
   EDU: IconSchool,
@@ -29,8 +30,11 @@ export default function CandidateDashboardPage() {
   const [completion, setCompletion] = useState(null)
   const [error, setError] = useState(null)
 
+  const loadCompletion = () => api.getCandidateCompletion(talentId).then(setCompletion).catch((err) => setError(err.message))
+
   useEffect(() => {
-    api.getCandidateCompletion(talentId).then(setCompletion).catch((err) => setError(err.message))
+    loadCompletion()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [talentId])
 
   if (error) return <p className="hint-error">Could not load your profile: {error}</p>
@@ -46,6 +50,14 @@ export default function CandidateDashboardPage() {
     ? { category: 'BASIC_INFO', label: completion.basic_info.label }
     : completion.categories.find((c) => c.status !== 'complete')
   const pathFor = (category) => (category === 'BASIC_INFO' ? BASIC_INFO_PATH : surveyPathFor(category))
+
+  // Quick-start CV card: only at the very start of the journey -- once any
+  // of the three things a CV can fill (phone, Education, Practical fit) has
+  // real data, offering it again would just be confusing (see
+  // PROJECT_NOTES.md for the bug this replaced).
+  const eduStatus = completion.categories.find((c) => c.category === 'EDU')?.status
+  const practStatus = completion.categories.find((c) => c.category === 'PRACT')?.status
+  const showQuickStart = !completion.basic_info.complete && eduStatus === 'not_started' && practStatus === 'not_started'
 
   return (
     <div>
@@ -63,6 +75,8 @@ export default function CandidateDashboardPage() {
           <div className="ll-dash-overall-label">complete</div>
         </div>
       </div>
+
+      {showQuickStart && <QuickStartCvCard talentId={talentId} onDone={loadCompletion} />}
 
       <div className="ll-dash-grid">
         <div

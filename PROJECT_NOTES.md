@@ -13,6 +13,25 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Real regression found and fixed: CV extraction had drifted onto every category page instead of one dashboard step
+
+Prompted by the user asking me to re-verify Phase 3/4's CV-extraction design fresh rather than trust the old report. Found a real bug, not assumed from memory:
+
+**What was actually wrong.** `api/extraction_service.py`'s `CV_EXTRACTION_CATEGORIES = {PRACT, EDU}` was still correct and untouched -- the backend never drifted. But the frontend did: `CategorySurveyPage.jsx` (the shared component behind PRACT/TEAM/CAREER/MOT/ENV's 5 routes) offered "Share your CV, or start from scratch" identically on **all 5** of those pages, not just PRACT. Confirmed live: pasted a CV on the "How you work" (TEAM) page, and the AI correctly recognized team-preference content and flagged it in "Notes from extraction" as something it couldn't record -- but the actual question below still showed unfilled defaults. A real, wasted round trip. Meanwhile Education (its own dedicated page, `EducationPage.jsx`) had no CV-extraction entry point at all, despite being backend-eligible.
+
+**When and how this happened**, traced via `git log`: the original pre-Phase-4 design (`CandidateSurveyPage.jsx`, single page) had exactly one CV step, shown once, before every category rendered together on that one page. Commit `869680d` ("Split survey into 5 per-category pages") carried that same step verbatim into the new shared `CategorySurveyPage.jsx` to fix a different, real bug ("CV-extraction had become unreachable through the UI") -- but the fix reintroduced the step on all 5 pages equally instead of scoping it to the one category that could actually use it. A correct fix for one bug quietly created another.
+
+**The fix**, matching the architecture the dashboard-hub redesign actually needs (asked the user where the one-time step should live now that there's no single linear page anymore; chose a new dashboard-level step over patching around the old per-page one):
+- Removed the CV-paste step entirely from `CategorySurveyPage.jsx` -- all 5 of its routes (PRACT/TEAM/CAREER/MOT/ENV) now go straight to manual entry, same as TEAM/CAREER/MOT/ENV already correctly did.
+- New `QuickStartCvCard.jsx`, shown once at the top of `CandidateDashboardPage.jsx` -- only while Basic Info, Education, and Practical fit are *all* still not-started (the real "very start of the journey" condition in a hub architecture, since any one of them having data means the candidate already engaged some other way). Paste once -> review phone + every Practical-fit question + Education entries together on one screen -> "Confirm and save" writes phone (`PATCH .../basic-info`), Practical fit and Education-History (both via one `POST .../survey` call). Card disappears once saved, matching the "one-time" requirement structurally, not just by convention.
+- Extracted the entry-editing UI (level/institution/programme/dates/status, ISCED-F mapping) out of `EducationPage.jsx` into a shared `frontend/src/components/EducationEntryEditor.jsx`, reused by both the standalone Education page and the new quick-start review screen, rather than duplicating it.
+
+No backend changes were needed -- `CV_EXTRACTION_CATEGORIES` and `POST /candidates/{id}/extract-cv` were already correctly scoped; this was purely a frontend reachability/UX regression.
+
+Full backend test suite (177, unchanged) still passes. Verified live end to end: fresh candidate sees the quick-start card, pastes a CV, gets phone/education/practical-fit all correctly pre-filled for review, confirms, and the card disappears while Basic Info/Education/Practical fit all show Complete on the dashboard; separately confirmed "How you work" now goes straight to its question with no CV offer at all.
+
+---
+
 ## 2026-07-30 — Basic Info trim: show name/email read-only, drop `linkedin_url` entirely, remove the dead-end `in_app_only` contact preference
 
 Prompted by a real question raised while reviewing the Basic Info page: does choosing "contact me in-app only" actually do anything? Checked -- there is no messaging/inbox mechanism anywhere in this codebase (no such table, router, or frontend UI), and `contact_preference` was write-only even for the three options that stayed (set/read back to the candidate, never read by any company-facing code path). Rather than build a messaging feature right now, the user asked for three narrower changes:
