@@ -156,7 +156,8 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
     # counted: it always has a real DB default ('email'), so it's never
     # meaningfully "incomplete".
     basic_info_row = conn.execute(
-        text("select phone from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)},
+        text("select phone, dashboard_intro_seen from talent where talent_id = :talent_id"),
+        {"talent_id": str(talent_id)},
     ).mappings().first()
     basic_info_complete = bool(basic_info_row and basic_info_row["phone"])
 
@@ -166,7 +167,18 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
         "premium_readiness_threshold_percent": threshold_percent,
         "premium_ready": overall_percent >= threshold_percent,
         "basic_info": {"label": "Account Settings", "complete": basic_info_complete},
+        "dashboard_intro_seen": bool(basic_info_row and basic_info_row["dashboard_intro_seen"]),
     }
+
+
+def mark_dashboard_intro_seen(conn: Connection, talent_id: UUID) -> None:
+    """Idempotent -- called once by the frontend the moment the "What
+    Launchino does for you" explainer auto-expands, so it never
+    auto-expands again for this candidate (see PROJECT_NOTES.md)."""
+    conn.execute(
+        text("update talent set dashboard_intro_seen = true where talent_id = :talent_id"),
+        {"talent_id": str(talent_id)},
+    )
 
 
 def set_candidate_subscription(

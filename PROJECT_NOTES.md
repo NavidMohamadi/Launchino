@@ -13,6 +13,20 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Re-diagnosis found items 1/2 already fixed and live; added the dashboard explainer section and login-page logo consistency
+
+Four items requested; the first two turned out to already be fixed and deployed.
+
+**Item 1/2 re-diagnosis: the CV-extraction and Account Settings/CTA fixes from earlier today were reported as broken on the live site -- checked fresh rather than assumed, found they're not.** Confirmed via `git log` that both fixes (`6aa7174`, `ffbbfbb`) are on `master` and pushed. Fetched the actual deployed bundle (`https://launchino.com/assets/index-fK2cWM86.js`) and confirmed it contains "Account Settings"/"Danger zone"/"Quick start" and no "Basic Info"/old CV-step text. Then, rather than trust bundle-text presence alone, registered a genuinely fresh candidate directly against the live production API (`api.launchino.com`) and walked it in a real browser: the quick-start card appears at the very top of the dashboard (the only place CV extraction is offered), Education/Practical fit/"How you work" all go straight to their manual questions with no CV step of their own, and -- the strongest confirmation, since this exact candidate had never touched Account Settings -- the CTA read **"Continue: Education"**, not "Continue: Account Settings"; under the old bug this exact state (phone never set) would have shown the stuck CTA forever. Both fixes are live and correct. No code changed for these two items. The discrepancy the user observed was most likely a stale/cached view or a test against an account with pre-existing category progress (which correctly hides the now-relocated quick-start card) rather than a real gap -- flagged, not silently dismissed, since "the live site doesn't match" deserved a real check, not an assumption either way.
+
+**New: "What Launchino does for you" dashboard explainer.** Collapsible section (`frontend/src/components/DashboardIntro.jsx`), placed below the header and above the category cards/quick-start card, with the exact copy provided. Needed a real persisted per-candidate flag, not a client-only or completion-percentage-based heuristic: `overall_percent_complete === 0` stays true on every revisit until real progress exists, so it can't distinguish "first visit ever" from "tenth visit, still nothing saved." Added `talent.dashboard_intro_seen boolean not null default false` (`migrations/009_v2_5_0_to_v2_6_0.sql`), included in `GET /candidates/{id}/completion`'s response, and a new idempotent `POST /candidates/{id}/dashboard-intro-seen` the frontend calls the instant it auto-expands. Verified live: a genuinely fresh candidate sees it auto-expanded with the full 4-paragraph copy; reloading the same dashboard shows it collapsed by default; the toggle still opens/closes it manually any time afterward.
+
+**Login page logo consistency.** `LoginPage.jsx`'s hero previously rendered a script wordmark for the candidate role tab and a sans wordmark for company/admin (`HERO_COPY[role].word`) -- now always renders the same icon + sans wordmark (`ll-wordmark-sans`) as the dashboard/nav's `TopNav`, on every role tab, deliberately overriding that split for this one page per explicit instruction. Removed the now-fully-unused `word` field from all three `HERO_COPY` entries rather than leave dead config sitting next to logic that no longer reads it.
+
+Full backend test suite (179 -- 178 existing + 1 new `dashboard_intro_seen` test) passes.
+
+---
+
 ## 2026-07-31 — Account Settings rename, account deletion UI, and a second real regression fixed: the "Continue" CTA was permanently stuck
 
 Three related changes to what was "Basic Info."

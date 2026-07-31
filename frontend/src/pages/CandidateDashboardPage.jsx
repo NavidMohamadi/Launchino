@@ -8,6 +8,7 @@ import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
 import { ACCOUNT_SETTINGS_PATH, surveyPathFor } from '../categorySlugs'
 import QuickStartCvCard from '../components/QuickStartCvCard'
+import DashboardIntro from '../components/DashboardIntro'
 
 const CATEGORY_ICONS = {
   EDU: IconSchool,
@@ -77,6 +78,8 @@ export default function CandidateDashboardPage() {
           <div className="ll-dash-overall-label">complete</div>
         </div>
       </div>
+
+      <DashboardIntro talentId={talentId} introSeen={completion.dashboard_intro_seen} />
 
       {showQuickStart && <QuickStartCvCard talentId={talentId} onDone={loadCompletion} />}
 

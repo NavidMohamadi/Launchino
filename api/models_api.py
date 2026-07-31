@@ -299,6 +299,7 @@ class CandidateCompletionOut(BaseModel):
     premium_readiness_threshold_percent: float
     premium_ready: bool
     basic_info: BasicInfoCompletionOut
+    dashboard_intro_seen: bool
 
 
 class PremiumRequestCreate(BaseModel):

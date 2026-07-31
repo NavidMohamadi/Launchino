@@ -12,21 +12,18 @@ const ROLES = [
 
 const HERO_COPY = {
   candidate: {
-    word: 'script',
     headline: 'Launch your career!',
     motto: null,
     sub: 'Get to know yourself better, and let real companies discover you — free, and at your own pace.',
     showList: true,
   },
   company: {
-    word: 'sans',
     headline: 'Find your next great hire.',
     motto: null,
     sub: 'Post roles, search verified candidate profiles, and reach people who are ready to move.',
     showList: false,
   },
   admin: {
-    word: 'sans',
     headline: 'Manage Launchino with confidence.',
     motto: null,
     sub: 'Oversight tools for accounts, listings, and platform health.',
@@ -91,8 +88,12 @@ export default function LoginPage() {
       <div className="ll-body">
       <div className="ll-hero">
         <div className="ll-hero-mark">
+          {/* Same icon + sans wordmark as the dashboard/nav (App.jsx's TopNav)
+              on every role tab here, including candidate -- deliberately
+              overrides the marketing-script/UI-sans split for this one page,
+              so the first thing a candidate sees matches everything after it. */}
           <img src={logoIcon} alt="" width="72" height="72" />
-          <span className={hero.word === 'script' ? 'll-wordmark ll-wordmark-script' : 'll-wordmark ll-wordmark-sans'}>
+          <span className="ll-wordmark ll-wordmark-sans">
             Launchino
           </span>
         </div>

@@ -91,6 +91,7 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         by_category = {c["category"]: c for c in body["categories"]}
         assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV", "EDU", "CAP", "TASK"}
         assert body["basic_info"] == {"label": "Account Settings", "complete": False}
+        assert body["dashboard_intro_seen"] is False
         pract = by_category["PRACT"]
         assert pract["label"] == "Practical fit"
         assert pract["status"] == "not_started"
@@ -254,3 +255,22 @@ def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
         assert body["overall_percent_complete"] == 100.0
         assert body["overall_percent_complete"] >= body["premium_readiness_threshold_percent"]
         assert body["premium_ready"] is True
+
+
+def test_dashboard_intro_seen_flips_true_and_is_idempotent():
+    with TestClient(app) as client:
+        talent_id, headers = _make_candidate(client)
+
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["dashboard_intro_seen"] is False
+
+        r = client.post(f"/candidates/{talent_id}/dashboard-intro-seen", headers=headers)
+        assert r.status_code == 200, r.text
+        assert r.json() == {"talent_id": talent_id, "dashboard_intro_seen": True}
+
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["dashboard_intro_seen"] is True
+
+        # Idempotent -- marking it again is a harmless no-op, not an error.
+        r = client.post(f"/candidates/{talent_id}/dashboard-intro-seen", headers=headers)
+        assert r.status_code == 200, r.text

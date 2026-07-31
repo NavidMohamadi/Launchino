@@ -96,6 +96,9 @@ export const submitCandidateSurvey = (talentId, values) =>
 
 export const getCandidateCompletion = (talentId) => request(`/candidates/${talentId}/completion`)
 
+export const markDashboardIntroSeen = (talentId) =>
+  request(`/candidates/${talentId}/dashboard-intro-seen`, { method: 'POST' })
+
 export const getCandidateSurveyValues = (talentId) => request(`/candidates/${talentId}/survey-values`)
 
 export const getPremiumRequest = (talentId) => request(`/candidates/${talentId}/premium-request`)

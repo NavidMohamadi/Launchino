@@ -94,6 +94,11 @@ create table talent (
     phone text,
     contact_preference text not null default 'email'
         check (contact_preference in ('email','phone','either')),
+    -- Whether the candidate has ever seen the "What Launchino does for
+    -- you" dashboard explainer -- lets it auto-expand exactly once, on a
+    -- genuinely first-ever visit, not every time overall_percent_complete
+    -- happens to be 0.
+    dashboard_intro_seen boolean not null default false,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );

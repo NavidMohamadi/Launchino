@@ -15,7 +15,9 @@ from api.auth import (
     CANDIDATE_TOKEN_EXPIRY, create_access_token, hash_password, require_candidate_self_or_admin, require_role,
     verify_password,
 )
-from api.candidate_service import compute_candidate_completion, set_candidate_basic_info, set_candidate_subscription
+from api.candidate_service import (
+    compute_candidate_completion, mark_dashboard_intro_seen, set_candidate_basic_info, set_candidate_subscription,
+)
 from api.database import get_connection
 from api.extraction_service import run_cv_extraction
 from api.mapping_service import map_occupation_to_esco, map_program_to_isced, map_skill_to_esco
@@ -188,6 +190,23 @@ def get_candidate_completion(
         raise HTTPException(status_code=404, detail="Candidate not found")
     result = compute_candidate_completion(conn, talent_id)
     return CandidateCompletionOut(talent_id=talent_id, **result)
+
+
+@router.post("/{talent_id}/dashboard-intro-seen")
+def post_dashboard_intro_seen(
+    talent_id: UUID, conn: Connection = Depends(get_connection),
+    claims: dict = Depends(require_candidate_self_or_admin),
+) -> dict:
+    """Marks the "What Launchino does for you" dashboard explainer as seen --
+    idempotent, called once by the frontend the moment it auto-expands
+    (see PROJECT_NOTES.md)."""
+    row = conn.execute(
+        text("select 1 from talent where talent_id = :talent_id"), {"talent_id": str(talent_id)}
+    ).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    mark_dashboard_intro_seen(conn, talent_id)
+    return {"talent_id": talent_id, "dashboard_intro_seen": True}
 
 
 @router.get("/{talent_id}/survey-values")
