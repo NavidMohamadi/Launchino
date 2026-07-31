@@ -40,18 +40,23 @@ export default function CandidateDashboardPage() {
   if (error) return <p className="hint-error">Could not load your profile: {error}</p>
   if (!completion) return <p>Loading...</p>
 
-  // Account Settings is deliberately not part of completion.categories (see
-  // api/candidate_service.py's compute_candidate_completion) -- it's a plain
-  // talent column, not a Fit Dictionary category, excluded from
-  // overall_percent_complete. It must ALSO never be part of the "next
-  // incomplete" CTA below: `basic_info.complete` only reflects whether phone
-  // is set, and phone is optional for most contact preferences, so a
-  // candidate who never sets one would otherwise see "Continue: Account
-  // Settings" forever, never advancing to Education/Practical fit/etc. even
-  // after finishing all 8 real categories (see PROJECT_NOTES.md -- a real
-  // regression, not the original design: Account Settings is reachable any
-  // time via its own standalone card, never a blocking step in this queue).
-  const nextIncomplete = completion.categories.find((c) => c.status !== 'complete')
+  // Account Settings leads the "Continue" queue, ahead of the 8 real
+  // categories -- it's still deliberately excluded from
+  // completion.categories/overall_percent_complete (a plain talent column,
+  // not a Fit Dictionary category, see api/candidate_service.py). This used
+  // to be unconditionally unsafe: `basic_info.complete` was `bool(phone)`
+  // regardless of whether phone was actually required, so a candidate who
+  // never needed one would see "Continue: Account Settings" forever (see
+  // PROJECT_NOTES.md). Fixed at the source instead of routing around it --
+  // compute_candidate_completion now mirrors the write-side rule (phone
+  // required only when contact_preference == 'phone'), so this can safely
+  // check basic_info first again.
+  const nextIncompleteCategory = completion.categories.find((c) => c.status !== 'complete')
+  const nextIncomplete = !completion.basic_info.complete
+    ? { path: ACCOUNT_SETTINGS_PATH, label: completion.basic_info.label }
+    : nextIncompleteCategory
+      ? { path: surveyPathFor(nextIncompleteCategory.category), label: nextIncompleteCategory.label }
+      : null
 
   return (
     <div>
@@ -148,7 +153,7 @@ export default function CandidateDashboardPage() {
       {nextIncomplete ? (
         <button
           type="button" className="ll-dash-cta"
-          onClick={() => navigate(surveyPathFor(nextIncomplete.category))}
+          onClick={() => navigate(nextIncomplete.path)}
         >
           Continue: {nextIncomplete.label}
         </button>

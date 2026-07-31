@@ -47,8 +47,8 @@ CATEGORY_LABELS: Dict[Category, str] = {
 # compute_candidate_completion's own "basic_info" field below), excluded
 # from the overall completion percentage.
 CANDIDATE_DASHBOARD_CATEGORY_ORDER: List[Category] = [
-    Category.EDU, Category.PRACT, Category.TEAM, Category.CAREER,
-    Category.MOT, Category.ENV, Category.CAP, Category.TASK,
+    Category.EDU, Category.TASK, Category.PRACT, Category.TEAM,
+    Category.CAREER, Category.MOT, Category.ENV, Category.CAP,
 ]
 
 
@@ -152,14 +152,21 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
     # Basic Info: phone is a plain talent column (see PROJECT_NOTES.md's
     # Phase 1/4 entries), not a Fit Dictionary element -- deliberately
     # excluded from total_active/total_answered and overall_percent above,
-    # surfaced here as its own field instead. contact_preference isn't
-    # counted: it always has a real DB default ('email'), so it's never
-    # meaningfully "incomplete".
+    # surfaced here as its own field instead. Mirrors set_candidate_basic_info's
+    # own write-side rule (added for the "conditional phone requirement" work,
+    # see PROJECT_NOTES.md): phone is only actually required when
+    # contact_preference == 'phone', so "complete" must be conditional the
+    # same way on read, not just bool(phone) -- that mismatch was the real
+    # root cause of a candidate who never needed a phone number seeing
+    # Account Settings marked "Not started" forever, even though nothing was
+    # actually missing from it.
     basic_info_row = conn.execute(
-        text("select phone, dashboard_intro_seen from talent where talent_id = :talent_id"),
+        text("select phone, contact_preference, dashboard_intro_seen from talent where talent_id = :talent_id"),
         {"talent_id": str(talent_id)},
     ).mappings().first()
-    basic_info_complete = bool(basic_info_row and basic_info_row["phone"])
+    basic_info_complete = bool(
+        basic_info_row and (basic_info_row["contact_preference"] != "phone" or basic_info_row["phone"])
+    )
 
     return {
         "categories": categories,

@@ -12,11 +12,13 @@ import { TextField } from './formFields'
 // dashboard-step version this replaced). Extraction covers Education +
 // "What you've done" together (api/extraction_service.py's
 // CV_EXTRACTION_CATEGORIES = {EDU, TASK}) since one CV is the real source
-// for both -- Task History and phone are saved immediately here (this page
-// doesn't otherwise own them); Education entries are handed back to the
-// parent via onEducationExtracted so they flow through this page's own
-// existing "Confirm and submit" button, same as any manually-typed entry,
-// not a second parallel save path.
+// for both. All three -- phone, Task History, and Education -- are saved
+// immediately on confirm here, via onEducationExtracted (an async callback
+// the parent EducationPage owns, since it's the one with the rest of the
+// candidate's Education entries to merge into): a candidate who closes the
+// tab right after confirming must not lose data that looked saved (a real
+// reported bug -- see PROJECT_NOTES.md -- when Education alone was left
+// unsaved, waiting on a second, separate button click).
 //
 // Only shows the fields that actually land somewhere in the real profile
 // (phone, Education, Task History) -- unmapped_terms/review_flags from the
@@ -68,7 +70,7 @@ export default function CvImportPanel({ talentId, onEducationExtracted }) {
         source_type: 'self_report', shareable_with_employer: false,
       }
       await api.submitCandidateSurvey(talentId, [taskValue])
-      onEducationExtracted(eduEntries)
+      await onEducationExtracted(eduEntries)
       setOpen(false)
       setStage('offer')
       setCvText('')

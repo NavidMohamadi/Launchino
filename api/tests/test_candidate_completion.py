@@ -15,8 +15,10 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 sys.path.insert(0, str(REPO_ROOT))
 
 from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy import text  # noqa: E402
 
 from api.candidate_service import get_premium_readiness_threshold_percent  # noqa: E402
+from api.database import engine  # noqa: E402
 from api.main import app  # noqa: E402
 from schemas import MatchConfiguration  # noqa: E402
 
@@ -90,7 +92,11 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         assert body["overall_percent_complete"] == 0.0
         by_category = {c["category"]: c for c in body["categories"]}
         assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV", "EDU", "CAP", "TASK"}
-        assert body["basic_info"] == {"label": "Account Settings", "complete": False}
+        # contact_preference defaults to 'email' (not 'phone'), so phone isn't
+        # actually required yet -- Account Settings is correctly complete
+        # from registration, nothing left to fill in (see PROJECT_NOTES.md
+        # for the earlier bug where this was unconditionally bool(phone)).
+        assert body["basic_info"] == {"label": "Account Settings", "complete": True}
         assert body["dashboard_intro_seen"] is False
         pract = by_category["PRACT"]
         assert pract["label"] == "Practical fit"
@@ -158,6 +164,47 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         by_category = {c["category"]: c for c in body["categories"]}
         assert by_category["PRACT"]["status"] == "complete"
         assert by_category["PRACT"]["percent_complete"] == 100.0
+
+
+def test_basic_info_complete_is_conditional_on_contact_preference():
+    """Account Settings must only be "incomplete" when phone is actually
+    required (contact_preference == 'phone') and missing -- mirrors
+    set_candidate_basic_info's own write-side validation rule. Confirms the
+    fix for a real bug where this was unconditionally bool(phone), so a
+    candidate who never needed a phone number saw Account Settings marked
+    "Not started" forever (see PROJECT_NOTES.md)."""
+    with TestClient(app) as client:
+        talent_id, headers = _make_candidate(client)
+
+        # Default contact_preference is 'email' -- nothing required, complete
+        # from registration even with no phone set.
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["basic_info"]["complete"] is True
+
+        # Setting contact_preference to 'phone' together with a real phone
+        # number in the same request -- the only way the write-side
+        # validation allows reaching 'phone' at all -- stays complete.
+        r = client.patch(
+            f"/candidates/{talent_id}/basic-info", headers=headers,
+            json={"phone": "+31 6 1234 5678", "contact_preference": "phone"},
+        )
+        assert r.status_code == 200, r.text
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["basic_info"]["complete"] is True
+
+        # set_candidate_basic_info's own guard makes contact_preference='phone'
+        # with no phone number unreachable through the API once phone is ever
+        # set (a None update is dropped as "no change", never a clear) -- so
+        # this edge case (e.g. data from before that guard existed) is
+        # simulated directly at the DB level to confirm the read side still
+        # correctly flags it as incomplete, not just trusts a stale True.
+        with engine.begin() as conn:
+            conn.execute(
+                text("update talent set phone = null where talent_id = :talent_id"),
+                {"talent_id": talent_id},
+            )
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["basic_info"]["complete"] is False
 
 
 def test_completion_requires_self_or_admin():

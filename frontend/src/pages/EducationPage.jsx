@@ -26,22 +26,38 @@ export default function EducationPage() {
       .finally(() => setLoading(false))
   }, [talentId])
 
+  // Shared by the page's own "Confirm and submit" and the CV import panel's
+  // "Confirm and save" -- CV-imported entries must actually persist right
+  // then, not just populate local state waiting for a second button click
+  // the candidate has no reason to expect (see PROJECT_NOTES.md: a real
+  // reported bug where CV-extracted education looked confirmed but wasn't
+  // saved because only Task History/phone were, silently, by the panel).
+  async function saveEducation(entriesToSave) {
+    const value = entriesToSave.length ? { entries: entriesToSave } : { entries: [] }
+    await api.submitCandidateSurvey(talentId, [{
+      element_id: 'EDU-HISTORY', value, value_status: entriesToSave.length ? 'answered' : 'unknown',
+      unknown_reason: entriesToSave.length ? null : 'candidate_not_answered',
+      source_type: 'self_report', shareable_with_employer: false,
+    }])
+  }
+
   async function handleSubmit() {
     setSubmitting(true)
     setSubmitError(null)
     try {
-      const value = entries.length ? { entries } : { entries: [] }
-      await api.submitCandidateSurvey(talentId, [{
-        element_id: 'EDU-HISTORY', value, value_status: entries.length ? 'answered' : 'unknown',
-        unknown_reason: entries.length ? null : 'candidate_not_answered',
-        source_type: 'self_report', shareable_with_employer: false,
-      }])
+      await saveEducation(entries)
       navigate('/candidate')
     } catch (err) {
       setSubmitError(err.message)
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleCvEducationExtracted(extracted) {
+    const merged = [...entries, ...extracted]
+    setEntries(merged)
+    await saveEducation(merged)
   }
 
   if (loadError) return <p className="hint-error">Could not load your education history: {loadError}</p>
@@ -60,7 +76,7 @@ export default function EducationPage() {
 
         <CvImportPanel
           talentId={talentId}
-          onEducationExtracted={(extracted) => setEntries((prev) => [...prev, ...extracted])}
+          onEducationExtracted={handleCvEducationExtracted}
         />
 
         <EducationEntryEditor talentId={talentId} entries={entries} onChange={setEntries} />
