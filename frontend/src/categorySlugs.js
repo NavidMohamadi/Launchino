@@ -23,7 +23,9 @@ export const SLUG_TO_CATEGORY = Object.fromEntries(
 
 export const surveyPathFor = (category) => `/candidate/survey/${CATEGORY_SLUGS[category]}`
 
-// Basic Info isn't a Fit Dictionary category (see PROJECT_NOTES.md's Phase
-// 1/4 entries) -- plain talent columns, its own page, not part of the
-// category slug map above.
-export const BASIC_INFO_PATH = '/candidate/survey/basic-info'
+// Account Settings (formerly "Basic Info") isn't a Fit Dictionary category
+// (see PROJECT_NOTES.md's Phase 1/4 entries) -- plain talent columns, its
+// own page, not part of the category slug map above. Deliberately not
+// under /survey/ -- it's reachable any time, not a step in that sequence
+// (see PROJECT_NOTES.md's stuck-CTA fix entry).
+export const ACCOUNT_SETTINGS_PATH = '/candidate/account-settings'

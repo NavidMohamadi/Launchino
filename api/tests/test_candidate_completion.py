@@ -90,7 +90,7 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         assert body["overall_percent_complete"] == 0.0
         by_category = {c["category"]: c for c in body["categories"]}
         assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV", "EDU", "CAP", "TASK"}
-        assert body["basic_info"] == {"label": "Basic Info", "complete": False}
+        assert body["basic_info"] == {"label": "Account Settings", "complete": False}
         pract = by_category["PRACT"]
         assert pract["label"] == "Practical fit"
         assert pract["status"] == "not_started"

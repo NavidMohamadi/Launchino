@@ -13,6 +13,22 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Account Settings rename, account deletion UI, and a second real regression fixed: the "Continue" CTA was permanently stuck
+
+Three related changes to what was "Basic Info."
+
+**Renamed "Basic Info" -> "Account Settings"** throughout the candidate-facing UI: dashboard card label (`api/candidate_service.py`'s `compute_candidate_completion` -- the label string lives server-side), page `<h1>`, and the page/component/route itself (`frontend/src/pages/BasicInfoPage.jsx` -> `AccountSettingsPage.jsx`, route moved from `/candidate/survey/basic-info` to `/candidate/account-settings` -- `categorySlugs.js`'s `BASIC_INFO_PATH` -> `ACCOUNT_SETTINGS_PATH`, out of the `/survey/` URL namespace since it's no longer part of that sequence at all, see below).
+
+**Account deletion added, reusing the existing endpoint verbatim.** `DELETE /candidates/{talent_id}` (built during the earlier security/GDPR work) already anonymizes correctly -- no backend changes made or needed. New "Danger zone" section on the Account Settings page: a "Delete my account" button reveals a second stage requiring the candidate to type the literal word `DELETE` before the real "Permanently delete my account" button enables -- not a single click, matching the irreversibility of the action. On success, calls the same `logout()` the existing "Log out" link already uses, letting `RequireRole`'s own redirect-to-`/login` take over -- no second redirect mechanism invented. No test existed for this endpoint before despite it being a real GDPR erasure mechanism; added one (`api/tests/test_candidate_delete_endpoint.py`) confirming, for real: tombstoned name/email, cleared password (can't log back in), `talent_element_value` rows hard-deleted, and that a second delete on an already-anonymized row is still a clean 200 (re-deletable, not a special-cased error).
+
+**A second real regression found and fixed: the "Continue" CTA could get stuck on Account Settings forever.** Root-caused, not assumed: `CandidateDashboardPage.jsx`'s `nextIncomplete` checked `!completion.basic_info.complete` *first*, before ever looking at `completion.categories` -- and `basic_info.complete` depends solely on `phone` being set (per the 2026-07-30 Basic Info trim entry below). Since phone is optional for every `contact_preference` except `'phone'` itself, any candidate who legitimately never sets a phone number would see "Continue: Account Settings" forever, even after finishing all 8 real categories -- it could never advance, because the ternary always re-resolved to Account Settings first. This is a real regression, not the original design: the Phase 4 entry below explicitly says Basic Info was "surfaced as its own dashboard concept" specifically so it could "never be accidentally swept into `overall_percent_complete`'s denominator" -- the completion *percentage* guard existed, but nothing equivalent guarded the separate CTA computation, and it silently grew this same class of bug. Fixed by dropping the Account-Settings branch from `nextIncomplete` entirely -- it now only ever considers `completion.categories`. Account Settings remains reachable at any time via its own standalone dashboard card (unchanged), just never part of the sequential queue.
+
+No backend changes were needed for the CTA fix (purely a frontend computation) or the deletion feature (endpoint reused as-is); only the completion label string changed server-side for the rename.
+
+Full backend test suite (178 -- 177 existing + 1 new delete-endpoint test) passes. Verified live in a browser: dashboard card and page both read "Account Settings"; a candidate who completed Practical fit but never set a phone sees "Continue: Education" (not stuck); Danger Zone's confirm button stays disabled until "DELETE" is typed, then a real deletion anonymized the account exactly as the endpoint documents and logged out to the login page.
+
+---
+
 ## 2026-07-31 — Real regression found and fixed: CV extraction had drifted onto every category page instead of one dashboard step
 
 Prompted by the user asking me to re-verify Phase 3/4's CV-extraction design fresh rather than trust the old report. Found a real bug, not assumed from memory:

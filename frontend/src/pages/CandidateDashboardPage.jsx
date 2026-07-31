@@ -6,7 +6,7 @@ import {
 } from '@tabler/icons-react'
 import * as api from '../api'
 import { useAuth } from '../auth/AuthContext'
-import { BASIC_INFO_PATH, surveyPathFor } from '../categorySlugs'
+import { ACCOUNT_SETTINGS_PATH, surveyPathFor } from '../categorySlugs'
 import QuickStartCvCard from '../components/QuickStartCvCard'
 
 const CATEGORY_ICONS = {
@@ -40,16 +40,18 @@ export default function CandidateDashboardPage() {
   if (error) return <p className="hint-error">Could not load your profile: {error}</p>
   if (!completion) return <p>Loading...</p>
 
-  // Basic Info is deliberately not part of completion.categories (see
+  // Account Settings is deliberately not part of completion.categories (see
   // api/candidate_service.py's compute_candidate_completion) -- it's a plain
   // talent column, not a Fit Dictionary category, excluded from
-  // overall_percent_complete. Still surfaced first here, as its own
-  // synthetic "next incomplete" candidate, since it's the first real step
-  // in the intended survey order (see PROJECT_NOTES.md's Phase 4 entry).
-  const nextIncomplete = !completion.basic_info.complete
-    ? { category: 'BASIC_INFO', label: completion.basic_info.label }
-    : completion.categories.find((c) => c.status !== 'complete')
-  const pathFor = (category) => (category === 'BASIC_INFO' ? BASIC_INFO_PATH : surveyPathFor(category))
+  // overall_percent_complete. It must ALSO never be part of the "next
+  // incomplete" CTA below: `basic_info.complete` only reflects whether phone
+  // is set, and phone is optional for most contact preferences, so a
+  // candidate who never sets one would otherwise see "Continue: Account
+  // Settings" forever, never advancing to Education/Practical fit/etc. even
+  // after finishing all 8 real categories (see PROJECT_NOTES.md -- a real
+  // regression, not the original design: Account Settings is reachable any
+  // time via its own standalone card, never a blocking step in this queue).
+  const nextIncomplete = completion.categories.find((c) => c.status !== 'complete')
 
   // Quick-start CV card: only at the very start of the journey -- once any
   // of the three things a CV can fill (phone, Education, Practical fit) has
@@ -80,9 +82,9 @@ export default function CandidateDashboardPage() {
 
       <div className="ll-dash-grid">
         <div
-          key="basic-info" className="ll-dash-card clickable"
-          role="button" tabIndex={0} onClick={() => navigate(BASIC_INFO_PATH)}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(BASIC_INFO_PATH) } }}
+          key="account-settings" className="ll-dash-card clickable"
+          role="button" tabIndex={0} onClick={() => navigate(ACCOUNT_SETTINGS_PATH)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(ACCOUNT_SETTINGS_PATH) } }}
         >
           {completion.basic_info.complete && (
             <span className="ll-dash-card-badge complete"><IconCheck size={20} /></span>
@@ -154,7 +156,7 @@ export default function CandidateDashboardPage() {
       {nextIncomplete ? (
         <button
           type="button" className="ll-dash-cta"
-          onClick={() => navigate(pathFor(nextIncomplete.category))}
+          onClick={() => navigate(surveyPathFor(nextIncomplete.category))}
         >
           Continue: {nextIncomplete.label}
         </button>

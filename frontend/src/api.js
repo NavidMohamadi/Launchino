@@ -58,6 +58,8 @@ export const updateCandidateSubscription = (talentId, payload) =>
 export const updateBasicInfo = (talentId, payload) =>
   request(`/candidates/${talentId}/basic-info`, { method: 'PATCH', body: JSON.stringify(payload) })
 
+export const deleteCandidate = (talentId) => request(`/candidates/${talentId}`, { method: 'DELETE' })
+
 export const mapSkill = (talentId, term) =>
   request(`/candidates/${talentId}/map-skill`, { method: 'POST', body: JSON.stringify({ term }) })
 

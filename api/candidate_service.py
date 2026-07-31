@@ -165,7 +165,7 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
         "overall_percent_complete": overall_percent,
         "premium_readiness_threshold_percent": threshold_percent,
         "premium_ready": overall_percent >= threshold_percent,
-        "basic_info": {"label": "Basic Info", "complete": basic_info_complete},
+        "basic_info": {"label": "Account Settings", "complete": basic_info_complete},
     }
 
 
