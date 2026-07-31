@@ -1215,14 +1215,15 @@
   {
     "element_id": "TASK-EXPERIENCE",
     "category": "TASK",
-    "label": "Work experience",
-    "definition": "Every job the candidate wants considered: job title (AI-mapped to an ESCO occupation code with confidence), start date, and end date (or currently in this role). Repeatable.",
-    "candidate_question": "What jobs have you held? Include the job title and the dates you worked there.",
+    "label": "What you've done",
+    "definition": "Every job, internship, or project the candidate wants considered -- not formal employment only: a role or project name (AI-mapped to an ESCO occupation code with confidence, best-effort), an optional employer/organization (informational only, never matched or mapped), start date, and end date (or currently ongoing). Repeatable.",
+    "candidate_question": "What have you done -- jobs, internships, or projects? Include a role or project name and the dates.",
     "vacancy_question": "What occupation domains (if any) does this role genuinely require or prefer experience in?",
     "candidate_value_schema": {
       "jobs": [
         {
           "job_title": "string",
+          "employer": "string|null",
           "esco_uri": "string|null",
           "confidence": "number 0..1|null",
           "start_date": "YYYY-MM-DD",
@@ -1240,7 +1241,7 @@
         }
       ]
     },
-    "evidence_rule": "Candidate self-report; job title mapped to ESCO by AI with a confidence score the candidate must confirm or correct when low. Duration is never taken from here directly -- see TASK-YEARS, computed by the system from these dates.",
+    "evidence_rule": "Candidate self-report; role/project name mapped to ESCO by AI with a confidence score the candidate must confirm or correct when low -- employer/organization is never matched or mapped, purely informational. Duration is never taken from here directly -- see TASK-YEARS, computed by the system from these dates.",
     "comparator_key": "tagged_list_overlap_occupation",
     "sharing_status": "candidate_visible",
     "active": true,

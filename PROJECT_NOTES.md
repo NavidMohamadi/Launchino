@@ -13,6 +13,24 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — CV extraction scope moved from Practical fit to "What you've done"/Task History; that category relabeled and made non-traditional-experience-friendly
+
+**CV extraction scope: `CV_EXTRACTION_CATEGORIES` changed from `{PRACT, EDU}` to `{EDU, TASK}`.** Practical fit facts (visa/sponsorship/location/work-mode) are exactly the kind of thing a candidate should state themselves, not have inferred from CV text; TASK-EXPERIENCE's job/role entries are exactly what a CV *is* a record of, and its ESCO occupation mapping already works the same best-effort, non-blocking way EDU's institution/program mapping does regardless of entry origin -- there's no second, diverging path, just one real mapping endpoint fed by two entry points into the same raw text (`api/extraction_service.py`'s updated comment has the full reasoning). Updated `prompts/P01_cv_extraction.txt`'s SCOPE section and `CV_VALUE_SCHEMA_RULE`'s worked examples (previously all PRACT-based, now EDU/TASK-based, since PRACT no longer reaches the model at all). **Confirmed, not assumed, that Account Settings (phone) stays fully unaffected**: `CandidateExtractionResult.basic_info` is a structurally separate top-level field from `extracted_elements`/category scoping (`src/candidate_extraction.py`), so it was never affected by which categories are in `CV_EXTRACTION_CATEGORIES` in the first place. Verified with a real API call: a CV explicitly stating visa/sponsorship/work-mode/location facts alongside a job and a personal project produced `extracted_elements` containing only EDU-HISTORY/TASK-EXPERIENCE -- the practical-fit facts were correctly recognized by the model but landed in `unmapped_terms` (nowhere to put them, exactly as intended) rather than as PRACT-* elements, and `basic_info` contained only `phone`.
+
+**Task History relabeled to "What you've done"** (`api/candidate_service.py`'s `CATEGORY_LABELS`, `data/fit_dictionary_starter.json`'s TASK-EXPERIENCE `label`/`definition`/`candidate_question`/`evidence_rule`, `TaskHistoryPage.jsx`'s `<h1>`/description copy) to be inclusive of internships, projects, and other non-traditional experience, not just formal jobs. The entry field itself relabeled from "Job title" to "Role or project name". Reseeded the live `fit_element` table via `seed_fit_dictionary()` (also runs automatically on every app startup through `bootstrap()`, so this propagates to production on deploy without a separate manual step).
+
+**New: employer/organization field**, free text, purely informational -- never matched or mapped to anything, same pattern as Education's institution name. Added to `TASK-EXPERIENCE`'s `candidate_value_schema` (`jobs[].employer`). Verified live: a project entry with employer left blank saved and displayed correctly, distinct from a formal job entry with a real employer name.
+
+**Per-entry duration added, alongside the existing aggregate total.** A single entry's own start/end date diff needs no overlap-merge (`src/task_years.py`'s server-side algorithm only matters once you're combining *multiple* ranges), so this is computed client-side in the new shared `TaskEntryEditor.jsx` without risking a second, drifting copy of that real algorithm. Verified live: two entries (2019-2022 and a 5-month 2023 project) each showed their own correct duration ("3 yrs" / "5 mos") alongside the still-server-computed aggregate total ("3").
+
+**Extracted two shared components** rather than duplicating entry-editing UI a third time: `TaskEntryEditor.jsx` (job/role/project entries, mirroring `EducationEntryEditor.jsx`'s existing extraction pattern from earlier this session) is now used by both `TaskHistoryPage.jsx` and the dashboard's `QuickStartCvCard.jsx`, which also needed its own PRACT-review section replaced with a TASK-review section (and its visibility condition switched from checking Practical fit's status to checking TASK's) to match the new extraction scope.
+
+**Also moved "What Launchino does for you" to below the "Continue" button** on the candidate dashboard, per request -- was directly below the header.
+
+Full backend test suite (179, unchanged count -- existing extraction-scoping tests updated in place, not added to) passes. Verified live end to end: dashboard card and quick-start copy both read "What you've done"; a real CV-extraction call correctly scoped to EDU+TASK only; a real Task History submission with a formal job and a blank-employer project, both showing correct per-entry and total durations; the explainer section now renders after the Continue button.
+
+---
+
 ## 2026-07-31 — Re-diagnosis found items 1/2 already fixed and live; added the dashboard explainer section and login-page logo consistency
 
 Four items requested; the first two turned out to already be fixed and deployed.

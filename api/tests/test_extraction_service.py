@@ -231,9 +231,11 @@ def test_vacancy_extraction_schema_validation_failure_raises_clear_error():
             )
 
 
-# --- Phase 3: CV extraction is structurally scoped to PRACT+EDU only -----
+# --- Phase 3: CV extraction is structurally scoped to EDU+TASK only -------
+# (revised 2026-07-31 -- was PRACT+EDU; PRACT removed, TASK added, see
+# PROJECT_NOTES.md and CV_EXTRACTION_CATEGORIES's own comment.)
 
-def test_cv_extraction_scoping_excludes_cap_task_career_mot_env_even_if_active():
+def test_cv_extraction_scoping_excludes_cap_pract_career_mot_env_even_if_active():
     # A hard code-level allowlist (CV_EXTRACTION_CATEGORIES), not a side
     # effect of which elements happen to be active=true -- so this must hold
     # even when given a dictionary spanning every category, all "active".
@@ -250,7 +252,7 @@ def test_cv_extraction_scoping_excludes_cap_task_career_mot_env_even_if_active()
         "ENV-STRUCTURE": _env_element(),
     }
     scoped = _scope_to_cv_extraction_categories(full_dictionary)
-    assert set(scoped) == {"PRACT-SPONSOR", "EDU-HISTORY"}
+    assert set(scoped) == {"EDU-HISTORY", "TASK-EXPERIENCE"}
 
 
 def test_cv_extraction_prompt_never_offers_out_of_scope_element_ids_as_valid():
@@ -264,9 +266,9 @@ def test_cv_extraction_prompt_never_offers_out_of_scope_element_ids_as_valid():
         "CAREER-GROWTH": _career_element(), "ENV-STRUCTURE": _env_element(),
     }
     _, user = build_cv_extraction_prompt(candidate_id="T-1", cv_text="a CV", dictionary=full_dictionary)
-    dictionary_json_line = next(line for line in user.splitlines() if '"element_id": "PRACT-SPONSOR"' in line)
+    dictionary_json_line = next(line for line in user.splitlines() if '"element_id": "EDU-HISTORY"' in line)
+    assert "PRACT-SPONSOR" not in dictionary_json_line
     assert "CAP-SQL" not in dictionary_json_line
-    assert "TASK-EXPERIENCE" not in dictionary_json_line
     assert "CAREER-GROWTH" not in dictionary_json_line
     assert "ENV-STRUCTURE" not in dictionary_json_line
 

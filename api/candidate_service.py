@@ -35,7 +35,7 @@ CATEGORY_LABELS: Dict[Category, str] = {
     Category.MOT: "What drives you",
     Category.ENV: "Your ideal environment",
     Category.CAP: "Capabilities",
-    Category.TASK: "Task History",
+    Category.TASK: "What you've done",
 }
 
 # The 8 real Fit Dictionary categories, in the fixed order the candidate

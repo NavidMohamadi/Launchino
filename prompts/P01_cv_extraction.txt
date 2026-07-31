@@ -7,12 +7,12 @@ INPUTS
 - fit_dictionary: {{FIT_DICTIONARY_JSON}}
 - approved_mapping_memory: {{MAPPING_MEMORY_JSON}}
 
-SCOPE (deliberately narrow -- see PROJECT_NOTES.md's Phase 3 entry)
+SCOPE (deliberately narrow -- see PROJECT_NOTES.md's Phase 3 entry, revised 2026-07-31)
 This extraction covers three things only:
 1. Basic Info -- phone only, if explicitly stated (see the BASIC INFO rule appended below for the exact output shape).
-2. Education -- fit_dictionary above will only ever contain EDU-category elements alongside Practical fit (never CAP/TASK/CAREER/MOT/ENV/TEAM), so map education history there using its value_schema.
-3. Practical fit (PRACT) -- the other category fit_dictionary above may contain.
-Skills and work experience (CAP/TASK) are NEVER extracted here, even if the CV clearly lists them -- they are always manual candidate entry, each backed by their own AI-to-ESCO mapping through a separate, purpose-built path. Do not attempt to fill this gap by inventing or repurposing other fields.
+2. Education -- fit_dictionary above will only ever contain EDU-category elements alongside "What you've done" (never CAP/PRACT/CAREER/MOT/ENV/TEAM), so map education history there using its value_schema.
+3. "What you've done" (TASK-EXPERIENCE) -- the other category fit_dictionary above may contain. Include every job, internship, or project the CV describes with a role/name and dates -- not formal employment only. Leave esco_uri/confidence null; occupation mapping happens separately, after extraction, through the real mapping endpoint, never invented here.
+Skills (CAP) and practical-fit facts like visa/sponsorship/location/work-mode (PRACT) are NEVER extracted here, even if the CV clearly states them -- skills are always manual candidate entry with their own AI-to-ESCO mapping through a separate, purpose-built path, and practical-fit facts are exactly the kind of thing a candidate should state themselves, not have inferred from CV text. Do not attempt to fill either gap by inventing or repurposing other fields.
 
 TASK
 1. Extract only what SCOPE above covers, from explicit CV content, with a short supporting quote per item.

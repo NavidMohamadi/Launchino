@@ -40,20 +40,36 @@ MAPPING_MEMORY_PATH = REPO_ROOT / "data" / "mapping_memory.json"
 
 # CV extraction is scoped to Basic Info (handled separately, see
 # CandidateExtractionResult.basic_info) + these two Fit Dictionary
-# categories only (Phase 3 of Education/Capabilities/Task History -- see
-# PROJECT_NOTES.md). CAP/TASK are deliberately excluded: a CV extraction can
-# only ever produce a low-confidence guess at a skill/job-title-to-ESCO
-# mapping, and Phase 1/2 already built a real, purpose-built path for that
-# (api/mapping_service.py, driven by explicit candidate entry) -- letting CV
-# extraction attempt the same thing via a completely different, less
-# reliable route would give two silently-diverging ways to fill the same
-# data. CAREER/MOT/ENV/TEAM are excluded because a CV is a record of what
-# someone did, not a survey of preferences/motivations it could ever
-# honestly answer. This is a hard code-level allowlist, not a side effect of
-# which elements happen to be active=true -- it must keep excluding CAP/TASK
-# even after Phase 4 flips their active flag to make them real for manual
-# entry.
-CV_EXTRACTION_CATEGORIES = {Category.PRACT, Category.EDU}
+# categories only (Phase 3 of Education/Capabilities/Task History, revised
+# 2026-07-31 -- see PROJECT_NOTES.md). Originally {PRACT, EDU}; PRACT was
+# removed and TASK added:
+#
+# - PRACT excluded (was included): visa/sponsorship/location/work-mode
+#   facts are exactly the kind of thing a candidate should state themselves,
+#   not have inferred/guessed from CV text -- unlike a job title or a degree,
+#   there's no reliable textual signal for "do you expect sponsorship" or
+#   "what's your preferred work mode" even when a CV happens to mention a
+#   country or contract type.
+# - TASK included (was excluded): TASK-EXPERIENCE's job/role entries are
+#   exactly the kind of thing a CV *is* a record of, and its ESCO occupation
+#   mapping already works the same best-effort, non-blocking way EDU's
+#   institution/program mapping does regardless of whether an entry came
+#   from CV-paste or manual typing (api/mapping_service.py's
+#   map_occupation_to_esco) -- there's no second, diverging path here, just
+#   the one real mapping endpoint fed by two entry points into the same raw
+#   text. The old reasoning against this (below, for CAP) doesn't actually
+#   apply to TASK once you look at how EDU already behaves.
+# - CAP stays excluded: a CV extraction can only ever produce a
+#   low-confidence guess at a skill-to-ESCO mapping from unstructured skill
+#   lists (unlike TASK's naturally CV-formatted title+dates), and Phase 1/2
+#   already built a real, purpose-built path for that
+#   (api/mapping_service.py, driven by explicit candidate entry).
+# - CAREER/MOT/ENV/TEAM stay excluded: a CV is a record of what someone did,
+#   not a survey of preferences/motivations it could ever honestly answer.
+#
+# This is a hard code-level allowlist, not a side effect of which elements
+# happen to be active=true.
+CV_EXTRACTION_CATEGORIES = {Category.EDU, Category.TASK}
 
 
 def _scope_to_cv_extraction_categories(dictionary: Dict[str, FitElement]) -> Dict[str, FitElement]:
@@ -195,33 +211,36 @@ the schema marks that key nullable and you have no evidence for it); no other ke
 If value_schema nests an object or array (e.g. a "languages" map, or a "values" list), your
 value must use that exact same nesting -- not a flattened or renamed version of it.
 
-Worked example: fit_dictionary shows element_id "PRACT-SPONSOR" with
-value_schema {"requirement": "required|not_required|not_sure"}. The CV says "I do not require
-visa sponsorship." Correct value: {"requirement": "not_required"}.
-This is WRONG: {"sponsorship_required": false} -- "sponsorship_required" does not appear in
-value_schema. Using it means the review screen and the comparator this element feeds will not
-recognize the answer at all, silently discarding a real, correctly-extracted fact.
+Worked example: fit_dictionary shows element_id "TASK-EXPERIENCE" with value_schema
+{"jobs": [{"job_title": "string", "employer": "string|null", "esco_uri": "string|null",
+"confidence": "number 0..1|null", "start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD|null",
+"current": "boolean"}]}. The CV says "Software Engineer at Acme Corp, 2019-present." Correct
+value: {"jobs": [{"job_title": "Software Engineer", "employer": "Acme Corp", "esco_uri": null,
+"confidence": null, "start_date": "2019-01-01", "end_date": null, "current": true}]}
+(esco_uri/confidence are null here, not guessed -- mapping happens separately, after
+extraction, through the real occupation-matching endpoint; never invent a code yourself).
+This is WRONG: {"jobs": [{"title": "Software Engineer", "company": "Acme Corp", ...}]} --
+wrong key names ("title"/"company" instead of "job_title"/"employer").
 
-Another worked example: element_id "PRACT-COUNTRY" has value_schema {"current_country":
-"ISO country", "presence_relative_to_vacancy": "in_country|outside_country|unknown"}. The CV
-says the candidate lives in the Netherlands. Correct value: {"current_country": "Netherlands",
-"presence_relative_to_vacancy": "in_country"}.
-This is WRONG: {"country": "Netherlands"} -- wrong key name, and the second required key is
-missing entirely.
-
-Another worked example: element_id "PRACT-LANG" has value_schema {"languages": {"language":
-"basic|working|professional|fluent|native_or_equivalent"}} -- a map from language name to
-level, not a list. Correct value: {"languages": {"English": "fluent", "Dutch": "working"}}.
-This is WRONG: {"languages": [{"language": "English", "level": "fluent"}]} -- a list of
-objects is a different shape than the map value_schema specifies, even though it carries the
-same information.
+Another worked example: element_id "EDU-HISTORY" has value_schema {"entries":
+[{"level": "secondary|vocational|bachelor|master|phd|other", "institution": {"ror_id":
+"string|null", "name": "string"}, "program": "string", "field": {"isced_code": "string|null",
+"confidence": "number 0..1|null"}, "start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD|null",
+"status": "completed|currently_studying|did_not_complete"}]} -- a nested object for
+institution, not a flat string. Correct value for "MSc Computer Science, Delft University of
+Technology, 2016-2018": {"entries": [{"level": "master", "institution": {"ror_id": null,
+"name": "Delft University of Technology"}, "program": "Computer Science", "field":
+{"isced_code": null, "confidence": null}, "start_date": "2016-01-01", "end_date": "2018-01-01",
+"status": "completed"}]}.
+This is WRONG: {"entries": [{"institution": "Delft University of Technology", ...}]} --
+flattens institution to a bare string instead of the required {ror_id, name} object.
 """
 
 
 def build_cv_extraction_prompt(*, candidate_id: str, cv_text: str, dictionary: Dict[str, FitElement]) -> Tuple[str, str]:
     # Hard code-level scoping (CV_EXTRACTION_CATEGORIES), not just a prompt
     # instruction -- dictionary may contain any category (it's whatever the
-    # caller's load_dictionary() returned), but only PRACT/EDU ever reach the
+    # caller's load_dictionary() returned), but only EDU/TASK ever reach the
     # model. See CV_EXTRACTION_CATEGORIES's own comment for why.
     scoped_dictionary = _scope_to_cv_extraction_categories(dictionary)
     user = _fill(

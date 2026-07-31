@@ -55,12 +55,13 @@ export default function CandidateDashboardPage() {
   const nextIncomplete = completion.categories.find((c) => c.status !== 'complete')
 
   // Quick-start CV card: only at the very start of the journey -- once any
-  // of the three things a CV can fill (phone, Education, Practical fit) has
-  // real data, offering it again would just be confusing (see
-  // PROJECT_NOTES.md for the bug this replaced).
+  // of the three things a CV can fill (phone, Education, "What you've
+  // done") has real data, offering it again would just be confusing (see
+  // PROJECT_NOTES.md for the bug this replaced, and for the 2026-07-31
+  // scope revision from Practical fit to "What you've done"/TASK).
   const eduStatus = completion.categories.find((c) => c.category === 'EDU')?.status
-  const practStatus = completion.categories.find((c) => c.category === 'PRACT')?.status
-  const showQuickStart = !completion.basic_info.complete && eduStatus === 'not_started' && practStatus === 'not_started'
+  const taskStatus = completion.categories.find((c) => c.category === 'TASK')?.status
+  const showQuickStart = !completion.basic_info.complete && eduStatus === 'not_started' && taskStatus === 'not_started'
 
   return (
     <div>
@@ -78,8 +79,6 @@ export default function CandidateDashboardPage() {
           <div className="ll-dash-overall-label">complete</div>
         </div>
       </div>
-
-      <DashboardIntro talentId={talentId} introSeen={completion.dashboard_intro_seen} />
 
       {showQuickStart && <QuickStartCvCard talentId={talentId} onDone={loadCompletion} />}
 
@@ -168,6 +167,8 @@ export default function CandidateDashboardPage() {
           Your profile is fully complete across every category.
         </p>
       )}
+
+      <DashboardIntro talentId={talentId} introSeen={completion.dashboard_intro_seen} />
     </div>
   )
 }
