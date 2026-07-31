@@ -92,16 +92,16 @@ export default function LoginPage() {
               on every role tab here, including candidate -- deliberately
               overrides the marketing-script/UI-sans split for this one page,
               so the first thing a candidate sees matches everything after it.
-              Sized much larger than the nav treatment (24px there) and
-              centered, so it reads as a hero brand mark, not a small nav
-              logo (see PROJECT_NOTES.md). */}
-          <img src={logoIcon} alt="" />
+              Left-aligned and modestly sized (60px icon, 28px wordmark) --
+              sized to support the headline, not compete with it (see
+              PROJECT_NOTES.md). */}
+          <img src={logoIcon} alt="" width="60" height="60" />
           <span className="ll-wordmark ll-wordmark-sans">
             Launchino
           </span>
         </div>
         <h1 className="ll-headline">{hero.headline}</h1>
-        {hero.showList && <p className="ll-motto">&ldquo;<span style={{ fontWeight: 'normal' }}>You can be anything you want<br />&mdash; you just need the</span> right resources.&rdquo;</p>}
+        {hero.showList && <p className="ll-motto">&ldquo;<span style={{ fontWeight: 'normal' }}>You can be anything you want &mdash; you just need the</span> right resources.&rdquo;</p>}
         <p className="ll-sub">{hero.sub}</p>
         {hero.showList && (
           <ul className="ll-checklist">
