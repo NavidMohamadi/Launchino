@@ -13,6 +13,30 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Real bug fix: `contact_preference`'s DB default made a fresh account's Account Settings look "Complete" before any real choice was made
+
+Reported directly: a genuinely fresh account showed Account Settings as "Complete," violating the same answered-vs-never-touched principle this system already enforces everywhere else (Fit Dictionary elements' `value_status`, `dashboard_intro_seen`, etc.).
+
+**Diagnosis (checked before touching anything, per the request):**
+1. `talent.contact_preference` was `text not null default 'email'` (`src/database_schema.sql`, from `migrations/006_v2_2_0_to_v2_3_0.sql`) -- registration's `INSERT` never sets it explicitly, so every fresh row got a real, stored `'email'` the instant it was created. Never genuinely NULL.
+2. `AccountSettingsPage.jsx` initialized `useState('email')` and fell back with `candidate.contact_preference || 'email'` on load -- the shared `Select` component's own "-- choose --" placeholder (already used correctly elsewhere, e.g. Education level) was never reachable, because a real value was always present by render time.
+3. `compute_candidate_completion`'s `basic_info_complete` (fixed two entries ago in this file to be conditional on `contact_preference == 'phone'`) only ever checked "did they choose phone without providing one" -- not "did they ever make a genuine choice at all." Since the column was never actually NULL, that check was trivially true immediately, reproducing exactly this bug.
+
+**Also found during diagnosis, load-bearing for the fix**: `TalentOut.contact_preference` and `Talent.contact_preference` (the Pydantic response models, `api/models_api.py`/`src/schemas.py`) were *also* non-optional with a `= ContactPreference.EMAIL` default -- fixing only the DB column without these would have either crashed every fresh candidate's API response (pydantic rejects an explicit `None` against a non-Optional field) or kept fabricating `"email"` in the JSON even with a genuinely NULL DB row.
+
+**Fix**: `contact_preference` now has no default and is genuinely nullable end to end.
+- `src/database_schema.sql` (fresh installs) and new `migrations/010_v2_6_0_to_v2_7_0.sql` (applied live to the shared DB) drop both the `NOT NULL` and the `DEFAULT 'email'`. Existing rows are left untouched -- there's no way to tell a genuine past choice of 'email' from one that was only ever the default, so this only changes behavior for accounts created from now on (flagged here as a known, permanent gap in the existing ~350+ rows, not silently resolved either way).
+- `TalentOut.contact_preference`/`Talent.contact_preference` -> `Optional[ContactPreference] = None`.
+- Registration's own `TalentOut(...)` construction (`api/routers/candidates.py`) now explicitly passes `contact_preference=None` instead of relying on the model's own (now-removed) default.
+- `compute_candidate_completion`'s `basic_info_complete` now also requires `contact_preference is not None`, not just "isn't 'phone'."
+- `AccountSettingsPage.jsx`: initial state and load-fallback both use `''` instead of `'email'`, so the Select's existing "-- choose --" placeholder genuinely shows until a real choice is made. Added `required` support to the shared `Select` component (`formFields.jsx`, mirroring `TextField`'s existing pattern) and used it here, so an empty submit is blocked client-side, matching the phone field's existing conditional-required pattern -- the backend already independently rejects an empty value too (`BasicInfoUpdate.contact_preference: Optional[ContactPreference]` fails Pydantic validation before reaching any business logic).
+
+Updated three existing tests whose assertions relied on the old default (`test_completion_starts_at_zero_and_tracks_real_answers`, `test_basic_info_complete_is_conditional_on_contact_preference`, `test_basic_info_partial_update_and_defaults`) and extended the conditional-completion test with an explicit "make a real choice -> now complete" step. Full backend test suite (190, same count -- no new test functions, just corrected/extended assertions) passes.
+
+Verified live in a local browser against a genuinely fresh candidate: dashboard showed Account Settings "Not started" and "Continue: Account Settings" immediately after registration (not "Complete"); the Account Settings form's contact-preference dropdown showed "-- choose --" selected, not "Email"; selecting "Email" and saving flipped Account Settings to "Complete" and the CTA correctly advanced to "Continue: Education." Also confirmed directly against the database that a mid-reload stale API response during this same verification (showing `"email"` in one throwaway response) did not reflect a real DB value -- the row itself was already correctly `NULL`.
+
+---
+
 ## 2026-07-31 — Real bug fix: CV-imported Education wasn't actually saved; Account Settings restored to the front of the Continue queue (and a real underlying bug fixed to make that safe); Task History reordered to directly follow Education
 
 Reported directly after the previous entry's changes went live: CV extraction looked confirmed but Education wasn't saved, and the "Continue" CTA no longer started at Account Settings. Both were real regressions from this session's own recent changes, not user error.

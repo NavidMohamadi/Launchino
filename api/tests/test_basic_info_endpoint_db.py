@@ -32,15 +32,18 @@ def test_basic_info_partial_update_and_defaults():
             talent_id = r.json()["candidate"]["talent_id"]
             headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
 
-            # New account: default contact_preference is "email", phone null.
+            # New account: contact_preference has no default and starts
+            # genuinely unset (None), same as phone -- a candidate who has
+            # never visited Account Settings has never made a real choice
+            # (see PROJECT_NOTES.md).
             body = r.json()["candidate"]
-            assert body["contact_preference"] == "email"
+            assert body["contact_preference"] is None
             assert body["phone"] is None
 
             r = client.patch(f"/candidates/{talent_id}/basic-info", json={"phone": "+31 6 1111 2222"}, headers=headers)
             assert r.status_code == 200, r.text
             assert r.json()["phone"] == "+31 6 1111 2222"
-            assert r.json()["contact_preference"] == "email"  # untouched
+            assert r.json()["contact_preference"] is None  # untouched -- still no real choice made
 
             r = client.patch(
                 f"/candidates/{talent_id}/basic-info", json={"contact_preference": "either"}, headers=headers,
@@ -79,7 +82,7 @@ def test_phone_required_only_when_contact_preference_is_phone():
             talent_id = r.json()["candidate"]["talent_id"]
             headers = {"Authorization": f"Bearer {r.json()['access_token']}"}
 
-            # Switching to "phone" with no phone on file at all (default is email, phone null) -- rejected.
+            # Switching to "phone" with no phone on file at all (contact_preference starts unset, phone null) -- rejected.
             r = client.patch(f"/candidates/{talent_id}/basic-info", json={"contact_preference": "phone"}, headers=headers)
             assert r.status_code == 422, r.text
 

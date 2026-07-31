@@ -17,12 +17,12 @@ export function TextField({ label, value, onChange, placeholder, required = fals
 // options may be plain strings (value === label, the original shape) or
 // {value, label} objects (Phase 5 -- e.g. ISCED-F codes, where the code
 // itself isn't a helpful thing to show the user, only its name is).
-export function Select({ label, value, options, onChange }) {
+export function Select({ label, value, options, onChange, required = false }) {
   const normalised = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o))
   return (
     <label className="field">
-      {label}
-      <select value={value ?? ''} onChange={(e) => onChange(e.target.value)}>
+      {label}{required && <span aria-hidden="true"> *</span>}
+      <select value={value ?? ''} required={required} onChange={(e) => onChange(e.target.value)}>
         <option value="" disabled>-- choose --</option>
         {normalised.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>

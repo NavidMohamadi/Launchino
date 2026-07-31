@@ -21,7 +21,10 @@ export default function AccountSettingsPage() {
   const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [contactPreference, setContactPreference] = useState('email')
+  // No default -- '' shows the shared Select's own "-- choose --"
+  // placeholder until the candidate makes a real choice. A default here
+  // would look identical to a genuine choice (see PROJECT_NOTES.md).
+  const [contactPreference, setContactPreference] = useState('')
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
@@ -38,7 +41,7 @@ export default function AccountSettingsPage() {
         setFullName(candidate.full_name || '')
         setEmail(candidate.email || '')
         setPhone(candidate.phone || '')
-        setContactPreference(candidate.contact_preference || 'email')
+        setContactPreference(candidate.contact_preference || '')
       })
       .catch((err) => setLoadError(err.message))
       .finally(() => setLoading(false))
@@ -104,7 +107,10 @@ export default function AccountSettingsPage() {
               label="Phone" value={phone} onChange={setPhone} placeholder="+31 6 1234 5678"
               required={contactPreference === 'phone'}
             />
-            <Select label="How should companies contact you?" value={contactPreference} options={CONTACT_PREFERENCES} onChange={setContactPreference} />
+            <Select
+              label="How should companies contact you?" value={contactPreference}
+              options={CONTACT_PREFERENCES} onChange={setContactPreference} required
+            />
           </div>
           <div style={{ marginTop: 20 }}>
             <button type="submit" disabled={submitting}>{submitting ? 'Saving…' : 'Save'}</button>

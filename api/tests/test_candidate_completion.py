@@ -92,11 +92,11 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
         assert body["overall_percent_complete"] == 0.0
         by_category = {c["category"]: c for c in body["categories"]}
         assert set(by_category) == {"PRACT", "TEAM", "CAREER", "MOT", "ENV", "EDU", "CAP", "TASK"}
-        # contact_preference defaults to 'email' (not 'phone'), so phone isn't
-        # actually required yet -- Account Settings is correctly complete
-        # from registration, nothing left to fill in (see PROJECT_NOTES.md
-        # for the earlier bug where this was unconditionally bool(phone)).
-        assert body["basic_info"] == {"label": "Account Settings", "complete": True}
+        # contact_preference has no DB default -- a fresh candidate has never
+        # made a real choice yet, so Account Settings is correctly incomplete
+        # from registration (see PROJECT_NOTES.md for the earlier bug where a
+        # default 'email' made this indistinguishable from a genuine choice).
+        assert body["basic_info"] == {"label": "Account Settings", "complete": False}
         assert body["dashboard_intro_seen"] is False
         pract = by_category["PRACT"]
         assert pract["label"] == "Practical fit"
@@ -167,17 +167,27 @@ def test_completion_starts_at_zero_and_tracks_real_answers():
 
 
 def test_basic_info_complete_is_conditional_on_contact_preference():
-    """Account Settings must only be "incomplete" when phone is actually
-    required (contact_preference == 'phone') and missing -- mirrors
-    set_candidate_basic_info's own write-side validation rule. Confirms the
-    fix for a real bug where this was unconditionally bool(phone), so a
-    candidate who never needed a phone number saw Account Settings marked
-    "Not started" forever (see PROJECT_NOTES.md)."""
+    """Account Settings must only be "complete" once the candidate has made
+    a genuine contact_preference choice, and (if that choice is 'phone') has
+    actually provided a phone number -- mirrors set_candidate_basic_info's
+    own write-side validation rule. Confirms the fix for a real bug where
+    contact_preference defaulted to 'email' at the DB level, making a
+    default indistinguishable from a real choice (see PROJECT_NOTES.md)."""
     with TestClient(app) as client:
         talent_id, headers = _make_candidate(client)
 
-        # Default contact_preference is 'email' -- nothing required, complete
-        # from registration even with no phone set.
+        # Fresh candidate: contact_preference has no DB default, genuinely
+        # unset -- correctly incomplete, not "complete because nothing's
+        # required yet."
+        r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
+        assert r.json()["basic_info"]["complete"] is False
+
+        # Making a real, deliberate non-phone choice completes it -- no
+        # phone number needed for 'email'.
+        r = client.patch(
+            f"/candidates/{talent_id}/basic-info", headers=headers, json={"contact_preference": "email"},
+        )
+        assert r.status_code == 200, r.text
         r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
         assert r.json()["basic_info"]["complete"] is True
 

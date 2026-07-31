@@ -176,7 +176,10 @@ class Talent(BaseModel):
     subscription_source: Optional[SubscriptionSource] = None
     phone: Optional[str] = None
     linkedin_url: Optional[str] = None
-    contact_preference: ContactPreference = ContactPreference.EMAIL
+    # No default -- mirrors the DB column exactly (see PROJECT_NOTES.md): a
+    # candidate who has never chosen one has a genuinely NULL value, not a
+    # fabricated 'email' that would be indistinguishable from a real choice.
+    contact_preference: Optional[ContactPreference] = None
 
     @field_validator("subscription_expires_at", "subscription_updated_at")
     @classmethod

@@ -92,8 +92,11 @@ create table talent (
     -- last_login_at above, deliberately NOT a Fit Dictionary category, since
     -- these are never compared against a vacancy.
     phone text,
-    contact_preference text not null default 'email'
-        check (contact_preference in ('email','phone','either')),
+    -- No default, genuinely nullable: a candidate who has never visited
+    -- Account Settings has never made a real choice here, and a fabricated
+    -- default would be indistinguishable from one (see PROJECT_NOTES.md).
+    contact_preference text
+        check (contact_preference is null or contact_preference in ('email','phone','either')),
     -- Whether the candidate has ever seen the "What Launchino does for
     -- you" dashboard explainer -- lets it auto-expand exactly once, on a
     -- genuinely first-ever visit, not every time overall_percent_complete

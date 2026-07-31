@@ -155,17 +155,21 @@ def compute_candidate_completion(conn: Connection, talent_id: UUID) -> Dict[str,
     # surfaced here as its own field instead. Mirrors set_candidate_basic_info's
     # own write-side rule (added for the "conditional phone requirement" work,
     # see PROJECT_NOTES.md): phone is only actually required when
-    # contact_preference == 'phone', so "complete" must be conditional the
-    # same way on read, not just bool(phone) -- that mismatch was the real
-    # root cause of a candidate who never needed a phone number seeing
-    # Account Settings marked "Not started" forever, even though nothing was
-    # actually missing from it.
+    # contact_preference == 'phone'. contact_preference itself has no DB
+    # default (see PROJECT_NOTES.md's later entry) -- it must genuinely be
+    # non-null, i.e. the candidate has actually visited Account Settings and
+    # made a real choice, not just have satisfied "isn't 'phone'" by never
+    # having touched it at all. A fabricated default here would be exactly
+    # the same class of bug this whole conditional check exists to prevent:
+    # treating an unmade choice as though it were a real one.
     basic_info_row = conn.execute(
         text("select phone, contact_preference, dashboard_intro_seen from talent where talent_id = :talent_id"),
         {"talent_id": str(talent_id)},
     ).mappings().first()
     basic_info_complete = bool(
-        basic_info_row and (basic_info_row["contact_preference"] != "phone" or basic_info_row["phone"])
+        basic_info_row
+        and basic_info_row["contact_preference"] is not None
+        and (basic_info_row["contact_preference"] != "phone" or basic_info_row["phone"])
     )
 
     return {
@@ -241,11 +245,14 @@ def set_candidate_basic_info(conn: Connection, talent_id: UUID, fields: Dict[str
     clobbering the others back to null. A no-op (empty fields) still returns
     the current row rather than erroring, so callers don't need a special case.
     """
-    # Values of None are dropped, not written as SQL NULL: contact_preference
-    # is NOT NULL at the DB level (migrations/006_v2_2_0_to_v2_3_0.sql), and a
-    # null phone here just means "no change" for now, not "clear it" -- an
-    # explicit null would otherwise either violate that constraint or
-    # silently wipe a field the candidate didn't intend to touch.
+    # Values of None are dropped, not written as SQL NULL: this is a partial
+    # update (exclude_unset=True), so a null here just means "the candidate
+    # didn't touch this field in this request," not "clear it" -- an
+    # explicit null would otherwise silently wipe a field the candidate
+    # didn't intend to touch. (contact_preference itself has no DB default
+    # and genuinely starts NULL -- see PROJECT_NOTES.md -- but that's a
+    # separate concern from this drop-None behavior, which exists purely for
+    # partial-update semantics.)
     allowed = {"phone", "contact_preference"}
     updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
     if updates:

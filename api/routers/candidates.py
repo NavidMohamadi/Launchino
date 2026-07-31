@@ -97,6 +97,11 @@ def create_candidate(
         job_discovery_campaign_opt_in=payload.job_discovery_campaign_opt_in,
         subscription_updated_at=payload.subscription_updated_at,
         subscription_source=payload.subscription_source,
+        # Explicit, not relying on TalentOut's own default -- this must
+        # reflect the real, freshly-inserted row (contact_preference has no
+        # DB default, see PROJECT_NOTES.md), not silently fabricate a choice
+        # the candidate hasn't made yet.
+        contact_preference=None,
     )
     token = create_access_token(subject=str(talent_id), role="candidate", expires_delta=CANDIDATE_TOKEN_EXPIRY)
     return CandidateAuthResponse(access_token=token, candidate=candidate)

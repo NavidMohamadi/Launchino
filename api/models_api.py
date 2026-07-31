@@ -54,7 +54,10 @@ class TalentOut(BaseModel):
     subscription_updated_at: Optional[datetime] = None
     subscription_source: Optional[SubscriptionSource] = None
     phone: Optional[str] = None
-    contact_preference: ContactPreference = ContactPreference.EMAIL
+    # No default -- a candidate who has never visited Account Settings has
+    # genuinely never chosen one (see PROJECT_NOTES.md: a default here would
+    # be indistinguishable from a real choice, exactly the bug this fixes).
+    contact_preference: Optional[ContactPreference] = None
 
 
 class CandidateLoginRequest(BaseModel):
