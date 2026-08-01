@@ -13,13 +13,23 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Logo icon's navy dot on the nav bar: outline attempt swapped for a lighter solid fill (wasn't effective enough)
+
+Follow-up to the entry right below: the `stroke="#4A5080"` outline fix wasn't visually strong enough in practice, even though it was technically non-zero contrast.
+
+**Switched to a solid, lighter fill instead of an outline.** `frontend/src/assets/logo-icon-on-navy.svg`'s navy dot `<circle>` now has `fill="#5B62A0"` (no `stroke` at all) instead of `fill="#151A45" stroke="#4A5080"`. Computed WCAG contrast ratios confirm why the outline undersold it and the new fill doesn't: `#151A45` (original) vs `#151A45` (nav bg) = 1.00 (invisible, by definition); the `#4A5080` outline attempt = 2.17; the new `#5B62A0` fill = **2.92** -- actually higher contrast against the same nav bar than the purple dot's own `#7F2FA3` (2.24), so the navy dot now reads at least as clearly as the icon's other two dots, not just barely above invisible. Purple dot, gold dot, and the turquoise trail are untouched -- only this one `<circle>`'s fill changed, and only in this navy-background variant.
+
+Verified live in a browser (same method as the entry below, repeated after this change): a real authenticated candidate's `TopNav` icon source confirms `fill="#5B62A0"`, no stroke; the login page's hero mark source still reads `fill="#151A45"`, completely unchanged -- the two variants remain genuinely decoupled. No frontend test suite exists to cover this. Full backend test suite passes (unaffected, frontend-only asset change).
+
+---
+
 ## 2026-07-31 — Fixed the logo icon's navy dot disappearing on the navy nav bar
 
 The icon mark's navy dot (`#151A45`) is the same color as `nav.top-nav`'s background, so it was invisible there -- worked fine everywhere else (login page hero, favicon) since those all sit on light/different-colored backgrounds.
 
 New `frontend/src/assets/logo-icon-on-navy.svg`, identical to `logo-icon.svg` except the navy dot's `<circle>` gets `stroke="#4A5080" stroke-width="1.5"` (a lighter slate-navy, enough contrast against the navy fill without standing out on light backgrounds either). `App.jsx`'s `TopNav` now imports this variant instead of the plain icon; every other usage (`LoginPage.jsx`'s hero mark, `frontend/public/favicon.svg`) is untouched -- the favicon in particular is a wholly separate, unrelated asset (a different abstract mark, not this dot/circle icon), never affected by this change to begin with.
 
-No frontend test suite exists in this repo to cover a UI component like this (no test files, no `test` script in `frontend/package.json`) -- verified live in a browser instead: a real authenticated candidate's `TopNav` icon now renders the navy dot with the `#4A5080` outline against the `rgb(21,26,69)` (`#151A45`) nav bar background, clearly visible; the login page's hero mark still renders the original, un-outlined SVG, confirming the two are genuinely decoupled, not the same asset conditionally styled. Full backend test suite passes (unaffected, as expected for a frontend-only asset change).
+No frontend test suite exists in this repo to cover a UI component like this (no test files, no `test` script in `frontend/package.json`) -- verified live in a browser instead: a real authenticated candidate's `TopNav` icon now renders the navy dot with the `#4A5080` outline against the `rgb(21,26,69)` (`#151A45`) nav bar background, clearly visible; the login page's hero mark still renders the original, un-outlined SVG, confirming the two are genuinely decoupled, not the same asset conditionally styled. Full backend test suite passes (unaffected, as expected for a frontend-only asset change). **Superseded by the entry above -- the outline wasn't visually strong enough, replaced with a solid fill.**
 
 ---
 
