@@ -92,10 +92,10 @@ export default function LoginPage() {
               on every role tab here, including candidate -- deliberately
               overrides the marketing-script/UI-sans split for this one page,
               so the first thing a candidate sees matches everything after it.
-              Left-aligned and modestly sized (60px icon, 28px wordmark) --
-              sized to support the headline, not compete with it (see
+              Left-aligned, sized to read clearly as a hero mark (88px icon,
+              34px wordmark) without competing with the headline (see
               PROJECT_NOTES.md). */}
-          <img src={logoIcon} alt="" width="60" height="60" />
+          <img src={logoIcon} alt="" width="88" height="88" />
           <span className="ll-wordmark ll-wordmark-sans">
             Launchino
           </span>

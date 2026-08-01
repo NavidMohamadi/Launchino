@@ -38,7 +38,7 @@
 
 .ll-wordmark { font-size: 24px; }
 .ll-wordmark-script { font-family: var(--ll-font-script); font-weight: 700; font-size: 68px; color: var(--ll-purple); text-shadow: 0 2px 10px rgba(255,255,255,0.65); }
-.ll-wordmark-sans { font-family: var(--ll-font-heading); font-weight: 600; letter-spacing: 0.01em; font-size: 28px; color: #fff; }
+.ll-wordmark-sans { font-family: var(--ll-font-heading); font-weight: 600; letter-spacing: 0.01em; font-size: 34px; color: #fff; }
 
 .ll-headline {
   font-family: var(--ll-font-heading);
