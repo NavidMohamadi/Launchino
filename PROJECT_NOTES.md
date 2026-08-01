@@ -13,6 +13,16 @@ is, why, and what would resolve it.
 
 ---
 
+## 2026-07-31 — Fixed the logo icon's navy dot disappearing on the navy nav bar
+
+The icon mark's navy dot (`#151A45`) is the same color as `nav.top-nav`'s background, so it was invisible there -- worked fine everywhere else (login page hero, favicon) since those all sit on light/different-colored backgrounds.
+
+New `frontend/src/assets/logo-icon-on-navy.svg`, identical to `logo-icon.svg` except the navy dot's `<circle>` gets `stroke="#4A5080" stroke-width="1.5"` (a lighter slate-navy, enough contrast against the navy fill without standing out on light backgrounds either). `App.jsx`'s `TopNav` now imports this variant instead of the plain icon; every other usage (`LoginPage.jsx`'s hero mark, `frontend/public/favicon.svg`) is untouched -- the favicon in particular is a wholly separate, unrelated asset (a different abstract mark, not this dot/circle icon), never affected by this change to begin with.
+
+No frontend test suite exists in this repo to cover a UI component like this (no test files, no `test` script in `frontend/package.json`) -- verified live in a browser instead: a real authenticated candidate's `TopNav` icon now renders the navy dot with the `#4A5080` outline against the `rgb(21,26,69)` (`#151A45`) nav bar background, clearly visible; the login page's hero mark still renders the original, un-outlined SVG, confirming the two are genuinely decoupled, not the same asset conditionally styled. Full backend test suite passes (unaffected, as expected for a frontend-only asset change).
+
+---
+
 ## 2026-07-31 — Real bug fix: `contact_preference`'s DB default made a fresh account's Account Settings look "Complete" before any real choice was made
 
 Reported directly: a genuinely fresh account showed Account Settings as "Complete," violating the same answered-vs-never-touched principle this system already enforces everywhere else (Fit Dictionary elements' `value_status`, `dashboard_intro_seen`, etc.).

@@ -15,7 +15,12 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import TermsOfServicePage from './pages/TermsOfServicePage'
 import { AuthProvider, useAuth } from './auth/AuthContext'
-import logoIcon from './assets/logo-icon.svg'
+// Navy-outlined variant, specifically for TopNav's navy background -- the
+// icon's navy dot (#151A45) is otherwise invisible there, since it's the
+// same color as the nav bar itself (see PROJECT_NOTES.md). Every other
+// usage (login page hero, favicon) keeps the plain logo-icon.svg unchanged,
+// since the dot is already visible on those light backgrounds.
+import logoIcon from './assets/logo-icon-on-navy.svg'
 import './App.css'
 
 const DEFAULT_PATH_BY_ROLE = { candidate: '/candidate', company: '/vacancy', admin: '/admin/dashboard' }
