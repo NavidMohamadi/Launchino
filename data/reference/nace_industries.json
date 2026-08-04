@@ -1,0 +1,27 @@
+{
+  "source": "Eurostat NACE Rev. 2 (Statistical Classification of Economic Activities in the European Community, Revision 2)",
+  "note": "Hand-transcribed section-level (1-letter) codes from the official, fixed EU standard -- unchanged since the 2008 Rev. 2 publication, so no live-API refresh mechanism applies, same as isced_f_2013.json. Section level (21 entries) is deliberately used rather than the ~88 division-level (2-digit) codes: CAREER-INDUSTRIES is a low-weight candidate preference, not a precise classification requirement, and this coarser level can be transcribed from the standard with full confidence -- division-level codes would risk small labeling errors for a list this large recalled from memory rather than sourced from a machine-readable file.",
+  "sections": [
+    { "code": "A", "name": "Agriculture, forestry and fishing" },
+    { "code": "B", "name": "Mining and quarrying" },
+    { "code": "C", "name": "Manufacturing" },
+    { "code": "D", "name": "Electricity, gas, steam and air conditioning supply" },
+    { "code": "E", "name": "Water supply, sewerage, waste management and remediation activities" },
+    { "code": "F", "name": "Construction" },
+    { "code": "G", "name": "Wholesale and retail trade; repair of motor vehicles and motorcycles" },
+    { "code": "H", "name": "Transportation and storage" },
+    { "code": "I", "name": "Accommodation and food service activities" },
+    { "code": "J", "name": "Information and communication" },
+    { "code": "K", "name": "Financial and insurance activities" },
+    { "code": "L", "name": "Real estate activities" },
+    { "code": "M", "name": "Professional, scientific and technical activities" },
+    { "code": "N", "name": "Administrative and support service activities" },
+    { "code": "O", "name": "Public administration and defence; compulsory social security" },
+    { "code": "P", "name": "Education" },
+    { "code": "Q", "name": "Human health and social work activities" },
+    { "code": "R", "name": "Arts, entertainment and recreation" },
+    { "code": "S", "name": "Other service activities" },
+    { "code": "T", "name": "Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use" },
+    { "code": "U", "name": "Activities of extraterritorial organisations and bodies" }
+  ]
+}

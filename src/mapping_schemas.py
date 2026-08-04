@@ -14,7 +14,20 @@ class MappingResponse(BaseModel):
     when nothing fits -- never a code with no label or vice versa.
     """
 
-    matched_code: Optional[str] = None
+    matched_code: Optional[str] = Field(
+        default=None,
+        description=(
+            "Must be copied EXACTLY, character-for-character, from the chosen option's "
+            "own identifier field in the list you were given (its 'uri' for a skill/"
+            "occupation shortlist, or its 'code' for a fixed ISCED/NACE list) -- never "
+            "typed from memory. Never substitute a code from a different classification "
+            "system you happen to recognize (e.g. an ISCO occupation group code, a SOC "
+            "code, a NAICS code) even if it feels more standard or precise than the "
+            "option's own identifier -- doing so will cause the match to be discarded as "
+            "invented, even when your judgement was correct. If nothing genuinely "
+            "matches, use null here, not a code from outside the given list."
+        ),
+    )
     matched_label: Optional[str] = None
     confidence: float = Field(ge=0, le=1)
     reasoning: str

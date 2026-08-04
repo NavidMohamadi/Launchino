@@ -10,18 +10,45 @@ import { useEffect, useState } from 'react'
 import * as api from '../../api'
 import { OrdinalActualControl, OrdinalRangeCandidateControl } from '../OrdinalRangeControl'
 import RequirementListEditor from '../RequirementListEditor'
+import SearchAutocomplete from '../SearchAutocomplete'
 import { CheckboxGroup, DateField, Select, TextField } from '../formFields'
 
+// A slider always renders SOME number (there is no meaningful "empty" state
+// for <input type=range>, unlike a Select's "-- choose --" or an unchecked
+// checkbox) -- so the number shown on first render must become the real
+// answer immediately, not just a display fallback the user has to actively
+// confirm by dragging. Without this, a candidate/company who accepts what's
+// already shown and submits without touching the slider silently loses that
+// answer: CategorySurveyPage/VacancyWorkshopPage only include an element_id
+// in the submission once something has called onChange for it (real bug
+// found via live browser verification, see PROJECT_NOTES.md's Phase 5 entry
+// -- not hypothetical, reproduced with values_stored: 0 on a real submit).
+function useSeedDefaults(value, onChange, defaults) {
+  useEffect(() => {
+    if (Object.keys(defaults).some((k) => value[k] === undefined)) onChange({ ...defaults, ...value })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+}
+
 // --- ordinal_requirement (TEAM-*): 0-4 level ---
+// No per-element "Example" field on the candidate side: `example` exists only
+// in these elements' vacancy_value_schema, never their candidate_value_schema
+// (data/fit_dictionary_starter.json) -- the candidate's illustrative example
+// is the separate TEAM-EVIDENCE element, one free-text answer covering all six
+// self-ratings, deliberately not six per-element repetitions of the same ask.
+// The field was here but unreachable until Phase 7 made these six visible
+// candidate-side, so it never actually wrote off-schema data; see
+// PROJECT_NOTES.md's Phase 7 entry.
 function OrdinalRequirementCandidate({ value, onChange }) {
+  useSeedDefaults(value, onChange, { level: 2 })
   return (
     <div className="field-group">
       <Stepper04 label="Your level" value={value.level ?? 2} onChange={(n) => onChange({ ...value, level: n })} />
-      <TextField label="Example" value={value.example} onChange={(v) => onChange({ ...value, example: v })} />
     </div>
   )
 }
 function OrdinalRequirementVacancy({ value, onChange }) {
+  useSeedDefaults(value, onChange, { required_level: 2 })
   return (
     <div className="field-group">
       <Stepper04 label="Required level" value={value.required_level ?? 2} onChange={(n) => onChange({ ...value, required_level: n })} />
@@ -198,6 +225,168 @@ function WorkTypeSetVacancy({ value, onChange }) {
 }
 
 
+// --- ordinal_distance (v3 redesign, Phase 5 -- see PROJECT_NOTES.md): a
+// single 1-5 value on both sides (ENV, RIASEC, TEAM-COLLAB-INTENSITY) --
+// simpler than ordinal_range's 4-value preferred/tolerable band, since
+// Family 2's symmetric-distance formula only needs one number per side.
+function Stepper15({ label, value, onChange }) {
+  return (
+    <label className="stepper">
+      {label}
+      <input type="range" min={1} max={5} step={1} value={value} onChange={(e) => onChange(Number(e.target.value))} />
+      <span className="stepper-value">{value}</span>
+    </label>
+  )
+}
+function OrdinalDistanceCandidate({ value, onChange }) {
+  useSeedDefaults(value, onChange, { level: 3 })
+  return <Stepper15 label="Your level" value={value.level ?? 3} onChange={(n) => onChange({ ...value, level: n })} />
+}
+function OrdinalDistanceVacancy({ value, onChange }) {
+  useSeedDefaults(value, onChange, { required_level: 3 })
+  return <Stepper15 label="Actual level" value={value.required_level ?? 3} onChange={(n) => onChange({ ...value, required_level: n })} />
+}
+
+// --- motivation_preferred_minimum (v3 redesign, Phase 5): the candidate
+// states a preferred AND a minimum-acceptable 1-5 level for a selected
+// priority (selected/priority_rank are set by CategorySurveyPage's MOT
+// checkbox handling, not this editor -- spread through unchanged here);
+// the vacancy supplies one actual 1-5 value.
+function MotivationPreferredMinimumCandidate({ value, onChange }) {
+  useSeedDefaults(value, onChange, { preferred_level: 3, minimum_acceptable_level: 2 })
+  return (
+    <div className="field-group">
+      <Stepper15 label="Preferred level" value={value.preferred_level ?? 3} onChange={(n) => onChange({ ...value, preferred_level: n })} />
+      <Stepper15 label="Lowest you'd accept" value={value.minimum_acceptable_level ?? 2} onChange={(n) => onChange({ ...value, minimum_acceptable_level: n })} />
+    </div>
+  )
+}
+function MotivationPreferredMinimumVacancy({ value, onChange }) {
+  useSeedDefaults(value, onChange, { actual_level: 3 })
+  return <Stepper15 label="Actual level" value={value.actual_level ?? 3} onChange={(n) => onChange({ ...value, actual_level: n })} />
+}
+
+// --- esco_occupation_pick (v3 redesign, Phase 5): CAREER-PRIMARY-ROLE/
+// SECONDARY-ROLE. Plain-language search-and-pick against ESCO occupations
+// (same picker as the vacancy-side required-occupations editor above) --
+// ESCO/the uri are never shown to the candidate, only the label they typed
+// or picked. raw_text is always kept even without a picked match (mirrors
+// EDU-HISTORY's own established pattern -- a candidate's original free text
+// is never lost just because nothing was picked from the list); picking a
+// real suggestion is a direct, human-confirmed match, not an AI guess, so it
+// gets confidence 1.0 rather than null.
+function OccupationPickCandidate({ value, onChange }) {
+  const occupation = value.occupation || {}
+  return (
+    <div className="field-group">
+      <SearchAutocomplete
+        label="Target occupation" value={occupation.raw_text} searchFn={api.searchOccupations}
+        getOptionLabel={(o) => o.label} placeholder="Start typing an occupation..."
+        onChange={(text, option) => onChange({
+          ...value,
+          occupation: {
+            raw_text: text, esco_uri: option ? option.uri : null, label: option ? option.label : null,
+            confidence: option ? 1.0 : null,
+          },
+        })}
+      />
+      <label className="checkbox">
+        <input type="checkbox" checked={!!value.still_exploring}
+          onChange={(e) => onChange({ ...value, still_exploring: e.target.checked })} />
+        I'm still exploring options
+      </label>
+      <label className="checkbox">
+        <input type="checkbox" checked={!!value.open_to_adjacent}
+          onChange={(e) => onChange({ ...value, open_to_adjacent: e.target.checked })} />
+        Open to adjacent roles
+      </label>
+    </div>
+  )
+}
+function OccupationPickVacancy({ value, onChange }) {
+  const occupation = value.occupation || {}
+  return (
+    <SearchAutocomplete
+      label="Role family / occupational direction" value={occupation.label} searchFn={api.searchOccupations}
+      getOptionLabel={(o) => o.label} placeholder="Start typing an occupation..."
+      onChange={(text, option) => onChange({
+        ...value, occupation: { esco_uri: option ? option.uri : null, label: option ? option.label : text },
+      })}
+    />
+  )
+}
+
+// --- nace_industry_overlap (v3 redesign, Phase 5): CAREER-INDUSTRIES.
+// NACE is mapped at section level only in this system (21 sections, no
+// sub-hierarchy -- see data/reference/nace_industries.json), small enough
+// to pick from a plain dropdown rather than a search box (same reasoning
+// as RequiredEducationVacancy's ISCED-F picker above).
+function useNaceOptions() {
+  const [options, setOptions] = useState([])
+  useEffect(() => { api.getNaceSections().then((sections) => setOptions(sections.map((s) => ({ value: s.code, label: s.label })))) }, [])
+  return options
+}
+function IndustriesCandidate({ value, onChange }) {
+  const options = useNaceOptions()
+  const industries = value.industries || []
+  function updateAt(i, code) {
+    const match = options.find((o) => o.value === code)
+    const next = [...industries]
+    next[i] = { raw_text: match ? match.label : null, nace_code: code || null, label: match ? match.label : null, confidence: code ? 1.0 : null }
+    onChange({ ...value, industries: next })
+  }
+  return (
+    <div className="field-group">
+      {industries.map((entry, i) => (
+        <div key={i} className="entry-card">
+          <button type="button" className="entry-card-remove" onClick={() => onChange({ ...value, industries: industries.filter((_, j) => j !== i) })}>Remove</button>
+          <Select label="Industry" value={entry.nace_code} options={options} onChange={(code) => updateAt(i, code)} />
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...value, industries: [...industries, { raw_text: null, nace_code: null, label: null, confidence: null }] })}>
+        + Add industry
+      </button>
+    </div>
+  )
+}
+function IndustriesVacancy({ value, onChange }) {
+  const options = useNaceOptions()
+  const industries = value.industries || []
+  function updateAt(i, code) {
+    const match = options.find((o) => o.value === code)
+    const next = [...industries]
+    next[i] = { nace_code: code || null, label: match ? match.label : null }
+    onChange({ ...value, industries: next })
+  }
+  return (
+    <div className="field-group">
+      {industries.map((entry, i) => (
+        <div key={i} className="entry-card">
+          <button type="button" className="entry-card-remove" onClick={() => onChange({ ...value, industries: industries.filter((_, j) => j !== i) })}>Remove</button>
+          <Select label="Industry" value={entry.nace_code} options={options} onChange={(code) => updateAt(i, code)} />
+        </div>
+      ))}
+      <button type="button" onClick={() => onChange({ ...value, industries: [...industries, { nace_code: null, label: null }] })}>
+        + Add industry
+      </button>
+    </div>
+  )
+}
+
+// --- unscored (v3 redesign, Phase 5): CAREER-NARRATIVE, CAREER-DEVELOPMENT,
+// TEAM-EVIDENCE -- free text, stored for human review, never scored (see
+// PROJECT_NOTES.md's Phase 2 entry -- matching_service.py excludes these
+// from matching entirely). Candidate side only: VacancyWorkshopPage filters
+// comparator_key "unscored" out of its rendered element list entirely,
+// since there is genuinely nothing for a vacancy to answer here.
+function UnscoredTextEditor({ value, onChange }) {
+  return (
+    <label className="field">
+      <textarea className="cv-input" value={value.text || ''} onChange={(e) => onChange({ ...value, text: e.target.value })} />
+    </label>
+  )
+}
+
 // --- tagged_list_overlap_skills/_occupation/_education (Phase 5) --
 // vacancy-side only; see this file's own top-of-file comment for why there
 // is no candidate-side entry for these three keys.
@@ -228,13 +417,32 @@ function RequiredEducationVacancy({ value, onChange }) {
   const [iscedFields, setIscedFields] = useState([])
   useEffect(() => { api.getIscedFields().then((fields) => setIscedFields(fields.map((f) => ({ value: f.code, label: f.label })))) }, [])
   return (
-    <RequirementListEditor
-      entries={value.required_education || []}
-      onChange={(entries) => onChange({ ...value, required_education: entries })}
-      codeField="isced_code"
-      picker={{ mode: 'select', label: 'Field of study', options: iscedFields }}
-      requirementLevelField="level" requirementLevels={['secondary', 'vocational', 'bachelor', 'master', 'phd', 'postdoc']}
-    />
+    <div className="field-group">
+      {/* v3 redesign (see PROJECT_NOTES.md): the conditional field-mismatch
+          rule Family 1's education scoring depends on -- required caps the
+          score hard on a field mismatch, preferred reduces it without
+          capping, open ignores field entirely. Left unset, the comparator
+          defaults to "open"; surfaced as an explicit, unset-by-default
+          choice rather than silently deciding a real scoring behaviour for
+          the company without them ever seeing it. */}
+      <Select
+        label="How strictly does this role require the field of study above?"
+        value={value.education_field_requirement}
+        options={[
+          { value: 'required', label: 'Required -- a field mismatch rules the candidate out' },
+          { value: 'preferred', label: 'Preferred -- a field mismatch reduces fit but does not rule anyone out' },
+          { value: 'open', label: "Open -- field of study doesn't matter, only the level does" },
+        ]}
+        onChange={(v) => onChange({ ...value, education_field_requirement: v })}
+      />
+      <RequirementListEditor
+        entries={value.required_education || []}
+        onChange={(entries) => onChange({ ...value, required_education: entries })}
+        codeField="isced_code"
+        picker={{ mode: 'select', label: 'Field of study', options: iscedFields }}
+        requirementLevelField="level" requirementLevels={['secondary', 'vocational', 'bachelor', 'master', 'phd']}
+      />
+    </div>
   )
 }
 
@@ -256,6 +464,11 @@ export const VALUE_EDITORS = {
   tagged_list_overlap_skills: { vacancy: RequiredSkillsVacancy },
   tagged_list_overlap_occupation: { vacancy: RequiredOccupationsVacancy },
   tagged_list_overlap_education: { vacancy: RequiredEducationVacancy },
+  ordinal_distance: { candidate: OrdinalDistanceCandidate, vacancy: OrdinalDistanceVacancy },
+  motivation_preferred_minimum: { candidate: MotivationPreferredMinimumCandidate, vacancy: MotivationPreferredMinimumVacancy },
+  esco_occupation_pick: { candidate: OccupationPickCandidate, vacancy: OccupationPickVacancy },
+  nace_industry_overlap: { candidate: IndustriesCandidate, vacancy: IndustriesVacancy },
+  unscored: { candidate: UnscoredTextEditor },
 }
 
 export function getValueEditor(comparatorKey, side) {

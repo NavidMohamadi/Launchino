@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Optional, Tuple
 
+from match_engine import alignment_bucket_for_percent
 from schemas import Alignment, OrdinalRange
 
 
@@ -57,3 +59,30 @@ def score_ordinal_range(
         clarification_required=True,
         distance_from_tolerance=distance,
     )
+
+
+def score_ordinal_distance(
+    candidate_level: Optional[int], vacancy_level: Optional[int],
+) -> Tuple[Alignment, str, Optional[float]]:
+    """Family 2 -- Preference/Culture-fit (v3 redesign, see PROJECT_NOTES.md):
+    a single candidate 1-5 preference against a single vacancy 1-5 actual
+    value, symmetric in both directions (unlike Family 1, over- and
+    under-shooting are equally penalized -- there is no "requirement" here,
+    just a distance). score = 100 - 20*|candidate-vacancy|, floored at 20%
+    (never 0% -- even a maximally distant preference match is still a
+    role, not a disqualification).
+
+    Used by every ENV element and TEAM-COLLAB-INTENSITY (Phase 3 migrated the
+    9 pre-existing ENV elements + TEAM-COLLAB-INTENSITY off
+    score_ordinal_range's 4-value preferred/tolerable format onto this
+    single-value shape, alongside the 4 ENV/RIASEC elements already born
+    into it in Phase 1/2 -- see PROJECT_NOTES.md).
+    """
+    if not isinstance(candidate_level, int) or not isinstance(vacancy_level, int):
+        # vacancy_level is "not_specified" (a real, documented value -- not a
+        # bug path) whenever a vacancy hasn't stated an actual level yet.
+        return Alignment.UNKNOWN, "Candidate or vacancy preference level is not specified.", None
+    distance = abs(candidate_level - vacancy_level)
+    percent = max(20.0, 100.0 - 20.0 * distance)
+    reason = f"Candidate and vacancy are {distance} scale point(s) apart ({percent:.0f}% preference match)."
+    return alignment_bucket_for_percent(percent), reason, percent

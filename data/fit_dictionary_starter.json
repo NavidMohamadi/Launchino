@@ -143,24 +143,21 @@
     "category": "TEAM",
     "label": "Timely team communication",
     "definition": "Shares job-relevant information clearly and at the right time.",
-    "candidate_question": "Describe a concrete situation that shows how you handle timely team communication in a group.",
-    "vacancy_question": "How important is timely team communication in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How consistently do you keep teammates informed about progress, risks, and blockers without needing to be reminded?",
+    "vacancy_question": "How consistently must someone in this role keep teammates informed about progress, risks, and blockers without needing to be reminded?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -169,24 +166,21 @@
     "category": "TEAM",
     "label": "Coordination",
     "definition": "Coordinates responsibilities, dependencies, timing, and handoffs.",
-    "candidate_question": "Describe a concrete situation that shows how you handle coordination in a group.",
-    "vacancy_question": "How important is coordination in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How confidently can you coordinate dependencies, responsibilities, and timing across several people?",
+    "vacancy_question": "How confidently must someone in this role coordinate dependencies, responsibilities, and timing across several people?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -195,24 +189,21 @@
     "category": "TEAM",
     "label": "Constructive disagreement",
     "definition": "Addresses disagreement directly and constructively.",
-    "candidate_question": "Describe a concrete situation that shows how you handle constructive disagreement in a group.",
-    "vacancy_question": "How important is constructive disagreement in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How confidently can you raise disagreement while keeping the discussion constructive?",
+    "vacancy_question": "How confidently must someone in this role raise disagreement while keeping the discussion constructive?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -221,24 +212,21 @@
     "category": "TEAM",
     "label": "Help seeking and support",
     "definition": "Asks for and offers help appropriately.",
-    "candidate_question": "Describe a concrete situation that shows how you handle help seeking and support in a group.",
-    "vacancy_question": "How important is help seeking and support in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How well do you judge when to solve something independently and when to seek or offer help?",
+    "vacancy_question": "How well must someone in this role judge when to solve something independently and when to seek or offer help?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -247,24 +235,21 @@
     "category": "TEAM",
     "label": "Feedback use",
     "definition": "Gives, receives, and acts on feedback.",
-    "candidate_question": "Describe a concrete situation that shows how you handle feedback use in a group.",
-    "vacancy_question": "How important is feedback use in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How actively do you seek, interpret, and apply useful feedback?",
+    "vacancy_question": "How actively must someone in this role seek, interpret, and apply useful feedback?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -273,24 +258,21 @@
     "category": "TEAM",
     "label": "Shared ownership",
     "definition": "Takes responsibility for the collective result, not only individual tasks.",
-    "candidate_question": "Describe a concrete situation that shows how you handle shared ownership in a group.",
-    "vacancy_question": "How important is shared ownership in this role, and what behaviour would demonstrate success?",
+    "candidate_question": "How comfortable are you taking responsibility for a shared outcome beyond only your assigned tasks?",
+    "vacancy_question": "How comfortable must someone in this role be taking responsibility for a shared outcome beyond only their assigned tasks?",
     "candidate_value_schema": {
-      "level": 0,
-      "example": "string",
-      "context": "string"
+      "level": "integer 0..4 (self-rated capability)"
     },
     "vacancy_value_schema": {
-      "required_level": 0,
-      "example": "string",
-      "selected_priority_rank": "integer 1..4|null",
+      "required_level": "integer 0..4|not_specified",
+      "example": "string|null",
       "activated": "boolean"
     },
     "evidence_rule": "Behavioural example; observation or documented evidence where available.",
     "comparator_key": "ordinal_requirement",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.1.0",
     "is_template": false,
     "activation_policy": "vacancy_activated"
   },
@@ -302,22 +284,16 @@
     "candidate_question": "What balance of independent and collaborative work do you prefer and tolerate?",
     "vacancy_question": "What proportion of the role is collaborative and how interdependent is the work?",
     "candidate_value_schema": {
-      "scale_id": "team_collaboration_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "team_collaboration_1_5",
-      "actual": "integer 1..5|not_specified",
-      "estimated_percent": "integer 0..100|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference and hiring-manager/team-member validation.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -326,25 +302,29 @@
     "category": "CAREER",
     "label": "Primary role direction",
     "definition": "The role direction the candidate most wants to pursue.",
-    "candidate_question": "What is your primary role direction for the next 12\u201324 months?",
+    "candidate_question": "What is your primary target occupation for the next 12-24 months?",
     "vacancy_question": "What is the clearest role family or occupational direction represented by this vacancy?",
     "candidate_value_schema": {
-      "values": [
-        "string"
-      ],
-      "ranked": true
+      "occupation": {
+        "raw_text": "string|null",
+        "esco_uri": "string|null",
+        "label": "string|null",
+        "confidence": "number 0..1|null"
+      },
+      "still_exploring": "boolean",
+      "open_to_adjacent": "boolean"
     },
     "vacancy_value_schema": {
-      "values": [
-        "string"
-      ],
-      "source": "job_description|hiring_manager|team_member"
+      "occupation": {
+        "esco_uri": "string",
+        "label": "string"
+      }
     },
     "evidence_rule": "Candidate self-report and vacancy validation.",
-    "comparator_key": "semantic_overlap",
+    "comparator_key": "esco_occupation_pick",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -353,25 +333,29 @@
     "category": "CAREER",
     "label": "Secondary role direction",
     "definition": "A second acceptable direction.",
-    "candidate_question": "What is your second acceptable role direction?",
+    "candidate_question": "What is your second acceptable target occupation?",
     "vacancy_question": "Which adjacent role directions could reasonably describe this opportunity?",
     "candidate_value_schema": {
-      "values": [
-        "string"
-      ],
-      "ranked": true
+      "occupation": {
+        "raw_text": "string|null",
+        "esco_uri": "string|null",
+        "label": "string|null",
+        "confidence": "number 0..1|null"
+      },
+      "still_exploring": "boolean",
+      "open_to_adjacent": "boolean"
     },
     "vacancy_value_schema": {
-      "values": [
-        "string"
-      ],
-      "source": "job_description|hiring_manager|team_member"
+      "occupation": {
+        "esco_uri": "string",
+        "label": "string"
+      }
     },
     "evidence_rule": "Candidate self-report and vacancy validation.",
-    "comparator_key": "semantic_overlap",
+    "comparator_key": "esco_occupation_pick",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -397,8 +381,8 @@
     "evidence_rule": "Candidate self-report and vacancy validation.",
     "comparator_key": "semantic_overlap",
     "sharing_status": "candidate_visible",
-    "active": true,
-    "version": "2.0.0",
+    "active": false,
+    "version": "2.1.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -424,8 +408,8 @@
     "evidence_rule": "Candidate self-report and vacancy validation.",
     "comparator_key": "semantic_overlap",
     "sharing_status": "candidate_visible",
-    "active": true,
-    "version": "2.0.0",
+    "active": false,
+    "version": "2.1.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -451,8 +435,8 @@
     "evidence_rule": "Candidate self-report and vacancy validation.",
     "comparator_key": "semantic_overlap",
     "sharing_status": "candidate_visible",
-    "active": true,
-    "version": "2.0.0",
+    "active": false,
+    "version": "2.1.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -464,22 +448,28 @@
     "candidate_question": "Which industries interest you?",
     "vacancy_question": "Which industry and product context does the role operate in?",
     "candidate_value_schema": {
-      "values": [
-        "string"
-      ],
-      "ranked": true
+      "industries": [
+        {
+          "raw_text": "string|null",
+          "nace_code": "string|null",
+          "label": "string|null",
+          "confidence": "number 0..1|null"
+        }
+      ]
     },
     "vacancy_value_schema": {
-      "values": [
-        "string"
-      ],
-      "source": "job_description|hiring_manager|team_member"
+      "industries": [
+        {
+          "nace_code": "string",
+          "label": "string"
+        }
+      ]
     },
     "evidence_rule": "Candidate self-report and vacancy validation.",
-    "comparator_key": "semantic_overlap",
+    "comparator_key": "nace_industry_overlap",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -487,9 +477,9 @@
     "element_id": "CAREER-DEVELOPMENT",
     "category": "CAREER",
     "label": "Development direction",
-    "definition": "Skills or experiences the candidate wants to develop.",
+    "definition": "Skills or experiences the candidate wants to develop -- shown for human review, never scored (see PROJECT_NOTES.md's v3 addendum: reverses the earlier plan to move this to Premium).",
     "candidate_question": "Which skills or experiences do you most want to develop next?",
-    "vacancy_question": "What will the person realistically learn in the first year?",
+    "vacancy_question": "(Not compared -- shown to a hiring manager only as context, same treatment as the career narrative question.)",
     "candidate_value_schema": {
       "values": [
         "string"
@@ -503,10 +493,10 @@
       "source": "job_description|hiring_manager|team_member"
     },
     "evidence_rule": "Candidate self-report and vacancy validation.",
-    "comparator_key": "semantic_overlap",
+    "comparator_key": "unscored",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "2.1.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -520,24 +510,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -551,24 +534,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -582,24 +558,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -613,24 +582,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -644,24 +606,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -675,24 +630,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -706,24 +654,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -737,24 +678,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -768,24 +702,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -799,24 +726,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -830,24 +750,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -861,24 +774,17 @@
     "candidate_value_schema": {
       "selected": "boolean",
       "priority_rank": "integer 1..5|null",
-      "scale_id": "motivation_supply_1_5",
-      "preferred_min": "integer 1..5|null",
-      "preferred_max": "integer 1..5|null",
-      "tolerable_min": "integer 1..5|null",
-      "tolerable_max": "integer 1..5|null",
-      "meaning": "string|null",
-      "example": "string|null"
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
     },
     "vacancy_value_schema": {
-      "scale_id": "motivation_supply_1_5",
-      "actual": "integer 1..5|not_specified",
-      "evidence": "string|null"
+      "actual_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate explanation; company must give concrete evidence rather than marketing language.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "motivation_preferred_minimum",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "candidate_selected"
   },
@@ -890,23 +796,16 @@
     "candidate_question": "What is your preferred and tolerable range for goal and role structure? Give an example.",
     "vacancy_question": "What is the actual level of goal and role structure in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_structure_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_structure_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -918,23 +817,16 @@
     "candidate_question": "What is your preferred and tolerable range for priority change? Give an example.",
     "vacancy_question": "What is the actual level of priority change in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_priority_change_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_priority_change_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -946,23 +838,16 @@
     "candidate_question": "What is your preferred and tolerable range for method autonomy? Give an example.",
     "vacancy_question": "What is the actual level of method autonomy in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_method_autonomy_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_method_autonomy_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -974,23 +859,16 @@
     "candidate_question": "What is your preferred and tolerable range for manager involvement? Give an example.",
     "vacancy_question": "What is the actual level of manager involvement in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_manager_involvement_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_manager_involvement_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1002,23 +880,16 @@
     "candidate_question": "What is your preferred and tolerable range for feedback frequency? Give an example.",
     "vacancy_question": "What is the actual level of feedback frequency in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_feedback_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_feedback_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1030,23 +901,16 @@
     "candidate_question": "What is your preferred and tolerable range for process maturity? Give an example.",
     "vacancy_question": "What is the actual level of process maturity in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_process_maturity_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_process_maturity_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1058,23 +922,16 @@
     "candidate_question": "What is your preferred and tolerable range for role reactivity? Give an example.",
     "vacancy_question": "What is the actual level of role reactivity in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_reactivity_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_reactivity_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1086,23 +943,16 @@
     "candidate_question": "What is your preferred and tolerable range for role breadth? Give an example.",
     "vacancy_question": "What is the actual level of role breadth in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_role_breadth_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_role_breadth_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1114,23 +964,16 @@
     "candidate_question": "What is your preferred and tolerable range for stakeholder exposure? Give an example.",
     "vacancy_question": "What is the actual level of stakeholder exposure in this role? Give an example.",
     "candidate_value_schema": {
-      "scale_id": "env_stakeholder_1_5",
-      "preferred_min": "integer 1..5",
-      "preferred_max": "integer 1..5",
-      "tolerable_min": "integer 1..5",
-      "tolerable_max": "integer 1..5",
-      "example": "string|null"
+      "level": "integer 1..5"
     },
     "vacancy_value_schema": {
-      "scale_id": "env_stakeholder_1_5",
-      "actual": "integer 1..5|not_specified",
-      "example": "string|null"
+      "required_level": "integer 1..5|not_specified"
     },
     "evidence_rule": "Candidate preference; hiring-manager and team-member reality check where possible.",
-    "comparator_key": "ordinal_range",
+    "comparator_key": "ordinal_distance",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.0.0",
+    "version": "3.0.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1144,7 +987,7 @@
     "candidate_value_schema": {
       "entries": [
         {
-          "level": "secondary|vocational|bachelor|master|phd|postdoc|other",
+          "level": "secondary|vocational|bachelor|master|phd|other",
           "institution": {
             "ror_id": "string|null",
             "name": "string"
@@ -1156,7 +999,8 @@
           },
           "start_date": "YYYY-MM-DD",
           "end_date": "YYYY-MM-DD|null",
-          "status": "completed|currently_studying|did_not_complete"
+          "status": "completed|currently_studying|did_not_complete",
+          "consider": "boolean (default true) -- whether this entry is eligible for matching"
         }
       ]
     },
@@ -1164,16 +1008,17 @@
       "required_education": [
         {
           "isced_code": "string",
-          "level": "secondary|vocational|bachelor|master|phd|postdoc",
+          "level": "secondary|vocational|bachelor|master|phd",
           "requirement": "required|preferred"
         }
-      ]
+      ],
+      "education_field_requirement": "required|preferred|open"
     },
     "evidence_rule": "Candidate report; field-of-study mapped to ISCED-F 2013 by AI with a confidence score the candidate must confirm or correct when low (see PROJECT_NOTES.md).",
     "comparator_key": "tagged_list_overlap_education",
     "sharing_status": "candidate_visible",
     "active": true,
-    "version": "2.3.0",
+    "version": "2.4.0",
     "is_template": false,
     "activation_policy": "always"
   },
@@ -1294,6 +1139,278 @@
     "sharing_status": "candidate_visible",
     "active": true,
     "version": "2.3.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "TEAM-EVIDENCE",
+    "category": "TEAM",
+    "label": "Team evidence",
+    "definition": "Free-text example illustrating the six self-rated teamwork capabilities above -- shown to a human reviewer for context, never itself scored.",
+    "candidate_question": "Think of a recent team project. Briefly describe one situation that shows how you communicated, coordinated, handled a difficulty, or supported the shared result.",
+    "vacancy_question": "(Not compared -- shown to a hiring manager only as context alongside the candidate's six self-ratings.)",
+    "candidate_value_schema": {
+      "text": "string"
+    },
+    "vacancy_value_schema": {},
+    "evidence_rule": "Free-text candidate example; not independently verified, shown as illustrative context only alongside the self-ratings.",
+    "comparator_key": "unscored",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "vacancy_activated"
+  },
+  {
+    "element_id": "CAREER-INTEREST-REALISTIC",
+    "category": "CAREER",
+    "label": "Realistic interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Working with equipment, physical systems, materials, tools, or other tangible processes.",
+    "candidate_question": "Working with equipment, physical systems, materials, tools, or other tangible processes",
+    "vacancy_question": "How much does this role's regular work involve working with equipment, physical systems, materials, tools, or other tangible processes?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INTEREST-INVESTIGATIVE",
+    "category": "CAREER",
+    "label": "Investigative interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Analysing evidence, diagnosing causes, researching questions, or solving complex technical problems.",
+    "candidate_question": "Analysing evidence, diagnosing causes, researching questions, or solving complex technical problems",
+    "vacancy_question": "How much does this role's regular work involve analysing evidence, diagnosing causes, researching questions, or solving complex technical problems?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INTEREST-ARTISTIC",
+    "category": "CAREER",
+    "label": "Artistic interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Creating original concepts, designs, written or visual content, or new ways of expressing ideas.",
+    "candidate_question": "Creating original concepts, designs, written or visual content, or new ways of expressing ideas",
+    "vacancy_question": "How much does this role's regular work involve creating original concepts, designs, written or visual content, or new ways of expressing ideas?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INTEREST-SOCIAL",
+    "category": "CAREER",
+    "label": "Social interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Teaching, advising, supporting, developing, or helping people directly.",
+    "candidate_question": "Teaching, advising, supporting, developing, or helping people directly",
+    "vacancy_question": "How much does this role's regular work involve teaching, advising, supporting, developing, or helping people directly?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INTEREST-ENTERPRISING",
+    "category": "CAREER",
+    "label": "Enterprising interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Influencing decisions, persuading others, initiating action, or leading commercial or organisational efforts.",
+    "candidate_question": "Influencing decisions, persuading others, initiating action, or leading commercial or organisational efforts",
+    "vacancy_question": "How much does this role's regular work involve influencing decisions, persuading others, initiating action, or leading commercial or organisational efforts?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-INTEREST-CONVENTIONAL",
+    "category": "CAREER",
+    "label": "Conventional interest",
+    "definition": "RIASEC interest question (low combined weight, ~5-10% of overall match -- see PROJECT_NOTES.md): Organising information, maintaining accuracy, following procedures, and bringing order to detailed work.",
+    "candidate_question": "Organising information, maintaining accuracy, following procedures, and bringing order to detailed work",
+    "vacancy_question": "How much does this role's regular work involve organising information, maintaining accuracy, following procedures, and bringing order to detailed work?",
+    "candidate_value_schema": {
+      "level": "integer 1..5 (1 = I would prefer to avoid it, 5 = I would like it to be a major part)"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; vacancy side is a hiring-manager/team-member estimate of how much the role's real day-to-day work involves this.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "MOT-CHALLENGE",
+    "category": "MOT",
+    "label": "Growth challenge",
+    "definition": "Being stretched by work that is difficult but realistically learnable, with adequate support.",
+    "candidate_question": "If growth challenge is in your top five priorities, state your preferred level and the lowest you'd accept on the 1-5 motivation scale.",
+    "vacancy_question": "How frequently does this role require the person to work beyond what they already know, with realistic support to learn?",
+    "candidate_value_schema": {
+      "selected": "boolean",
+      "priority_rank": "integer 1..5|null",
+      "preferred_level": "integer 1..5|null",
+      "minimum_acceptable_level": "integer 1..5|null"
+    },
+    "vacancy_value_schema": {
+      "actual_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate self-report; the vacancy-side 'with realistic support' framing exists specifically so companies don't conflate poor onboarding/chaos with genuine growth challenge.",
+    "comparator_key": "motivation_preferred_minimum",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "candidate_selected"
+  },
+  {
+    "element_id": "ENV-PRECISION",
+    "category": "ENV",
+    "label": "Precision",
+    "definition": "Reliance on careful checking, detailed accuracy, and low tolerance for errors.",
+    "candidate_question": "How much would you like your work to require careful checking, detailed accuracy, and a low tolerance for errors?",
+    "vacancy_question": "How strongly does success in this role depend on careful checking, detailed accuracy, and a low tolerance for errors?",
+    "candidate_value_schema": {
+      "level": "integer 1..5"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager/team-member estimate of the role's actual reality on the vacancy side.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-IDEA-EXECUTION",
+    "category": "ENV",
+    "label": "Idea execution vs. generation",
+    "definition": "Where work sits between implementing/improving established approaches and creating substantially new ones.",
+    "candidate_question": "Where would you prefer your work to sit between implementing/improving established approaches, and creating substantially new approaches? (1 = mostly implement established, 5 = mostly generate new approaches)",
+    "vacancy_question": "Where does this role sit between implementing/improving established approaches, and creating substantially new approaches?",
+    "candidate_value_schema": {
+      "level": "integer 1..5"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager/team-member estimate of the role's actual reality on the vacancy side.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-NOVELTY",
+    "category": "ENV",
+    "label": "Novelty",
+    "definition": "Where work problems sit between familiar/clearly defined and novel/initially ambiguous.",
+    "candidate_question": "Where do you prefer your work problems to sit between familiar/clearly defined, and novel/initially ambiguous? (1 = mostly familiar, 5 = mostly open-ended)",
+    "vacancy_question": "Where do this role's problems typically sit between familiar/clearly defined, and novel/initially ambiguous?",
+    "candidate_value_schema": {
+      "level": "integer 1..5"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager/team-member estimate of the role's actual reality on the vacancy side.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "ENV-COMMUNICATION-DIRECTNESS",
+    "category": "ENV",
+    "label": "Communication directness",
+    "definition": "How direct colleagues are when giving feedback, raising problems, or disagreeing.",
+    "candidate_question": "How direct do you prefer colleagues to be when giving feedback, raising problems, or disagreeing with you? (1 = very diplomatic, 5 = very direct)",
+    "vacancy_question": "How direct is feedback and disagreement in this team, in practice?",
+    "candidate_value_schema": {
+      "level": "integer 1..5"
+    },
+    "vacancy_value_schema": {
+      "required_level": "integer 1..5|not_specified"
+    },
+    "evidence_rule": "Candidate preference; hiring-manager/team-member estimate of the role's actual reality on the vacancy side.",
+    "comparator_key": "ordinal_distance",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
+    "is_template": false,
+    "activation_policy": "always"
+  },
+  {
+    "element_id": "CAREER-NARRATIVE",
+    "category": "CAREER",
+    "label": "Career narrative",
+    "definition": "Free-text context on which activities/problem types the candidate wants more or less of -- shown for human review, never scored.",
+    "candidate_question": "Which activities or types of problems would you especially like to do more often, and which activities should not dominate your next role?",
+    "vacancy_question": "(Not compared -- shown to a hiring manager only as context alongside the candidate's structured career-direction answers.)",
+    "candidate_value_schema": {
+      "text": "string"
+    },
+    "vacancy_value_schema": {},
+    "evidence_rule": "Free-text candidate self-report; not independently verified, shown as illustrative context only.",
+    "comparator_key": "unscored",
+    "sharing_status": "candidate_visible",
+    "active": true,
+    "version": "1.0.0",
     "is_template": false,
     "activation_policy": "always"
   }

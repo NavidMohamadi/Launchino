@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, Dict, Optional, Tuple
 
 from schemas import (
     ActivationPolicy, FitElement, NotScoredReason, UnknownReason, ValueStatus,
@@ -72,3 +73,51 @@ def resolve_scope(
         value_status=ValueStatus.ANSWERED,
         explanation="The element is active and both sides contain an answer suitable for comparison.",
     )
+
+
+def _side_resolvable_policy(side: str) -> ActivationPolicy:
+    return ActivationPolicy.CANDIDATE_SELECTED if side == "candidate" else ActivationPolicy.VACANCY_ACTIVATED
+
+
+def _side_not_scored_reason(side: str) -> NotScoredReason:
+    return NotScoredReason.NOT_TOP_FIVE if side == "candidate" else NotScoredReason.NOT_ACTIVATED_FOR_VACANCY
+
+
+def resolve_extracted_value_status(
+    element: FitElement,
+    *,
+    side: str,
+    value_status: ValueStatus,
+    unknown_reason: Optional[UnknownReason],
+    value_payload: Dict[str, Any],
+    selected_or_activated: bool,
+) -> Tuple[ValueStatus, Optional[UnknownReason], Optional[NotScoredReason]]:
+    """AI-extraction safeguard (v3 redesign, see PROJECT_NOTES.md): the
+    extraction model may only PROPOSE a value_status; this makes the final
+    not_scored/unknown decision instead, closing the gap where correctness
+    previously relied only on prompt wording (see extraction_service.py's
+    VACANCY_STATUS_RULE / CV extraction's equivalent instructions).
+
+    not_scored is only ever structurally valid for the ONE activation policy
+    this side can actually decide for itself -- CANDIDATE_SELECTED via the
+    candidate's own "selected" flag, VACANCY_ACTIVATED via the vacancy's own
+    "activated" flag (the other policy is a fact only the OTHER side could
+    ever assert, e.g. a vacancy extraction has no way to know whether some
+    future candidate will pick a given MOT priority as a top-five, so
+    not_scored/not_top_five is never a vacancy-side call to make). Every
+    other case is corrected to answered/unknown purely from whether real
+    data is present, regardless of what value_status the model itself
+    proposed -- if its own proposal already agrees with that correction, its
+    more specific unknown_reason is kept rather than replaced with a generic
+    fallback; if it disagrees, the reason is generic because its own
+    reasoning can no longer be trusted here.
+    """
+    if element.activation_policy == _side_resolvable_policy(side) and not selected_or_activated:
+        return ValueStatus.NOT_SCORED, None, _side_not_scored_reason(side)
+
+    corrected_status = ValueStatus.ANSWERED if value_payload else ValueStatus.UNKNOWN
+    if corrected_status == value_status:
+        return corrected_status, (unknown_reason if corrected_status == ValueStatus.UNKNOWN else None), None
+    if corrected_status == ValueStatus.UNKNOWN:
+        return ValueStatus.UNKNOWN, UnknownReason.REQUIRES_VERIFICATION, None
+    return ValueStatus.ANSWERED, None, None

@@ -13,12 +13,37 @@ const UNKNOWN_REASONS = [
 
 const NOT_SCORED_REASONS = ['not_top_five', 'not_activated_for_vacancy', 'out_of_scope_by_design']
 
+const REASON_LABELS = {
+  candidate_not_answered: 'Candidate has not answered yet',
+  vacancy_not_specified: 'Vacancy has not specified this yet',
+  candidate_declined: 'Candidate declined to answer',
+  assessment_not_completed: 'Assessment not yet completed',
+  conflicting_information: 'Conflicting information found',
+  requires_verification: 'Requires verification',
+  not_top_five: 'Not one of the candidate’s top-five priorities',
+  not_activated_for_vacancy: 'Not activated for this vacancy',
+  out_of_scope_by_design: 'Out of scope by design',
+}
+
 function defaultUnknownReason(side) {
   return side === 'vacancy' ? 'vacancy_not_specified' : 'candidate_not_answered'
 }
 
 function defaultNotScoredReason(side) {
   return side === 'vacancy' ? 'not_activated_for_vacancy' : 'not_top_five'
+}
+
+// v3 redesign (see PROJECT_NOTES.md): four distinct labels across the two
+// non-answered states, split by side -- a company simply not having
+// answered yet ("not yet known") is a genuinely different situation from a
+// role not needing something at all ("not relevant"), just as a candidate
+// not knowing is different from something not applying to them.
+function unknownLabel(side) {
+  return side === 'vacancy' ? 'Not yet known' : "Don't know"
+}
+
+function notScoredLabel(side) {
+  return side === 'vacancy' ? 'Not relevant to this role' : 'Not applicable to me'
 }
 
 export default function TriStateAnswer({ side, answer, onChange, children }) {
@@ -51,7 +76,7 @@ export default function TriStateAnswer({ side, answer, onChange, children }) {
               checked={status === option}
               onChange={() => setStatus(option)}
             />
-            {option === 'answered' ? 'Answered' : option === 'unknown' ? "Don't know" : 'Not applicable'}
+            {option === 'answered' ? 'Answered' : option === 'unknown' ? unknownLabel(side) : notScoredLabel(side)}
           </label>
         ))}
       </div>
@@ -63,7 +88,7 @@ export default function TriStateAnswer({ side, answer, onChange, children }) {
           value={answer.unknown_reason || defaultUnknownReason(side)}
           onChange={(e) => onChange({ ...answer, unknown_reason: e.target.value })}
         >
-          {UNKNOWN_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+          {UNKNOWN_REASONS.map((r) => <option key={r} value={r}>{REASON_LABELS[r]}</option>)}
         </select>
       )}
 
@@ -72,7 +97,7 @@ export default function TriStateAnswer({ side, answer, onChange, children }) {
           value={answer.not_scored_reason || defaultNotScoredReason(side)}
           onChange={(e) => onChange({ ...answer, not_scored_reason: e.target.value })}
         >
-          {NOT_SCORED_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+          {NOT_SCORED_REASONS.map((r) => <option key={r} value={r}>{REASON_LABELS[r]}</option>)}
         </select>
       )}
     </div>

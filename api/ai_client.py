@@ -36,6 +36,7 @@ MODEL_FOR_TASK: dict[str, str] = {
     "skill_mapping": "claude-haiku-4-5-20251001",
     "occupation_mapping": "claude-haiku-4-5-20251001",
     "program_mapping": "claude-haiku-4-5-20251001",
+    "industry_mapping": "claude-haiku-4-5-20251001",
 }
 
 

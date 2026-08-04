@@ -27,20 +27,41 @@ from schemas import MatchConfiguration  # noqa: E402
 # the total, see api/candidate_service.py). Real element_ids + minimal valid
 # values for each real candidate_value_schema shape in
 # data/fit_dictionary_starter.json.
+#
+# CAREER-PROBLEM-TYPES/DESIRED-ACTIVITIES/AVOIDED-ACTIVITIES are deliberately
+# absent (v3 redesign, see PROJECT_NOTES.md): deactivated (active=false), so
+# they're excluded from load_dictionary entirely and would never count here
+# even if answered. CAREER-PRIMARY-ROLE/SECONDARY-ROLE/CAREER-INDUSTRIES use
+# their new structured ESCO/NACE shapes, not the old free-text "values" list.
 _TEAM_CAREER_ENV_ANSWERS = [
-    {"element_id": "TEAM-COLLAB-INTENSITY",
-     "value": {"preferred_min": 2, "preferred_max": 4, "tolerable_min": 1, "tolerable_max": 5}},
+    {"element_id": "TEAM-COLLAB-INTENSITY", "value": {"level": 3}},
+    {"element_id": "CAREER-PRIMARY-ROLE", "value": {
+        "occupation": {"raw_text": "Software Engineer", "esco_uri": None, "label": None, "confidence": None},
+        "still_exploring": False, "open_to_adjacent": False,
+    }},
+    {"element_id": "CAREER-SECONDARY-ROLE", "value": {
+        "occupation": {"raw_text": "Data Analyst", "esco_uri": None, "label": None, "confidence": None},
+        "still_exploring": False, "open_to_adjacent": False,
+    }},
+    {"element_id": "CAREER-INDUSTRIES", "value": {
+        "industries": [{"raw_text": "Technology", "nace_code": None, "label": None, "confidence": None}],
+    }},
+    {"element_id": "CAREER-DEVELOPMENT", "value": {"values": ["example"], "ranked": True}},
+    {"element_id": "CAREER-NARRATIVE", "value": {"text": "Would like more architecture work, less on-call."}},
 ] + [
-    {"element_id": eid, "value": {"values": ["example"], "ranked": True}}
-    for eid in [
-        "CAREER-PRIMARY-ROLE", "CAREER-SECONDARY-ROLE", "CAREER-PROBLEM-TYPES", "CAREER-DESIRED-ACTIVITIES",
-        "CAREER-AVOIDED-ACTIVITIES", "CAREER-INDUSTRIES", "CAREER-DEVELOPMENT",
-    ]
-] + [
-    {"element_id": eid, "value": {"preferred_min": 2, "preferred_max": 4, "tolerable_min": 1, "tolerable_max": 5}}
+    {"element_id": eid, "value": {"level": 3}}
     for eid in [
         "ENV-STRUCTURE", "ENV-PRIORITY-CHANGE", "ENV-METHOD-AUTONOMY", "ENV-MANAGER-INVOLVEMENT",
         "ENV-FEEDBACK", "ENV-PROCESS-MATURITY", "ENV-REACTIVITY", "ENV-ROLE-BREADTH", "ENV-STAKEHOLDER",
+    ]
+] + [
+    {"element_id": eid, "value": {"level": 3}}
+    for eid in ["ENV-PRECISION", "ENV-IDEA-EXECUTION", "ENV-NOVELTY", "ENV-COMMUNICATION-DIRECTNESS"]
+] + [
+    {"element_id": eid, "value": {"level": 3}}
+    for eid in [
+        "CAREER-INTEREST-REALISTIC", "CAREER-INTEREST-INVESTIGATIVE", "CAREER-INTEREST-ARTISTIC",
+        "CAREER-INTEREST-SOCIAL", "CAREER-INTEREST-ENTERPRISING", "CAREER-INTEREST-CONVENTIONAL",
     ]
 ]
 _PRACT_ANSWERS = [
@@ -291,12 +312,13 @@ def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
         assert body["overall_percent_complete"] == 0.0
         assert body["premium_ready"] is False
 
-        # Answer every real ALWAYS-activated element (PRACT+TEAM+CAREER+ENV+
-        # EDU+CAP+TASK = 27 submitted items; MOT stays unselected, 0 active
+        # Answer every real ALWAYS-activated element (PRACT 7 + TEAM/CAREER/ENV
+        # 25 [v3 redesign: 1 TEAM + 5 CAREER + 9 old ENV + 4 new ENV + 6 RIASEC]
+        # + EDU/CAP/TASK 3 = 35 submitted items; MOT stays unselected, 0 active
         # there, doesn't count) -- a genuinely complete (100%) profile must
         # cross any threshold <=100%. TASK-YEARS isn't submitted directly (see
         # _EDU_CAP_TASK_ANSWERS's own comment) but is auto-derived from
-        # TASK-EXPERIENCE, so values_stored is 28, one more than submitted.
+        # TASK-EXPERIENCE, so values_stored is 36, one more than submitted.
         all_answers = _PRACT_ANSWERS + _TEAM_CAREER_ENV_ANSWERS + _EDU_CAP_TASK_ANSWERS
         r = client.post(f"/candidates/{talent_id}/survey", headers=headers, json={
             "values": [
@@ -305,7 +327,7 @@ def test_premium_ready_flips_as_real_coverage_crosses_the_real_threshold():
             ],
         })
         assert r.status_code == 201, r.text
-        assert r.json()["values_stored"] == 28
+        assert r.json()["values_stored"] == 36
 
         r = client.get(f"/candidates/{talent_id}/completion", headers=headers)
         body = r.json()

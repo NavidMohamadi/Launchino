@@ -19,16 +19,49 @@ ALIGNMENT_SCORE = {
 }
 
 
-def score_ordinal_requirement(candidate_level: Optional[int], required_level: Optional[int]) -> Tuple[Alignment, str]:
-    """Current capability alignment only; trainability does not add points."""
-    if candidate_level is None or required_level is None:
-        return Alignment.UNKNOWN, "Candidate or vacancy level is not specified."
+def alignment_bucket_for_percent(percent: float) -> Alignment:
+    """Maps a continuous 0-100 score onto the 4 legacy discrete Alignment labels,
+    for display/critical-flag purposes only (v3 redesign, see PROJECT_NOTES.md).
+
+    Family 1/2/3 comparators compute real percentages (e.g. Family 1's
+    max(0, 100-25*shortfall) needs 5 distinct values: 100/75/50/25/0), finer
+    than the 4 discrete buckets this system predates. Rather than widen
+    Alignment itself (used throughout persistence/UI), the continuous percent
+    becomes the authoritative score and this derives a label from it, using
+    the midpoints between the 4 buckets' original anchor values (100/66.7/
+    33.3/0) as boundaries -- so an unchanged old-style exact-bucket result
+    (e.g. ALIGNED=100) still buckets to the same label as before.
+    """
+    if percent >= 83.335:
+        return Alignment.ALIGNED
+    if percent >= 50.0:
+        return Alignment.POTENTIALLY_ALIGNED
+    if percent >= 16.665:
+        return Alignment.WEAK_ALIGNMENT
+    return Alignment.MISALIGNED
+
+
+def score_ordinal_requirement(candidate_level: Optional[int], required_level: Optional[int]) -> Tuple[Alignment, str, Optional[float]]:
+    """Family 1 -- Capability/Requirement (v3 redesign, see PROJECT_NOTES.md):
+    exceeding the requirement is never penalized; falling short is a real,
+    serious gap, scored as a proportional shortfall with a full 0% floor
+    (unlike Family 2's preference distance, which floors at 20%).
+
+    Returns (alignment, reason, score_percent) -- score_percent is the
+    authoritative 0-100 value; alignment is only the display bucket derived
+    from it via alignment_bucket_for_percent.
+    """
+    if not isinstance(candidate_level, int) or not isinstance(required_level, int):
+        # required_level may legitimately be the literal string "not_specified"
+        # (a real, documented value, not a bug path) when a vacancy hasn't
+        # stated a requirement yet.
+        return Alignment.UNKNOWN, "Candidate or vacancy level is not specified.", None
     if candidate_level >= required_level:
-        return Alignment.ALIGNED, "Candidate meets or exceeds the stated current level."
-    gap = required_level - candidate_level
-    if gap == 1:
-        return Alignment.WEAK_ALIGNMENT, "Candidate is one level below the stated current requirement."
-    return Alignment.MISALIGNED, "Candidate is more than one level below the stated current requirement."
+        return Alignment.ALIGNED, "Candidate meets or exceeds the stated required level.", 100.0
+    shortfall = required_level - candidate_level
+    percent = max(0.0, 100.0 - 25.0 * shortfall)
+    reason = f"Candidate is {shortfall} level(s) below the stated requirement ({percent:.0f}% capability match)."
+    return alignment_bucket_for_percent(percent), reason, percent
 
 
 def assess_bridgeability(*, trainability_window: TrainabilityWindow, reviewer_status: BridgeabilityStatus, reviewer_note: Optional[str]) -> tuple[BridgeabilityStatus, str]:
@@ -50,12 +83,21 @@ def make_item_result(
     unknown_reason: UnknownReason = UnknownReason.REQUIRES_VERIFICATION,
     bridgeability_status: BridgeabilityStatus = BridgeabilityStatus.NOT_APPLICABLE,
     bridgeability_note: Optional[str] = None,
+    score_percent: Optional[float] = None,
 ) -> ItemResult:
+    """score_percent (0-100, v3 redesign): Family 1/2/3 comparators compute a
+    real continuous percentage rather than picking one of the 4 discrete
+    Alignment buckets' fixed scores -- when given, it is the authoritative
+    score (converted to this model's 0-3 scale); alignment is then only the
+    display bucket the comparator already derived from that same percentage
+    via alignment_bucket_for_percent. Omitted entirely, behavior is unchanged
+    from before this redesign: score comes from ALIGNMENT_SCORE[alignment]."""
     value_status = ValueStatus.UNKNOWN if alignment == Alignment.UNKNOWN else ValueStatus.ANSWERED
     critical_review = requirement_type == RequirementType.CRITICAL and alignment in {Alignment.MISALIGNED, Alignment.UNKNOWN}
+    score = ALIGNMENT_SCORE[alignment] if score_percent is None else round(score_percent / 100.0 * 3.0, 4)
     return ItemResult(
         talent_id=talent_id, vacancy_id=vacancy_id, element_id=element_id, category=category,
-        value_status=value_status, alignment=alignment, score=ALIGNMENT_SCORE[alignment],
+        value_status=value_status, alignment=alignment, score=score,
         item_importance=item_importance, requirement_type=requirement_type,
         evidence_quality=evidence_quality, reason=reason,
         unknown_reason=unknown_reason if value_status == ValueStatus.UNKNOWN else None,

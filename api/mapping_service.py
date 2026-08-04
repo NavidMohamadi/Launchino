@@ -38,7 +38,7 @@ from typing import Any, Dict, List, Optional
 from mapping_schemas import MappingResponse, MappingResult
 
 from api import REPO_ROOT, ai_client
-from api.reference_search import load_esco_occupations, load_esco_skills, load_isced_narrow_fields
+from api.reference_search import load_esco_occupations, load_esco_skills, load_isced_narrow_fields, load_nace_sections
 from api.text_search import shortlist_by_text_similarity
 
 # Below this confidence, or when nothing matched at all, the candidate must
@@ -134,3 +134,20 @@ def map_program_to_isced(raw_term: str, *, candidate_id: Optional[str] = None) -
         user=user, response_model=MappingResponse, task="program_mapping", candidate_id=candidate_id,
     )
     return _to_result(response, valid_codes={item["code"] for item in fields})
+
+
+def map_industry_to_nace(raw_term: str, *, candidate_id: Optional[str] = None) -> MappingResult:
+    # Same "full fixed list, no shortlist stage" shape as map_program_to_isced
+    # -- only 21 NACE sections, small enough to send in full (see
+    # data/reference/nace_industries.json).
+    sections = load_nace_sections()
+    user = _fill(
+        _load_prompt("P25_industry_nace_mapping.txt"), RAW_TERM=raw_term, NACE_SECTIONS_JSON=json.dumps(sections),
+    )
+    user += f"\n\n{TOOL_OUTPUT_INSTRUCTIONS}"
+    response = ai_client.call_claude_structured(
+        model=ai_client.MODEL_FOR_TASK["industry_mapping"],
+        system="You are the SHEXON taxonomy-mapping assistant described below.",
+        user=user, response_model=MappingResponse, task="industry_mapping", candidate_id=candidate_id,
+    )
+    return _to_result(response, valid_codes={item["code"] for item in sections})

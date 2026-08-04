@@ -83,12 +83,29 @@ def _env_element() -> FitElement:
     )
 
 
+def _team_element() -> FitElement:
+    return _element(
+        element_id="TEAM-CONFLICT", category=Category.TEAM, activation_policy="vacancy_activated",
+        comparator_key="ordinal_requirement", candidate_value_schema={"level": "integer 1..5"},
+        vacancy_value_schema={"required_level": "integer 1..5", "activated": "boolean"},
+    )
+
+
+def _mot_element() -> FitElement:
+    return _element(
+        element_id="MOT-LEARN", category=Category.MOT, activation_policy="candidate_selected",
+        comparator_key="motivation_preferred_minimum",
+        candidate_value_schema={"selected": "boolean", "preferred_level": "integer 1..5", "minimum_acceptable_level": "integer 1..5"},
+        vacancy_value_schema={"actual_level": "integer 1..5"},
+    )
+
+
 def test_model_for_task_mapping_is_correct_per_task():
     sonnet_tasks = {"cv_extraction", "vacancy_extraction", "match_explanation"}
     haiku_tasks = {
         "gap_questions", "clarification_questions", "source_classification",
         "duplicate_review_flagging", "sponsor_review_flagging",
-        "skill_mapping", "occupation_mapping", "program_mapping",
+        "skill_mapping", "occupation_mapping", "program_mapping", "industry_mapping",
     }
     assert set(ai_client.MODEL_FOR_TASK) == sonnet_tasks | haiku_tasks
     for task in sonnet_tasks:
@@ -334,3 +351,132 @@ def test_cv_extraction_basic_info_defaults_to_none_when_absent():
         result = run_cv_extraction(candidate_id="T-1", cv_text="... a CV with no contact info ...", dictionary={})
 
     assert result.basic_info is None
+
+
+# --- Phase 4: AI-extraction safeguard (v3 redesign, see PROJECT_NOTES.md) --
+# the extraction model may only PROPOSE a value_status; the activation
+# resolver (code, not the model) makes the final not_scored/unknown
+# decision. These confirm the safeguard is actually wired into
+# run_cv_extraction/run_vacancy_extraction end to end, not just unit-tested
+# in isolation (see tests/test_activation.py's resolve_extracted_value_status
+# tests for the underlying logic).
+
+def test_vacancy_extraction_corrects_wrongly_answered_deactivated_team_element():
+    # The model answered TEAM-CONFLICT with activated=false in its own
+    # proposed value -- structurally impossible (not activated for this
+    # vacancy means not_scored, regardless of the model's own value_status).
+    canned = {
+        "extracted_elements": [
+            {
+                "value": {
+                    "vacancy_id": "V-1", "element_id": "TEAM-CONFLICT",
+                    "value": {"required_level": 4, "activated": False},
+                    "value_status": "answered", "source_type": "ai_extraction",
+                },
+                "source_quote": "n/a", "source_url": "shexon://vacancy-description-extraction",
+                "extraction_confidence": 0.5, "source_snapshot_id": "shexon-manual-extraction",
+            }
+        ],
+    }
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_vacancy_extraction(
+            vacancy_id="V-1", vacancy_text="n/a", dictionary={"TEAM-CONFLICT": _team_element()},
+        )
+
+    element = result.extracted_elements[0]
+    assert element.value.value_status.value == "not_scored"
+    assert element.value.not_scored_reason.value == "not_activated_for_vacancy"
+    assert element.value.value == {}
+
+
+def test_vacancy_extraction_keeps_activated_team_element_answered():
+    canned = {
+        "extracted_elements": [
+            {
+                "value": {
+                    "vacancy_id": "V-1", "element_id": "TEAM-CONFLICT",
+                    "value": {"required_level": 4, "activated": True},
+                    "value_status": "answered", "source_type": "ai_extraction",
+                },
+                "source_quote": "n/a", "source_url": "shexon://vacancy-description-extraction",
+                "extraction_confidence": 0.5, "source_snapshot_id": "shexon-manual-extraction",
+            }
+        ],
+    }
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_vacancy_extraction(
+            vacancy_id="V-1", vacancy_text="n/a", dictionary={"TEAM-CONFLICT": _team_element()},
+        )
+
+    element = result.extracted_elements[0]
+    assert element.value.value_status.value == "answered"
+    assert element.value.value == {"required_level": 4, "activated": True}
+
+
+def test_vacancy_extraction_never_marks_motivation_element_not_scored():
+    # A vacancy extraction has no way to know whether any future candidate
+    # will pick this MOT priority as a top-five -- even if the model wrongly
+    # proposed not_scored, the code corrects it since real data is present.
+    canned = {
+        "extracted_elements": [
+            {
+                "value": {
+                    "vacancy_id": "V-1", "element_id": "MOT-LEARN",
+                    "value": {"actual_level": 4},
+                    "value_status": "not_scored", "not_scored_reason": "out_of_scope_by_design",
+                    "source_type": "ai_extraction",
+                },
+                "source_quote": "n/a", "source_url": "shexon://vacancy-description-extraction",
+                "extraction_confidence": 0.5, "source_snapshot_id": "shexon-manual-extraction",
+            }
+        ],
+    }
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_vacancy_extraction(
+            vacancy_id="V-1", vacancy_text="n/a", dictionary={"MOT-LEARN": _mot_element()},
+        )
+
+    element = result.extracted_elements[0]
+    assert element.value.value_status.value == "answered"
+    assert element.value.value == {"actual_level": 4}
+
+
+def test_cv_extraction_corrects_wrongly_not_scored_always_element():
+    # EDU-HISTORY is ALWAYS-active -- not_scored is never structurally valid
+    # regardless of what the model proposed; real data present -> answered.
+    canned = {
+        "extracted_elements": [
+            {
+                "value": {
+                    "talent_id": "T-1", "element_id": "EDU-HISTORY",
+                    "value": {"entries": [{"level": "bachelor"}]},
+                    "value_status": "not_scored", "not_scored_reason": "out_of_scope_by_design",
+                    "source_type": "ai_extraction",
+                },
+                "source_quote": "BSc Computer Science", "extraction_confidence": 0.8,
+            }
+        ],
+    }
+
+    def fake_call_claude_structured(*, model, system, user, response_model, **kwargs):
+        return ai_client.validate_tool_output(canned, response_model)
+
+    with patch("api.ai_client.call_claude_structured", fake_call_claude_structured):
+        result = run_cv_extraction(candidate_id="T-1", cv_text="BSc Computer Science", dictionary={"EDU-HISTORY": _edu_element()})
+
+    element = result.extracted_elements[0]
+    assert element.value.value_status.value == "answered"
+    assert element.value.not_scored_reason is None
+    assert element.value.value == {"entries": [{"level": "bachelor"}]}

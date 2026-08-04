@@ -31,8 +31,9 @@ import json
 from typing import Dict, List, Tuple
 
 from api import REPO_ROOT, ai_client
+from activation import resolve_extracted_value_status
 from candidate_extraction import CandidateExtractionResult
-from schemas import Category, FitElement
+from schemas import Category, FitElement, ValueStatus
 from vacancy_extraction import VacancyExtractionResult
 
 PROMPTS_DIR = REPO_ROOT / "prompts"
@@ -381,19 +382,51 @@ def build_vacancy_extraction_prompt(*, vacancy_id: str, vacancy_text: str, dicti
 EXTRACTION_MAX_TOKENS = 16000
 
 
+def _apply_extraction_activation_safeguard(dictionary: Dict[str, FitElement], result, *, side: str):
+    """AI-extraction safeguard (v3 redesign, see PROJECT_NOTES.md): the
+    extraction model may only PROPOSE a value_status; the activation
+    resolver (code, not the model) makes the final not_scored/unknown
+    decision. Runs on every extracted element regardless of what the model
+    itself decided -- this closes the gap where correctness previously
+    relied only on prompt wording (VACANCY_STATUS_RULE / CV extraction's
+    equivalent instructions above), rather than trusting a human reviewer to
+    catch every mislabeled element by eye.
+    """
+    flag_key = "selected" if side == "candidate" else "activated"
+    corrected_elements = []
+    for extracted in result.extracted_elements:
+        element = dictionary.get(extracted.value.element_id)
+        if element is None:
+            corrected_elements.append(extracted)
+            continue
+        status, unknown_reason, not_scored_reason = resolve_extracted_value_status(
+            element, side=side, value_status=extracted.value.value_status,
+            unknown_reason=extracted.value.unknown_reason, value_payload=extracted.value.value,
+            selected_or_activated=bool(extracted.value.value.get(flag_key)),
+        )
+        corrected_value = extracted.value.model_copy(update={
+            "value_status": status, "unknown_reason": unknown_reason, "not_scored_reason": not_scored_reason,
+            "value": extracted.value.value if status == ValueStatus.ANSWERED else {},
+        })
+        corrected_elements.append(extracted.model_copy(update={"value": corrected_value}))
+    return result.model_copy(update={"extracted_elements": corrected_elements})
+
+
 def run_cv_extraction(*, candidate_id: str, cv_text: str, dictionary: Dict[str, FitElement]) -> CandidateExtractionResult:
     system, user = build_cv_extraction_prompt(candidate_id=candidate_id, cv_text=cv_text, dictionary=dictionary)
-    return ai_client.call_claude_structured(
+    result = ai_client.call_claude_structured(
         model=ai_client.MODEL_FOR_TASK["cv_extraction"], system=system, user=user,
         response_model=CandidateExtractionResult, max_tokens=EXTRACTION_MAX_TOKENS,
         task="cv_extraction", candidate_id=candidate_id,
     )
+    return _apply_extraction_activation_safeguard(dictionary, result, side="candidate")
 
 
 def run_vacancy_extraction(*, vacancy_id: str, vacancy_text: str, dictionary: Dict[str, FitElement]) -> VacancyExtractionResult:
     system, user = build_vacancy_extraction_prompt(vacancy_id=vacancy_id, vacancy_text=vacancy_text, dictionary=dictionary)
-    return ai_client.call_claude_structured(
+    result = ai_client.call_claude_structured(
         model=ai_client.MODEL_FOR_TASK["vacancy_extraction"], system=system, user=user,
         response_model=VacancyExtractionResult, max_tokens=EXTRACTION_MAX_TOKENS,
         task="vacancy_extraction", vacancy_id=vacancy_id,
     )
+    return _apply_extraction_activation_safeguard(dictionary, result, side="vacancy")

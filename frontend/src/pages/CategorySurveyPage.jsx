@@ -76,7 +76,13 @@ export default function CategorySurveyPage() {
         return prev.filter((id) => id !== elementId)
       }
       if (prev.length >= MOT_MAX_SELECTIONS) return prev
-      updateAnswer(elementId, blankAnswer(elementId, 'self_report'))
+      // selected/priority_rank live INSIDE the value payload (candidate_value_schema),
+      // not just in this page's own motChecked state -- build_item_results reads
+      // value.selected to resolve CANDIDATE_SELECTED activation (src/activation.py),
+      // so a checked-but-not-yet-answered MOT element must already carry these two
+      // fields, not just an empty {} the per-element editor might never populate.
+      const blank = blankAnswer(elementId, 'self_report')
+      updateAnswer(elementId, { ...blank, value: { selected: true, priority_rank: prev.length + 1 } })
       return [...prev, elementId]
     })
   }
@@ -122,9 +128,28 @@ export default function CategorySurveyPage() {
   // would mean none of the 12 MOT elements could ever render. So MOT always
   // lists every element (same as the original single-page version); only the
   // other, ALWAYS-activated categories filter on e.active.
+  //
+  // VACANCY_ACTIVATED elements (the 6 TEAM capability self-ratings plus their
+  // TEAM-EVIDENCE free-text companion) are shown unconditionally for the same
+  // underlying reason: whether they're active is a fact about a VACANCY, and
+  // this page is the candidate's own general profile with no vacancy context
+  // to resolve it, so e.active is structurally always false here. Filtering on
+  // it meant these 7 could never be answered by anyone -- a real gap found in
+  // Phase 7's live E2E run (see PROJECT_NOTES.md), the candidate-side mirror
+  // of the vacancy-side activation gap fixed in the Phase 6 addendum.
+  //
+  // This deliberately does NOT weaken activation: the candidate answers once,
+  // proactively, and the VACANCY still decides which of these get SCORED for
+  // a given role (src/activation.py's resolve_scope, driven by the vacancy's
+  // own value.activated -- unchanged). Unactivated ones resolve
+  // not_scored/not_activated_for_vacancy at match time exactly as before.
+  // Same shape CAP-SKILLS and MOT already use: answer proactively, score
+  // selectively.
+  const candidateAnswerable = (e) =>
+    e.active || answers[e.element_id] || e.activation_policy === 'vacancy_activated'
   const categoryElements = category === 'MOT'
     ? elements.filter((e) => e.category === 'MOT')
-    : elements.filter((e) => e.category === category && (e.active || answers[e.element_id]))
+    : elements.filter((e) => e.category === category && candidateAnswerable(e))
   const label = CATEGORY_LABELS[category]
 
   return (

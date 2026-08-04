@@ -61,6 +61,11 @@
       "element_id": "MOT-COLLABORATION",
       "label": "Collaboration value",
       "scale_id": "motivation_supply_1_5"
+    },
+    {
+      "element_id": "MOT-CHALLENGE",
+      "label": "Growth challenge",
+      "scale_id": "motivation_supply_1_5"
     }
   ],
   "sections": [

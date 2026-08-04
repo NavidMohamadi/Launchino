@@ -37,19 +37,37 @@ export default function VacancyWorkshopPage() {
   const [reviewFlags, setReviewFlags] = useState([])
 
   const [answers, setAnswers] = useState({})
+  // Which VACANCY_ACTIVATED elements (the 6 TEAM capability questions) this
+  // company has picked as mattering for this role -- mirrors
+  // CategorySurveyPage's MOT checkbox pattern, the candidate-side precedent
+  // for the same activation_policy concept (real gap found and fixed, see
+  // PROJECT_NOTES.md's Phase 6 entry: there was previously no UI anywhere
+  // for a company to activate one of these manually).
+  const [activatedIds, setActivatedIds] = useState([])
 
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState(null)
   const [submitResult, setSubmitResult] = useState(null)
 
-  // The vacancy is already fully created (all ALWAYS + CANDIDATE_SELECTED elements are
-  // not relevant here; vacancy side cares about ALWAYS + VACANCY_ACTIVATED elements).
-  // We activate every VACANCY_ACTIVATED element up front so the company can workshop
-  // any of them -- there's no earlier "vacancy answer" that gates them the way MOT does
-  // on the candidate side, so there's nothing meaningful to gate on yet.
-  const { elements, error: dictError } = useFitDictionary({})
+  const { elements, error: dictError } = useFitDictionary({ vacancyActivatedIds: activatedIds })
 
   const updateAnswer = (elementId, next) => setAnswers((prev) => ({ ...prev, [elementId]: next }))
+
+  function toggleActivated(elementId) {
+    setActivatedIds((prev) => {
+      if (prev.includes(elementId)) {
+        setAnswers((a) => { const next = { ...a }; delete next[elementId]; return next })
+        return prev.filter((id) => id !== elementId)
+      }
+      // activated lives INSIDE the value payload (vacancy_value_schema), not
+      // just in this page's own activatedIds state -- build_item_results
+      // reads value.activated to resolve VACANCY_ACTIVATED activation (see
+      // src/activation.py), the exact same fix CategorySurveyPage's MOT
+      // checkbox needed (Phase 5).
+      updateAnswer(elementId, { ...blankAnswer(elementId), value: { activated: true } })
+      return [...prev, elementId]
+    })
+  }
 
   async function handleCreateVacancy(e) {
     e.preventDefault()
@@ -86,6 +104,18 @@ export default function VacancyWorkshopPage() {
         }
       }
       setAnswers(nextAnswers)
+      // Extraction can itself propose activated:true for a TEAM capability
+      // element (the AI-extraction safeguard, Phase 4, still decides the
+      // final not_scored/unknown status server-side either way) -- keep the
+      // checkbox state in sync with whatever it returned, so an
+      // AI-activated element doesn't render as an unchecked box sitting
+      // above its own already-answered question.
+      const activatedFromExtraction = result.extracted_elements
+        .filter((item) => item.value.value && item.value.value.activated)
+        .map((item) => item.value.element_id)
+      if (activatedFromExtraction.length) {
+        setActivatedIds((prev) => [...new Set([...prev, ...activatedFromExtraction])])
+      }
       setUnmappedTerms(result.unmapped_terms || [])
       setReviewFlags(result.review_flags || [])
       setStep('review')
@@ -124,7 +154,22 @@ export default function VacancyWorkshopPage() {
   if (dictError) return <p className="hint-error">Could not load the Fit Dictionary: {dictError}</p>
   if (!elements && step !== 'identify') return <p>Loading questions...</p>
 
-  const visibleElements = (elements || []).filter((e) => e.active || answers[e.element_id])
+  // comparator_key "unscored" (v3 redesign -- CAREER-NARRATIVE,
+  // CAREER-DEVELOPMENT, TEAM-EVIDENCE) is excluded here entirely, not just
+  // left with an empty editor: matching_service.py already excludes these
+  // from real matching altogether (see PROJECT_NOTES.md's Phase 2 entry),
+  // and their vacancy_value_schema is genuinely empty -- there is nothing
+  // for a vacancy to answer, only candidates provide this free text.
+  const relevantElements = (elements || []).filter((e) => e.comparator_key !== 'unscored')
+  // VACANCY_ACTIVATED elements (the 6 TEAM capability questions) always get
+  // an activation checkbox, regardless of e.active -- that's the whole point
+  // of showing them at all when nothing has activated them yet (real gap
+  // fixed here, see PROJECT_NOTES.md's Phase 6 entry). Everything else
+  // (ALWAYS-activated elements, or anything extraction already answered)
+  // keeps the original active-or-answered visibility rule.
+  const visibleElements = relevantElements.filter(
+    (e) => e.activation_policy === 'vacancy_activated' || e.active || answers[e.element_id],
+  )
   // A real pre-existing bug found during Phase 5 (see PROJECT_NOTES.md): this
   // list omitted EDU entirely, which was harmless while EDU had no active
   // elements but would have silently hidden the whole Education requirement
@@ -198,9 +243,28 @@ export default function VacancyWorkshopPage() {
               <div key={category}>
                 <h3 className="category-heading">{category}</h3>
                 {inCategory.map((el) => (
-                  <ElementQuestion key={el.element_id} element={el} side="vacancy"
-                    answer={answers[el.element_id] || blankAnswer(el.element_id)}
-                    onChange={(a) => updateAnswer(el.element_id, a)} />
+                  el.activation_policy === 'vacancy_activated' ? (
+                    <div key={el.element_id} className="element-question">
+                      <label className="checkbox">
+                        <input
+                          type="checkbox" checked={activatedIds.includes(el.element_id)}
+                          onChange={() => toggleActivated(el.element_id)}
+                        />
+                        <strong>{el.label}</strong>
+                        {' -- '}
+                        <span style={{ fontSize: 13, color: 'var(--ll-neutral-600)' }}>{el.definition}</span>
+                      </label>
+                      {el.active && (
+                        <ElementQuestion element={el} side="vacancy"
+                          answer={answers[el.element_id] || blankAnswer(el.element_id)}
+                          onChange={(a) => updateAnswer(el.element_id, a)} />
+                      )}
+                    </div>
+                  ) : (
+                    <ElementQuestion key={el.element_id} element={el} side="vacancy"
+                      answer={answers[el.element_id] || blankAnswer(el.element_id)}
+                      onChange={(a) => updateAnswer(el.element_id, a)} />
+                  )
                 ))}
               </div>
             )

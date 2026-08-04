@@ -46,3 +46,11 @@ def get_occupations(q: str = Query(min_length=1, max_length=200)) -> list:
 @router.get("/isced-fields")
 def get_isced_fields() -> list:
     return reference_search.list_isced_fields()
+
+
+@router.get("/nace-sections")
+def get_nace_sections() -> list:
+    # v3 redesign, Phase 5 (see PROJECT_NOTES.md): CAREER-INDUSTRIES' picker --
+    # full fixed list, not a search, same reasoning as isced-fields above (only
+    # 21 NACE sections, small enough to browse/pick directly).
+    return reference_search.list_nace_sections()

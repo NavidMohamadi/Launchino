@@ -79,6 +79,8 @@ export const searchOccupations = (q) => request(`/reference/occupations?q=${enco
 
 export const getIscedFields = () => request('/reference/isced-fields')
 
+export const getNaceSections = () => request('/reference/nace-sections')
+
 export const createCompany = (payload) =>
   request('/companies', { method: 'POST', body: JSON.stringify(payload) })
 

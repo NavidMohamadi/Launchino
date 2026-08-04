@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import date
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from match_engine import alignment_bucket_for_percent
 from schemas import Alignment
 
 UNKNOWN_VALUES = {None, "unknown", "not_specified", "not_sure"}
@@ -32,7 +33,9 @@ EDUCATION_LEVEL = {
     "bachelor": 3,
     "master": 4,
     "phd": 5,
-    "postdoc": 6,
+    # "postdoc" removed (v3 redesign, see PROJECT_NOTES.md) -- a research
+    # position/career stage, not a conferred degree; postdoctoral work now
+    # belongs in Task History instead.
     # "other" is deliberately absent -- it has no defined rank, so a
     # candidate/vacancy entry at "other" always resolves UNKNOWN for the
     # leveled comparison rather than silently sorting first or last.
@@ -218,3 +221,158 @@ def score_tagged_list_overlap(
     if any_weak:
         return Alignment.WEAK_ALIGNMENT, f"Candidate is one level below the required {label}."
     return Alignment.MISALIGNED, f"No overlap between candidate and required {label}."
+
+
+def score_capability_list_requirement(
+    candidate_entries: Optional[Iterable[Mapping[str, Any]]],
+    required_entries: Optional[Iterable[Mapping[str, Any]]],
+    *,
+    level_order: Mapping[str, int],
+    label: str,
+) -> Tuple[Alignment, str, Optional[float]]:
+    """Family 1 (v3 redesign, see PROJECT_NOTES.md) for repeatable, tagged,
+    leveled entries (CAP-SKILLS' proficiency) -- the continuous-percent
+    counterpart to score_tagged_list_overlap's discrete 3-bucket result for
+    the same {"tag", "level"} shape. Matching semantics are unchanged from
+    that existing function (a required tag is satisfied by ANY candidate
+    entry sharing the same tag; a candidate with zero entries for a required
+    tag scores 0% on it, not UNKNOWN -- missing a required skill entirely is
+    a bigger gap than being under-level in one they do have); only the
+    scoring formula for a matched tag changes, from 3 discrete buckets to
+    max(0, 100-25*shortfall). Overall score is the BEST-scoring required tag
+    (an OR across required tags, matching the existing overlap semantics --
+    not an AND-all-required check, which would be a matching-rule change
+    beyond this phase's scope).
+    """
+    required_list = [r for r in (required_entries or []) if r.get("tag") not in UNKNOWN_VALUES]
+    if not required_list:
+        return Alignment.UNKNOWN, f"The vacancy does not specify required {label}.", None
+    candidate_list = [c for c in (candidate_entries or []) if c.get("tag") not in UNKNOWN_VALUES]
+    if not candidate_list:
+        return Alignment.UNKNOWN, f"Candidate {label} needs clarification.", None
+
+    candidate_ranks_by_tag: Dict[str, List[int]] = {}
+    for c in candidate_list:
+        rank = level_order.get(str(c.get("level")))
+        if rank is not None:
+            candidate_ranks_by_tag.setdefault(c["tag"], []).append(rank)
+
+    best_percent: Optional[float] = None
+    matched_any_tag = False
+    for req in required_list:
+        ranks = candidate_ranks_by_tag.get(req["tag"])
+        if not ranks:
+            continue
+        matched_any_tag = True
+        required_rank = level_order.get(str(req.get("level")))
+        percent = 100.0 if required_rank is None else (
+            100.0 if max(ranks) >= required_rank else max(0.0, 100.0 - 25.0 * (required_rank - max(ranks)))
+        )
+        if best_percent is None or percent > best_percent:
+            best_percent = percent
+
+    if not matched_any_tag:
+        return Alignment.MISALIGNED, f"No overlap between candidate and required {label}.", 0.0
+    reason = f"Best matching {label} scores {best_percent:.0f}% of the stated requirement."
+    return alignment_bucket_for_percent(best_percent), reason, best_percent
+
+
+def score_motivation_preferred_minimum(
+    candidate_value: Mapping[str, Any], vacancy_value: Mapping[str, Any],
+) -> Tuple[Alignment, str, Optional[float]]:
+    """Family 3 -- Motivation (v3 redesign, see PROJECT_NOTES.md): the
+    candidate states a preferred AND a minimum-acceptable 1-5 level for a
+    selected priority; the vacancy supplies one actual 1-5 value.
+
+    If the vacancy clears the candidate's stated minimum, the penalty for
+    imperfect fit is gentle (the role clears their bar): score = 100 -
+    15*|actual-preferred|, floored at 40.
+    If the vacancy falls below the candidate's stated minimum, the penalty
+    is steeper -- a real, different signal, not just "some distance away":
+    score = max(0, 40 - 20*(minimum-actual)).
+    """
+    preferred = candidate_value.get("preferred_level")
+    minimum = candidate_value.get("minimum_acceptable_level")
+    actual = vacancy_value.get("actual_level")
+    if not isinstance(preferred, int) or not isinstance(minimum, int):
+        return Alignment.UNKNOWN, "Candidate has not stated a preferred/minimum level for this priority.", None
+    if not isinstance(actual, int):
+        # actual may legitimately be the literal string "not_specified" (a
+        # real, documented value) when a vacancy hasn't stated one yet.
+        return Alignment.UNKNOWN, "The vacancy does not specify an actual level for this priority.", None
+
+    if actual >= minimum:
+        percent = max(40.0, 100.0 - 15.0 * abs(actual - preferred))
+        reason = f"The role clears the candidate's stated minimum ({percent:.0f}% motivation match)."
+    else:
+        shortfall = minimum - actual
+        percent = max(0.0, 40.0 - 20.0 * shortfall)
+        reason = f"The role falls {shortfall} level(s) below the candidate's stated minimum ({percent:.0f}% motivation match)."
+    return alignment_bucket_for_percent(percent), reason, percent
+
+
+# EDU-HISTORY's vacancy-side education_field_requirement modes (v3 redesign):
+# how a field-of-study mismatch affects the level-based Family 1 score.
+# PREFERRED's reduction factor is a documented default, not a value stated
+# in the spec itself (which says only "reduces score but doesn't cap it") --
+# flagged for the user, tunable once real match data exists, same as the
+# spec's own Family 1/3 constants.
+EDUCATION_FIELD_MISMATCH_PREFERRED_FACTOR = 0.75
+
+
+def score_education_history(
+    candidate_entries: Optional[List[Mapping[str, Any]]],
+    required_entries: Optional[List[Mapping[str, Any]]],
+    *,
+    field_requirement: str,
+) -> Tuple[Alignment, str, Optional[float]]:
+    """Family 1 for EDU-HISTORY (v3 redesign, see PROJECT_NOTES.md): level is
+    always scored via the proportional shortfall formula; how a field
+    (ISCED-F code) mismatch affects that score now depends on the vacancy's
+    education_field_requirement:
+      - "required": field mismatch caps the entry's score to 0% regardless
+        of level -- a hard requirement.
+      - "preferred": field mismatch reduces (but doesn't zero) the level
+        score by EDUCATION_FIELD_MISMATCH_PREFERRED_FACTOR.
+      - "open": field is ignored entirely; score is level alone.
+    "Best entry wins": only candidate entries with consider != False are
+    eligible; among those, every (eligible entry x required-education
+    entry) pair is scored and the single best result wins.
+    """
+    required_list = [
+        r for r in (required_entries or [])
+        if r.get("level") not in UNKNOWN_VALUES and str(r.get("level")) in EDUCATION_LEVEL
+    ]
+    if not required_list:
+        return Alignment.UNKNOWN, "The vacancy does not specify a required education level.", None
+
+    eligible_entries = [
+        e for e in (candidate_entries or [])
+        if e.get("consider", True) is not False and str(e.get("level")) in EDUCATION_LEVEL
+    ]
+    if not eligible_entries:
+        return Alignment.UNKNOWN, "Candidate education level needs clarification.", None
+
+    best_percent: Optional[float] = None
+    for entry in eligible_entries:
+        candidate_rank = EDUCATION_LEVEL[str(entry.get("level"))]
+        candidate_field = (entry.get("field") or {}).get("isced_code")
+        for req in required_list:
+            required_rank = EDUCATION_LEVEL[str(req["level"])]
+            level_percent = 100.0 if candidate_rank >= required_rank else max(
+                0.0, 100.0 - 25.0 * (required_rank - candidate_rank)
+            )
+            field_matches = bool(candidate_field) and candidate_field == req.get("isced_code")
+
+            if field_requirement == "open":
+                percent = level_percent
+            elif field_requirement == "required":
+                percent = level_percent if field_matches else 0.0
+            else:  # "preferred"
+                percent = level_percent if field_matches else level_percent * EDUCATION_FIELD_MISMATCH_PREFERRED_FACTOR
+
+            if best_percent is None or percent > best_percent:
+                best_percent = percent
+
+    reason = f"Best matching education entry scores {best_percent:.0f}% under a '{field_requirement}' field requirement."
+    return alignment_bucket_for_percent(best_percent), reason, best_percent

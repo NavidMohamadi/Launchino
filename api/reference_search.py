@@ -80,14 +80,43 @@ def load_esco_skills() -> List[Dict[str, Any]]:
 
 @lru_cache(maxsize=1)
 def load_esco_occupations() -> List[Dict[str, Any]]:
+    # "code" is ESCO's own ISCO-08-derived hierarchical code (e.g. "2166.3.1")
+    # -- kept alongside uri/label so callers needing occupation-group
+    # closeness (not just exact-uri match) have it without a second lookup;
+    # search_occupations only ever reads uri/label, so this is additive.
     data = json.loads((REFERENCE_DIR / "esco_occupations.json").read_text(encoding="utf-8"))
-    return [{"uri": o["uri"], "label": o["label_en"]} for o in data["occupations"] if o.get("label_en")]
+    return [
+        {"uri": o["uri"], "label": o["label_en"], "code": o.get("code")}
+        for o in data["occupations"] if o.get("label_en")
+    ]
+
+
+@lru_cache(maxsize=1)
+def esco_occupation_unit_groups() -> Dict[str, str]:
+    """uri -> ISCO-08 unit-group prefix (the part of ESCO's own hierarchical
+    code before the first '.', e.g. "2166.3.1" -> "2166"). Occupations
+    sharing a unit group are the same broad occupational family (e.g.
+    "3D animator" and "3D modeller" both sit under 2166) -- used by
+    CAREER-PRIMARY-ROLE/SECONDARY-ROLE's Family 4 "exact-or-close" match
+    (see api/comparators_dispatch.py) to define "close" without inventing a
+    new taxonomy: this hierarchy is already present in the ESCO data itself.
+    """
+    return {
+        o["uri"]: o["code"].split(".")[0]
+        for o in load_esco_occupations() if o.get("code")
+    }
 
 
 @lru_cache(maxsize=1)
 def load_isced_narrow_fields() -> List[Dict[str, Any]]:
     data = json.loads((REFERENCE_DIR / "isced_f_2013.json").read_text(encoding="utf-8"))
     return [{"code": f["code"], "label": f["name"]} for f in data["narrow_fields"]]
+
+
+@lru_cache(maxsize=1)
+def load_nace_sections() -> List[Dict[str, Any]]:
+    data = json.loads((REFERENCE_DIR / "nace_industries.json").read_text(encoding="utf-8"))
+    return [{"code": s["code"], "label": s["name"]} for s in data["sections"]]
 
 
 def search_institutions(query: str) -> List[Dict[str, Any]]:
@@ -110,3 +139,10 @@ def list_isced_fields() -> List[Dict[str, Any]]:
     # Full list, not a search -- only 29 entries, small enough for a company
     # to pick from directly (see module docstring).
     return load_isced_narrow_fields()
+
+
+def list_nace_sections() -> List[Dict[str, Any]]:
+    # Full list, not a search -- only 21 entries (see nace_industries.json),
+    # small enough for a candidate to browse/pick directly, same reasoning
+    # as list_isced_fields above.
+    return load_nace_sections()

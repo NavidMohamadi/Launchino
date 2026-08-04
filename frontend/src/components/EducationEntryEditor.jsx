@@ -3,7 +3,12 @@ import * as api from '../api'
 import { Select, DateField } from './formFields'
 import SearchAutocomplete from './SearchAutocomplete'
 
-const LEVELS = ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'postdoc', 'other']
+// "postdoc" was removed (v3 redesign, see PROJECT_NOTES.md): a postdoc is a
+// research position/career stage, not a conferred degree, and keeping it as
+// a level created a false hierarchy (Master's < PhD < Postdoc). Postdoctoral
+// work belongs in Task History instead -- the one real candidate who had it
+// as an education level was migrated there and had the level removed.
+const LEVELS = ['secondary', 'vocational', 'bachelor', 'master', 'phd', 'other']
 const STATUSES = ['completed', 'currently_studying', 'did_not_complete']
 
 export function blankEducationEntry() {

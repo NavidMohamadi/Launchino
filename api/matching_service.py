@@ -101,6 +101,14 @@ def build_item_results(
 ) -> List[ItemResult]:
     items: List[ItemResult] = []
     for element_id, element in dictionary.items():
+        if element.comparator_key == "unscored":
+            # Family 5 (v3 redesign, see PROJECT_NOTES.md): CAREER-NARRATIVE,
+            # CAREER-DEVELOPMENT, TEAM-EVIDENCE -- stored for human review/
+            # candidate-facing explanation, never converted into a numeric
+            # score. Excluded from matching entirely rather than generating
+            # an UNKNOWN/needs-clarification ItemResult for something that
+            # was never meant to be scored in the first place.
+            continue
         talent_row = talent_values.get(element_id)
         vacancy_row = vacancy_values.get(element_id)
 
@@ -157,7 +165,7 @@ def build_item_results(
                 )
             )
         else:
-            alignment, reason, clarification_required = compare_answered_values(
+            alignment, reason, clarification_required, score_percent = compare_answered_values(
                 element, talent_row["value"], vacancy_row["value"]
             )
             items.append(
@@ -166,6 +174,7 @@ def build_item_results(
                     category=element.category, alignment=alignment,
                     item_importance=item_importance, requirement_type=requirement_type,
                     reason=reason, clarification_required=clarification_required,
+                    score_percent=score_percent,
                 )
             )
     return items
